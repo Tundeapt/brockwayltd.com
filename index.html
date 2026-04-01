@@ -150,20 +150,20 @@ body::after {
 /* ── HERO ── */
 .hero {
   position: relative;
-  min-height: 100vh;
+  min-height: auto;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  padding: 56px 0 0;
+  justify-content: flex-start;
+  padding: 120px 0 60px;
   overflow: hidden;
 }
 
 /* Shield HUD — 7-layer arc visualization */
 .shield-hud {
   position: absolute;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  width: 600px; height: 600px;
+  top: 40%; right: -5%;
+  transform: translateY(-40%);
+  width: 500px; height: 500px;
   opacity: 0;
   animation: hudFadeIn 2s 0.5s ease forwards;
   pointer-events: none;
@@ -197,7 +197,8 @@ body::after {
   text-anchor: middle;
 }
 @media(max-width:768px) {
-  .shield-hud { width: 350px; height: 350px; }
+  .hero { padding: 100px 0 40px; }
+  .shield-hud { width: 300px; height: 300px; right: -20%; top: 50%; }
   .hud-label { font-size: 5px; }
 }
 
@@ -1178,7 +1179,7 @@ body::after {
     </div>
   </div>
 
-  <div class="hero-strip">
+  <div class="hero-strip" style="margin-top:40px;">
     <div class="hs-cell">
       <div class="hs-label">Enforcement</div>
       <div class="hs-val"><span class="sig">Terminal</span><span class="u">level</span></div>
