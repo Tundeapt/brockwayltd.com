@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Shield by Brockway — Institutional risk governance for MT5. SOD floors, ratchet protection, session sweeps. $99/month. Any broker. Any strategy.">
-<title>Shield — Institutional Risk Infrastructure for MT5 | Brockway</title>
+<meta name="description" content="Shield by Brockway — Institutional risk infrastructure for MT5. Terminal-level enforcement. Zero override.">
+<title>SHIELD — Brockway Risk Infrastructure</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=Libre+Franklin:wght@200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
@@ -158,6 +158,49 @@ body::after {
   overflow: hidden;
 }
 
+/* Shield HUD — 7-layer arc visualization */
+.shield-hud {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px; height: 600px;
+  opacity: 0;
+  animation: hudFadeIn 2s 0.5s ease forwards;
+  pointer-events: none;
+}
+@keyframes hudFadeIn { to { opacity: 1; } }
+.shield-hud svg { width: 100%; height: 100%; }
+.hud-arc {
+  fill: none;
+  stroke-linecap: round;
+  opacity: 0;
+}
+.hud-arc.a1 { stroke: var(--blue); stroke-width: 2; stroke-dasharray: 180 400; animation: arcSpin1 20s linear infinite, arcIn 1s 0.8s ease forwards; }
+.hud-arc.a2 { stroke: rgba(0,148,255,0.6); stroke-width: 1.5; stroke-dasharray: 120 400; animation: arcSpin2 25s linear infinite reverse, arcIn 1s 1.0s ease forwards; }
+.hud-arc.a3 { stroke: rgba(0,148,255,0.4); stroke-width: 1; stroke-dasharray: 90 400; animation: arcSpin3 30s linear infinite, arcIn 1s 1.2s ease forwards; }
+.hud-arc.a4 { stroke: rgba(0,210,106,0.3); stroke-width: 1; stroke-dasharray: 60 400; animation: arcSpin2 35s linear infinite reverse, arcIn 1s 1.4s ease forwards; }
+.hud-arc.a5 { stroke: rgba(0,148,255,0.2); stroke-width: 0.5; stroke-dasharray: 40 400; animation: arcSpin1 40s linear infinite, arcIn 1s 1.6s ease forwards; }
+.hud-ring { fill: none; stroke: rgba(0,148,255,0.06); stroke-width: 1; }
+.hud-ring-d { fill: none; stroke: rgba(0,148,255,0.04); stroke-width: 0.5; stroke-dasharray: 4 6; }
+.hud-center { fill: var(--blue); opacity: 0; animation: centerPulse 3s 1.5s ease-in-out infinite; }
+@keyframes arcIn { to { opacity: 1; } }
+@keyframes arcSpin1 { from { transform-origin: center; transform: rotate(0deg); } to { transform-origin: center; transform: rotate(360deg); } }
+@keyframes arcSpin2 { from { transform-origin: center; transform: rotate(0deg); } to { transform-origin: center; transform: rotate(360deg); } }
+@keyframes arcSpin3 { from { transform-origin: center; transform: rotate(0deg); } to { transform-origin: center; transform: rotate(360deg); } }
+@keyframes centerPulse { 0%,100% { opacity: 0.6; r: 3; } 50% { opacity: 1; r: 5; } }
+.hud-label {
+  font-family: var(--mono);
+  font-size: 7px;
+  fill: rgba(0,148,255,0.35);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-anchor: middle;
+}
+@media(max-width:768px) {
+  .shield-hud { width: 350px; height: 350px; }
+  .hud-label { font-size: 5px; }
+}
+
 /* Cinematic gradient field */
 .hero-field {
   position: absolute;
@@ -191,44 +234,7 @@ body::after {
 }
 @keyframes datumIn { to { opacity: 0.6; } }
 
-/* Terminal ribbon - top */
-.hero-ribbon {
-  position: absolute;
-  top: 56px; left: 0; right: 0;
-  height: 32px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  overflow: hidden;
-}
-.ribbon-track {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  animation: ribbonScroll 50s linear infinite;
-  white-space: nowrap;
-  width: max-content;
-}
-@keyframes ribbonScroll {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
-}
-.ribbon-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 28px;
-  height: 32px;
-  border-right: 1px solid var(--border);
-  font-family: var(--mono);
-  font-size: 10px;
-}
-.ri-sym { color: var(--white); font-weight: 600; letter-spacing: 1px; }
-.ri-val { color: var(--blue); }
-.ri-chg { font-size: 9px; }
-.ri-chg.up { color: var(--green); }
-.ri-chg.dn { color: var(--red); }
+
 
 /* Hero content */
 .hero-content {
@@ -409,7 +415,7 @@ body::after {
   .hero-strip { grid-template-columns: repeat(2, 1fr); }
   .hs-cell:nth-child(n+3) { display: none; }
   .hero-content { padding: 0 20px; }
-  .hero-ribbon { display: none; }
+
 }
 
 /* ── INSTITUTIONAL STATEMENT (Nasdaq-style) ── */
@@ -1116,26 +1122,44 @@ body::after {
   <div class="hero-grid-bg"></div>
   <div class="hero-datum"></div>
 
-  <!-- Ticker ribbon -->
-  <div class="hero-ribbon">
-    <div class="ribbon-track">
-      <div class="ribbon-item"><span class="ri-sym">EURUSD</span><span class="ri-val">1.0842</span><span class="ri-chg up">+0.12%</span></div>
-      <div class="ribbon-item"><span class="ri-sym">GBPUSD</span><span class="ri-val">1.2916</span><span class="ri-chg dn">-0.08%</span></div>
-      <div class="ribbon-item"><span class="ri-sym">USDJPY</span><span class="ri-val">150.24</span><span class="ri-chg up">+0.31%</span></div>
-      <div class="ribbon-item"><span class="ri-sym">XAUUSD</span><span class="ri-val">3072.40</span><span class="ri-chg up">+0.54%</span></div>
-      <div class="ribbon-item"><span class="ri-sym">US500</span><span class="ri-val">5,712.8</span><span class="ri-chg dn">-0.22%</span></div>
-      <div class="ribbon-item"><span class="ri-sym">NAS100</span><span class="ri-val">19,842</span><span class="ri-chg dn">-0.18%</span></div>
-      <div class="ribbon-item"><span class="ri-sym">BTCUSD</span><span class="ri-val">87,240</span><span class="ri-chg up">+1.4%</span></div>
-      <div class="ribbon-item"><span class="ri-sym">USOIL</span><span class="ri-val">69.72</span><span class="ri-chg up">+0.85%</span></div>
-      <div class="ribbon-item"><span class="ri-sym">EURUSD</span><span class="ri-val">1.0842</span><span class="ri-chg up">+0.12%</span></div>
-      <div class="ribbon-item"><span class="ri-sym">GBPUSD</span><span class="ri-val">1.2916</span><span class="ri-chg dn">-0.08%</span></div>
-      <div class="ribbon-item"><span class="ri-sym">USDJPY</span><span class="ri-val">150.24</span><span class="ri-chg up">+0.31%</span></div>
-      <div class="ribbon-item"><span class="ri-sym">XAUUSD</span><span class="ri-val">3072.40</span><span class="ri-chg up">+0.54%</span></div>
-      <div class="ribbon-item"><span class="ri-sym">US500</span><span class="ri-val">5,712.8</span><span class="ri-chg dn">-0.22%</span></div>
-      <div class="ribbon-item"><span class="ri-sym">NAS100</span><span class="ri-val">19,842</span><span class="ri-chg dn">-0.18%</span></div>
-      <div class="ribbon-item"><span class="ri-sym">BTCUSD</span><span class="ri-val">87,240</span><span class="ri-chg up">+1.4%</span></div>
-      <div class="ribbon-item"><span class="ri-sym">USOIL</span><span class="ri-val">69.72</span><span class="ri-chg up">+0.85%</span></div>
-    </div>
+
+
+
+  <!-- Shield HUD Visualization -->
+  <div class="shield-hud">
+    <svg viewBox="0 0 600 600">
+      <!-- Static rings -->
+      <circle class="hud-ring" cx="300" cy="300" r="280"/>
+      <circle class="hud-ring-d" cx="300" cy="300" r="240"/>
+      <circle class="hud-ring" cx="300" cy="300" r="200"/>
+      <circle class="hud-ring-d" cx="300" cy="300" r="160"/>
+      <circle class="hud-ring" cx="300" cy="300" r="120"/>
+      <circle class="hud-ring-d" cx="300" cy="300" r="80"/>
+      <circle class="hud-ring" cx="300" cy="300" r="40"/>
+      <!-- Rotating arcs — 7 protection layers -->
+      <circle class="hud-arc a1" cx="300" cy="300" r="275"/>
+      <circle class="hud-arc a2" cx="300" cy="300" r="235"/>
+      <circle class="hud-arc a3" cx="300" cy="300" r="195"/>
+      <circle class="hud-arc a1" cx="300" cy="300" r="155"/>
+      <circle class="hud-arc a4" cx="300" cy="300" r="115"/>
+      <circle class="hud-arc a5" cx="300" cy="300" r="85"/>
+      <circle class="hud-arc a2" cx="300" cy="300" r="45"/>
+      <!-- Layer labels -->
+      <text class="hud-label" x="300" y="18">SOD Floor</text>
+      <text class="hud-label" x="300" y="55">Ratchet</text>
+      <text class="hud-label" x="300" y="95">Trail Floor</text>
+      <text class="hud-label" x="300" y="138">Heat Cap</text>
+      <text class="hud-label" x="540" y="300">Session</text>
+      <text class="hud-label" x="60" y="300">News</text>
+      <text class="hud-label" x="300" y="585">Velocity</text>
+      <!-- Center dot -->
+      <circle class="hud-center" cx="300" cy="300" r="3"/>
+      <!-- Cross hairs -->
+      <line x1="300" y1="295" x2="300" y2="270" stroke="rgba(0,148,255,0.15)" stroke-width="0.5"/>
+      <line x1="300" y1="305" x2="300" y2="330" stroke="rgba(0,148,255,0.15)" stroke-width="0.5"/>
+      <line x1="295" y1="300" x2="270" y2="300" stroke="rgba(0,148,255,0.15)" stroke-width="0.5"/>
+      <line x1="305" y1="300" x2="330" y2="300" stroke="rgba(0,148,255,0.15)" stroke-width="0.5"/>
+    </svg>
   </div>
 
   <div class="hero-content">
@@ -1370,12 +1394,11 @@ body::after {
 
 <!-- FOOTER -->
 <footer class="footer">
-  <div class="footer-left">&copy; 2026 Brockway Trading & Technical Analysis Ltd.
-</div>
+  <div class="footer-left">&copy; 2026 Brockway Trading & Technical Analysis Ltd. Lagos, Nigeria.</div>
   <div class="footer-right">
-    <a href="https://shield.brockwayltd.com" class="footer-link">Dashboard</a>
-    <a href="mailto:support@brockwayltd.com" class="footer-link">Support</a>
-    <a href="https://shield.brockwayltd.com" class="footer-link">Login</a>
+    <a href="https://paystack.com/buy/shield-brockway" class="footer-link">Documentation</a>
+    <a href="https://paystack.com/buy/shield-brockway" class="footer-link">Terms</a>
+    <a href="https://paystack.com/buy/shield-brockway" class="footer-link">Contact</a>
   </div>
 </footer>
 
