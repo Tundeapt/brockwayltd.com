@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- 
+    SHIELD LOGOMARK — Brockway Trading & Technical Analysis Limited
+    A geometric shield form with 3 concentric arcs representing the 7 protection layers.
+    Works at: 16x16 (favicon), 32x32, 180x180 (Apple touch), 512x512 (master), 1200x1200 (social)
+  -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0A0B0D"/>
+      <stop offset="100%" stop-color="#050607"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#40AFFF"/>
+      <stop offset="100%" stop-color="#0094FF"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+  <!-- Shield form: pointed bottom, flat top, symmetric -->
+  <!-- Outer shield outline -->
+  <path d="M256 72 L406 132 C414 136 420 148 420 158 L420 260 C420 340 360 400 256 440 C152 400 92 340 92 260 L92 158 C92 148 98 136 106 132 Z"
+    fill="none" stroke="#0094FF" stroke-width="6" opacity="0.2"/>
+  <!-- Middle shield -->
+  <path d="M256 108 L376 156 C382 158 386 166 386 174 L386 264 C386 328 338 374 256 408 C174 374 126 328 126 264 L126 174 C126 166 130 158 136 156 Z"
+    fill="none" stroke="#0094FF" stroke-width="4" opacity="0.4"/>
+  <!-- Inner shield — solid fill -->
+  <path d="M256 144 L346 180 C350 182 352 188 352 192 L352 268 C352 316 316 350 256 376 C196 350 160 316 160 268 L160 192 C160 188 162 182 166 180 Z"
+    fill="#0094FF" opacity="0.15"/>
+  <!-- Core mark — abstract S letterform from two arcs -->
+  <path d="M220 200 C220 200 256 190 292 210 C310 220 310 240 290 248 C270 256 230 248 220 260 C210 272 220 288 240 296 C260 304 296 296 296 296"
+    fill="none" stroke="url(#glow)" stroke-width="10" stroke-linecap="round" opacity="0.9"/>
+  <!-- Center dot -->
+  <circle cx="256" cy="248" r="4" fill="#0094FF" opacity="0.6"/>
+</svg>
