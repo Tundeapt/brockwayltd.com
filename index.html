@@ -1,14 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<link rel="icon" href="/favicon.ico" sizes="any">
-<link rel="apple-touch-icon" href="/shield-apple-touch-180.png">
-      
-<meta charset="UTF-8">
-      
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="Shield by Brockway — Institutional risk infrastructure for MT5. Terminal-level enforcement. Zero override.">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="shield-apple-touch-180.png">
 <title>SHIELD — Brockway Risk Infrastructure</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=Libre+Franklin:wght@200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -100,7 +97,7 @@ body::after {
 }
 .nav-logo {
   width: 28px; height: 28px;
-  border-radius: 50%;
+  
   border: 1px solid rgba(145,206,79,0.3);
   object-fit: cover;
   box-shadow: 0 0 12px rgba(145,206,79,0.15);
@@ -1101,7 +1098,6 @@ body::after {
   transform: translateY(0);
 }
 </style>
-   
 </head>
 <body>
 
@@ -1109,9 +1105,8 @@ body::after {
 <nav class="nav">
   <div class="nav-left">
     <a href="https://paystack.com/buy/shield-brockway" class="nav-mark">
-      <img class="nav-logo" src="shield-logomark.svg?v=2" alt="Shield Logo">
-          
-       <span class="nav-mark-text">Shield</span>
+      <img class="nav-logo" src="shield-logomark.svg?v=3" alt="Shield Logo">
+      <span class="nav-mark-text">Shield</span>
     </a>
     <div class="nav-sep"></div>
     <span class="nav-corp">Brockway Trading & Technical Analysis Ltd</span>
@@ -1172,16 +1167,16 @@ body::after {
 
   <div class="hero-content">
     <div class="hero-kicker">Institutional Risk Infrastructure</div>
-    <h1 class="hero-h1">Your strategy<br>didn't <span class="serif">fail.</span></h1>
-    <p class="hero-h1-sub">Your terminal let you override it.</p>
+    <h1 class="hero-h1">You don't blow accounts<br>from bad <span class="serif">trades.</span></h1>
+    <p class="hero-h1-sub">You blow them when nothing stops you.</p>
     <p class="hero-body">
-      Shield is an execution-layer risk governor built for prop firm traders.
-      It enforces <strong>daily drawdown floors</strong>, <strong>exposure caps</strong>,
-      and <strong>session boundaries</strong> at the terminal level.
-      No override. No second-chance trades. Your funded account stays funded.
+      Shield is a terminal-level risk governor for MT5.
+      It enforces your limits when discipline fails.
+      <strong>No override. No negotiation.</strong>
+      One prevented mistake pays for this.
     </p>
     <div class="hero-actions">
-      <a href="https://paystack.com/buy/shield-brockway" class="btn-main">Deploy Shield <span>&rarr;</span></a>
+      <a href="https://paystack.com/buy/shield-brockway" class="btn-main">Deploy Shield &mdash; $99/month <span>&rarr;</span></a>
       <a href="#architecture" class="btn-ghost">View Architecture</a>
     </div>
   </div>
@@ -1215,11 +1210,12 @@ body::after {
 <section class="statement rv">
   <div class="st-inner">
     <div class="st-tag">The Problem</div>
-    <h2 class="st-headline">Prop firm accounts don't fail because of bad strategy.<br><em>They fail because MT5 has no risk governor.</em></h2>
+    <h2 class="st-headline">The trade that blows your account is not the first loss.<br><em>It's the one you take after.</em></h2>
     <p class="st-body">
-      FTMO, FundedNext, Seacrest — every prop firm sets drawdown rules.
-      But MT5 doesn't enforce them. It does exactly what you tell it — including the revenge trade
-      at 4:47pm that breaches your daily limit. <strong>Shield enforces what MT5 won't.</strong>
+      MT5 will execute both trades. The first loss and the revenge trade after it.
+      It doesn't know your daily limit. It doesn't care about your prop firm's rules.
+      It does exactly what you tell it — especially when you shouldn't be trading.
+      <strong>Shield won't.</strong>
     </p>
   </div>
 </section>
@@ -1353,7 +1349,7 @@ body::after {
         <div class="pc-toggle"><span class="pct-name">Velocity Halt<small>Flash crash protection</small></span><span class="pct-state on">LOCKED</span></div>
         <div class="pc-toggle"><span class="pct-name">Web Dashboard<small>Live telemetry to control room</small></span><span class="pct-state on">ON</span></div>
         <div class="pc-toggle"><span class="pct-name">Telegram Alerts<small>Push notifications on triggers</small></span><span class="pct-state user">USER</span></div>
-        <div class="pc-price"><span class="pc-price-val">$99</span><span class="pc-price-per">/ month</span></div>
+        <div class="pc-price"><span class="pc-price-val">$99</span><span class="pc-price-per">/ month</span></div><div style="font-size:11px;color:var(--sub);margin-top:8px;line-height:1.5;">Less than 1% of a $10k funded account.<br>Less than one bad decision.</div>
         <a href="https://paystack.com/buy/shield-brockway" class="pc-cta">Deploy Institutional</a>
       </div>
     </div>
@@ -1394,7 +1390,7 @@ body::after {
   <div class="fc-inner">
     <div class="fc-tag">Risk Infrastructure</div>
     <h2 class="fc-hed">Stop <span class="serif">overriding</span><br>your own rules.</h2>
-    <p class="fc-sub">Shield doesn't improve your strategy. It prevents you from destroying it. Deploy the floor. Keep your funded account. Trade with the discipline your prop firm demands.</p>
+    <p class="fc-sub">Shield doesn't trade for you. It stops you when you shouldn't be trading. Install. Activate. Trade with enforced risk.</p>
     <a href="https://paystack.com/buy/shield-brockway" class="fc-btn">Deploy Shield &rarr;</a>
     <div class="fc-proof">Systems operational &mdash; V2.0 Stable</div>
   </div>
@@ -1402,7 +1398,7 @@ body::after {
 
 <!-- FOOTER -->
 <footer class="footer">
-  <div class="footer-left">&copy; 2026 Brockway Trading & Technical Analysis Ltd.</div>
+  <div class="footer-left">&copy; 2026 Brockway Trading & Technical Analysis Ltd. .</div>
   <div class="footer-right">
     <a href="https://paystack.com/buy/shield-brockway" class="footer-link">Documentation</a>
     <a href="https://paystack.com/buy/shield-brockway" class="footer-link">Terms</a>
