@@ -1125,39 +1125,55 @@ body, p, .hero-body, .subtitle, .desc, .sub {
 }
 
 /* =========================================
-   MASTER UI OVERRIDE: LUMINANCE & SPACING 
+   MASTER UI OVERRIDE: THE NUCLEAR PATCH
    ========================================= */
 
-/* 1. MICRO-TEXT READABILITY (Forces high-contrast light gray) */
-.nav-corp, .nav-link, .footer-link, .footer-copy, .hero-datum, .metric label, .layer .desc, footer p, footer span {
+/* 1. FORCE HIGH-CONTRAST GRAY ON ALL BODY/TABLE TEXT */
+p, td, li, dd, dt, small, span,
+.desc, .sub, .subtitle, .muted, .text-muted, 
+.description, .details, .info, .footer-copy, 
+.nav-corp, .nav-link, .footer-link, .metric label, .layer .desc {
   color: #C1C4D6 !important; 
   opacity: 1 !important;
   font-weight: 500 !important;
+  line-height: 1.6 !important;
 }
 
-/* 2. HERO COLLAPSE & OVERLAP FIX */
+/* 2. PROTECT BRAND COLORS (Prevents the rule above from breaking blue/green text) */
+.text-blue, .nav-mark-text, h1 span { color: #0094FF !important; }
+.text-green, .val.p { color: #00D26A !important; }
+.text-red, .val.n { color: #FF3B3B !important; }
+
+/* 3. FORCE PURE WHITE ON ALL HEADINGS AND METRICS */
+h1, h2, h3, h4, h5, h6, th, .val, .title {
+  color: #F0F1F5 !important;
+  opacity: 1 !important;
+}
+
+/* 4. HERO COLLAPSE & OVERLAP FIX */
 .hero {
-  height: auto !important; /* Kills any hardcoded heights causing spillover */
+  height: auto !important; 
   min-height: auto !important;
-  padding-bottom: 80px !important; /* Forces the metrics grid down */
+  padding-bottom: 80px !important; 
   display: flex !important;
   flex-direction: column !important;
 }
 
-/* 3. BUTTON SPATIAL BUFFER */
+/* 5. BUTTON SPATIAL BUFFER */
 .cta-button {
-  margin-bottom: 60px !important; /* Pushes the grid far away from the button */
+  margin-bottom: 60px !important; 
   display: inline-block !important;
   position: relative !important;
   z-index: 10 !important;
 }
 
-/* 4. METRICS GRID ANCHORING */
+/* 6. METRICS GRID ANCHORING */
 .metrics, .grid {
   position: relative !important;
   margin-top: 40px !important;
   clear: both !important;
 }
+
 
 
 </style>
