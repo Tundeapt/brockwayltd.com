@@ -1106,6 +1106,26 @@ body::after {
 .hero-strip { position: relative !important; margin-top: 60px !important; width: 100% !important; }
 .btn-main { margin-bottom: 40px !important; z-index: 10; }
 
+/* =========================================
+   OPTICAL THICKNESS & ANTI-ALIASING OVERRIDE
+   Physically widens the letterforms to combat dark-mode thinning
+   ========================================= */
+
+/* 1. Turn off the browser's aggressive text-thinning filter */
+body, html, * {
+  -webkit-font-smoothing: subpixel-antialiased !important;
+  -moz-osx-font-smoothing: auto !important;
+}
+
+/* 2. Apply a microscopic physical stroke to all small text */
+.btn-ghost, .hs-label, .hs-val .u, .st-body, .sp-body, .ft-desc, .rc-text, 
+.spec-k, .lt-desc, .pc-tagline, .pc-for, .pc-toggles-label, .step-title, 
+.step-desc, .af-text, .deploy-note, .fc-sub, .fc-proof, .footer-left, 
+.footer-link, .nav-corp, .nav-link, .doctrine-caption, .doctrine-author-title,
+td, p {
+  -webkit-text-stroke: 0.4px currentColor !important;
+}
+
 
 </style>
 </head>
