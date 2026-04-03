@@ -1097,6 +1097,16 @@ body::after {
   opacity: 1;
   transform: translateY(0);
 }
+
+/* LOGO BOX REMOVAL */
+.nav-logo { border: none !important; box-shadow: none !important; background: transparent !important; }
+
+/* HERO OVERLAP FIX */
+.hero { height: auto !important; padding-bottom: 80px !important; display: flex !important; flex-direction: column !important; }
+.hero-strip { position: relative !important; margin-top: 60px !important; width: 100% !important; }
+.btn-main { margin-bottom: 40px !important; z-index: 10; }
+
+
 </style>
 </head>
 <body>
@@ -1104,7 +1114,7 @@ body::after {
 <!-- NAV -->
 <nav class="nav">
   <div class="nav-left">
-    <a href="https://flutterwave.com/pay/bzbbumbdro0x" class="nav-mark">
+    <a href="/" class="nav-mark">
       <img class="nav-logo" src="shield-logomark.svg?v=3" alt="Shield Logo">
       <span class="nav-mark-text">Shield</span>
     </a>
@@ -1398,11 +1408,13 @@ body::after {
 
 <!-- FOOTER -->
 <footer class="footer">
-  <div class="footer-left">&copy; 2026 Brockway Trading & Technical Analysis Ltd. .</div>
-  <div class="footer-right">
-    <a href="https://flutterwave.com/pay/bzbbumbdro0x" class="footer-link">Documentation</a>
-    <a href="https://flutterwave.com/pay/bzbbumbdro0x" class="footer-link">Terms</a>
-    <a href="https://flutterwave.com/pay/bzbbumbdro0x" class="footer-link">Contact</a>
+  <div class="footer-left">&copy; 2026 Brockway Trading & Technical Analysis Ltd. </div>
+    <div class="footer-right">
+    <a href="#architecture" class="footer-link">Documentation</a>
+    <a href="#" class="footer-link">Terms</a>
+    <a href="mailto:support@brockwayltd.com" class="footer-link">Contact</a>
+  </div>
+
   </div>
 </footer>
 
