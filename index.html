@@ -1174,6 +1174,29 @@ h1, h2, h3, h4, h5, h6, th, .val, .title {
   clear: both !important;
 }
 
+/* =========================================
+   MASTER READABILITY PATCH 
+   Increases font weight without altering Claude's hex colors
+   ========================================= */
+
+.btn-ghost, .hs-label, .hs-val .u, .st-body, .sp-body, 
+.ft-desc, .rc-text, .spec-k, .lt-desc, .pc-tagline, .pc-for, 
+.pc-toggles-label, .step-desc, .af-text, .deploy-note, .fc-sub, 
+.footer-left, .footer-link, .nav-corp, .nav-link, .pc-tier,
+.pc-price + div, .fail-table td,
+div[style*="color:var(--muted)"], 
+div[style*="color:var(--sub)"],
+div[style*="color:var(--dim)"] {
+  font-weight: 700 !important;
+  opacity: 1 !important;
+  letter-spacing: 0.5px !important;
+}
+
+/* Fix Hero Overlap */
+.hero { height: auto !important; padding-bottom: 80px !important; display: flex !important; flex-direction: column !important; }
+.hero-strip { position: relative !important; margin-top: 40px !important; }
+.btn-main, .fc-btn { margin-bottom: 40px !important; z-index: 10 !important; display: inline-flex !important; }
+
 
 
 </style>
