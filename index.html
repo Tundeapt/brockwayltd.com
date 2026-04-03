@@ -1124,6 +1124,41 @@ body, p, .hero-body, .subtitle, .desc, .sub {
   }
 }
 
+/* =========================================
+   MASTER UI OVERRIDE: LUMINANCE & SPACING 
+   ========================================= */
+
+/* 1. MICRO-TEXT READABILITY (Forces high-contrast light gray) */
+.nav-corp, .nav-link, .footer-link, .footer-copy, .hero-datum, .metric label, .layer .desc, footer p, footer span {
+  color: #C1C4D6 !important; 
+  opacity: 1 !important;
+  font-weight: 500 !important;
+}
+
+/* 2. HERO COLLAPSE & OVERLAP FIX */
+.hero {
+  height: auto !important; /* Kills any hardcoded heights causing spillover */
+  min-height: auto !important;
+  padding-bottom: 80px !important; /* Forces the metrics grid down */
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* 3. BUTTON SPATIAL BUFFER */
+.cta-button {
+  margin-bottom: 60px !important; /* Pushes the grid far away from the button */
+  display: inline-block !important;
+  position: relative !important;
+  z-index: 10 !important;
+}
+
+/* 4. METRICS GRID ANCHORING */
+.metrics, .grid {
+  position: relative !important;
+  margin-top: 40px !important;
+  clear: both !important;
+}
+
 
 </style>
 </head>
