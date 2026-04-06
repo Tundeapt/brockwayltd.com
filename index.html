@@ -231,6 +231,18 @@ body::after {
 .lt-status.blue { color: var(--blue); }
 .lt-status.red { color: var(--red); }
 
+/* ── AUTHORITY QUOTES ── */
+.quotes { padding: 100px 0; }
+.q-wrap { max-width: 1400px; margin: 0 auto; padding: 0 48px; }
+.q-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); }
+.q-card { background: var(--surface); padding: 40px 36px; }
+.q-quote { font-family: var(--serif); font-size: 22px; color: var(--white); line-height: 1.4; margin-bottom: 20px; font-style: italic; }
+.q-auth { display: flex; align-items: center; gap: 12px; }
+.q-auth-line { width: 32px; height: 1px; background: var(--blue); }
+.q-auth-name { font-family: var(--mono); font-size: 10px; color: var(--blue); letter-spacing: 2px; font-weight: 600; }
+.q-auth-title { font-size: 9px; color: var(--muted); margin-top: 2px; font-weight: 600; }
+.q-footer { text-align: center; margin-top: 32px; font-family: var(--mono); font-size: 11px; color: var(--sub); letter-spacing: 1px; font-weight: 600; }
+
 /* ── PRICING TOGGLE ── */
 .billing-toggle { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 40px; }
 .bt-label { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; transition: color 0.3s; cursor: pointer; }
@@ -252,7 +264,6 @@ body::after {
 /* ── PROFILES ── */
 .profiles { padding: 120px 0 0; }
 .profiles-top { padding: 0 48px 60px; max-width: 1400px; margin: 0 auto; }
-.profiles-grid { display: grid; grid-template-columns: 1fr; max-width: 640px; }
 .p-card { border-top: 1px solid var(--border); border-right: 1px solid var(--border); }
 .p-card:last-child { border-right: none; }
 .pc-header { padding: 10px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
@@ -268,14 +279,6 @@ body::after {
 .pc-table td:first-child { color: var(--sub); letter-spacing: 1px; text-transform: uppercase; }
 .pc-table td:last-child { text-align: right; }
 .p-card:first-child .pc-table td:last-child { color: var(--green); }
-.pc-toggles-label { font-family: var(--mono); font-size: 8px; color: var(--muted); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 10px; font-weight: 700;}
-.pc-toggle { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border: 1px solid var(--border); margin-bottom: 4px; background: var(--surface); font-size: 11px; font-weight: 600;}
-.pct-name { color: var(--text); }
-.pct-name small { display: block; font-family: var(--mono); font-size: 9px; color: var(--muted); margin-top: 2px; font-weight: 600;}
-.pct-state { font-family: var(--mono); font-size: 8px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; padding: 2px 8px; border: 1px solid; }
-.pct-state.on { color: var(--green); border-color: var(--green-20); background: var(--green-05); }
-.pct-state.off { color: var(--dim); border-color: var(--border); }
-.pct-state.user { color: var(--amber); border-color: var(--amber-20); background: var(--amber-10); }
 .pc-price { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border); display: flex; align-items: baseline; gap: 8px; margin-bottom: 20px; }
 .pc-price-val { font-family: var(--sans); font-weight: 800; font-size: 44px; color: var(--white); letter-spacing: -1px; }
 .pc-price-per { font-family: var(--mono); font-size: 11px; color: var(--muted); font-weight: 600;}
@@ -370,7 +373,8 @@ td, p {
 .modal-overlay.active .modal-card { transform: translateY(0); }
 .modal-close { position: absolute; top: 20px; right: 24px; color: var(--muted); cursor: pointer; font-family: var(--mono); font-size: 24px; transition: color 0.2s;}
 .modal-close:hover { color: var(--white); }
-.modal-hed { font-family: var(--serif); font-size: 32px; color: var(--white); margin-bottom: 8px; font-style: italic; }
+.modal-hed { font-family: var(--sans); font-weight: 900; font-size: 28px; color: var(--white); letter-spacing: -0.5px; text-transform: uppercase; margin-bottom: 8px; }
+.modal-hed span { color: var(--blue); }
 .modal-sub { font-size: 13px; color: var(--sub); margin-bottom: 28px; font-weight: 600; }
 .frm-group { margin-bottom: 20px; }
 .frm-lbl { display: block; font-family: var(--mono); font-size: 9px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; font-weight: 700; }
@@ -551,40 +555,40 @@ td, p {
   </table>
 </section>
 
-<section class="quotes rv" style="padding:100px 0;">
-  <div style="max-width:1400px;margin:0 auto;padding:0 48px;">
+<section class="quotes rv">
+  <div class="q-wrap">
     <div class="sp-tag blue" style="margin-bottom:40px;">The Doctrine</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);">
-      <div style="background:var(--surface);padding:40px 36px;">
-        <div style="font-family:var(--serif);font-size:22px;color:var(--white);line-height:1.4;margin-bottom:20px;font-style:italic;">&ldquo;The most important rule of trading is to play great defense, not great offense.&rdquo;</div>
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div style="width:32px;height:1px;background:var(--blue);"></div>
-          <div><div style="font-family:var(--mono);font-size:10px;color:var(--blue);letter-spacing:2px;font-weight:600;">PAUL TUDOR JONES</div><div style="font-size:9px;color:var(--muted);margin-top:2px;font-weight:600;">Founder, Tudor Investment Corp</div></div>
+    <div class="q-grid">
+      <div class="q-card">
+        <div class="q-quote">&ldquo;The most important rule of trading is to play great defense, not great offense.&rdquo;</div>
+        <div class="q-auth">
+          <div class="q-auth-line"></div>
+          <div><div class="q-auth-name">PAUL TUDOR JONES</div><div class="q-auth-title">Founder, Tudor Investment Corp</div></div>
         </div>
       </div>
-      <div style="background:var(--surface);padding:40px 36px;">
-        <div style="font-family:var(--serif);font-size:22px;color:var(--white);line-height:1.4;margin-bottom:20px;font-style:italic;">&ldquo;The elements of good trading are: cutting losses, cutting losses, and cutting losses.&rdquo;</div>
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div style="width:32px;height:1px;background:var(--blue);"></div>
-          <div><div style="font-family:var(--mono);font-size:10px;color:var(--blue);letter-spacing:2px;font-weight:600;">ED SEYKOTA</div><div style="font-size:9px;color:var(--muted);margin-top:2px;font-weight:600;">Pioneer of systematic trading</div></div>
+      <div class="q-card">
+        <div class="q-quote">&ldquo;The elements of good trading are: cutting losses, cutting losses, and cutting losses.&rdquo;</div>
+        <div class="q-auth">
+          <div class="q-auth-line"></div>
+          <div><div class="q-auth-name">ED SEYKOTA</div><div class="q-auth-title">Pioneer of systematic trading</div></div>
         </div>
       </div>
-      <div style="background:var(--surface);padding:40px 36px;">
-        <div style="font-family:var(--serif);font-size:22px;color:var(--white);line-height:1.4;margin-bottom:20px;font-style:italic;">&ldquo;Rule No.1: Never lose money. Rule No.2: Never forget Rule No.1.&rdquo;</div>
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div style="width:32px;height:1px;background:var(--blue);"></div>
-          <div><div style="font-family:var(--mono);font-size:10px;color:var(--blue);letter-spacing:2px;font-weight:600;">WARREN BUFFETT</div><div style="font-size:9px;color:var(--muted);margin-top:2px;font-weight:600;">Chairman, Berkshire Hathaway</div></div>
+      <div class="q-card">
+        <div class="q-quote">&ldquo;Rule No.1: Never lose money. Rule No.2: Never forget Rule No.1.&rdquo;</div>
+        <div class="q-auth">
+          <div class="q-auth-line"></div>
+          <div><div class="q-auth-name">WARREN BUFFETT</div><div class="q-auth-title">Chairman, Berkshire Hathaway</div></div>
         </div>
       </div>
-      <div style="background:var(--surface);padding:40px 36px;">
-        <div style="font-family:var(--serif);font-size:22px;color:var(--white);line-height:1.4;margin-bottom:20px;font-style:italic;">&ldquo;It&#39;s not whether you&#39;re right or wrong, but how much you make when you&#39;re right and how much you lose when you&#39;re wrong.&rdquo;</div>
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div style="width:32px;height:1px;background:var(--blue);"></div>
-          <div><div style="font-family:var(--mono);font-size:10px;color:var(--blue);letter-spacing:2px;font-weight:600;">STANLEY DRUCKENMILLER</div><div style="font-size:9px;color:var(--muted);margin-top:2px;font-weight:600;">Former Chairman, Duquesne Capital</div></div>
+      <div class="q-card">
+        <div class="q-quote">&ldquo;It&#39;s not whether you&#39;re right or wrong, but how much you make when you&#39;re right and how much you lose when you&#39;re wrong.&rdquo;</div>
+        <div class="q-auth">
+          <div class="q-auth-line"></div>
+          <div><div class="q-auth-name">STANLEY DRUCKENMILLER</div><div class="q-auth-title">Former Chairman, Duquesne Capital</div></div>
         </div>
       </div>
     </div>
-    <div style="text-align:center;margin-top:32px;font-family:var(--mono);font-size:11px;color:var(--sub);letter-spacing:1px;font-weight:600;">Shield doesn&#39;t improve your strategy. It enforces the discipline these legends built their careers on.</div>
+    <div class="q-footer">Shield doesn&#39;t improve your strategy. It enforces the discipline these legends built their careers on.</div>
   </div>
 </section>
 <div class="divider"></div>
@@ -699,7 +703,7 @@ td, p {
 <div class="modal-overlay" id="deployModal">
   <div class="modal-card">
     <div class="modal-close" onclick="closeModal()">&times;</div>
-    <div class="modal-hed">Shield Deployment</div>
+    <div class="modal-hed">Shield <span>Deployment</span></div>
     <div class="modal-sub">Enter your terminal details to proceed to checkout.</div>
     <form id="deployForm">
       <div class="frm-group">
