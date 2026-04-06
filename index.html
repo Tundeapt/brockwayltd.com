@@ -855,6 +855,25 @@ body::after {
 .p-card:last-child .pc-cta { border: 1px solid var(--amber); color: var(--amber); background: transparent; }
 .p-card:last-child .pc-cta:hover { background: var(--amber); color: var(--bg); }
 
+/* ── PRICING TOGGLE ── */
+.billing-toggle { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 40px; }
+.bt-label { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; transition: color 0.3s; cursor: pointer; }
+.bt-label.active { color: var(--white); }
+.bt-switch { width: 50px; height: 26px; background: var(--surface); border: 1px solid var(--border); border-radius: 30px; position: relative; cursor: pointer; transition: background 0.3s, border-color 0.3s; }
+.bt-switch.active { background: var(--blue-10); border-color: var(--blue-30); }
+.bt-knob { width: 18px; height: 18px; background: var(--sub); border-radius: 50%; position: absolute; top: 3px; left: 4px; transition: transform 0.3s, background 0.3s; }
+.bt-switch.active .bt-knob { transform: translateX(22px); background: var(--blue); }
+.bt-save { font-size: 9px; color: var(--green); background: var(--green-10); padding: 2px 6px; border-radius: 4px; margin-left: 6px; }
+.pc-price-strike { font-family: var(--mono); font-size: 14px; color: var(--muted); text-decoration: line-through; margin-right: 8px; font-weight: 600; }
+.pc-subtext { font-size: 11px; color: var(--sub); margin-top: 8px; line-height: 1.5; font-weight: 600; height: 34px; }
+
+/* ── TRUST SECTION ── */
+.trust-block { padding: 80px 48px; background: var(--surface); border-top: 1px solid var(--border); text-align: center; }
+.trust-hed { font-family: var(--serif); font-size: clamp(28px, 4vw, 42px); color: var(--white); margin-bottom: 16px; font-style: italic; }
+.trust-body { font-size: 16px; line-height: 1.8; color: var(--body); font-weight: 600; max-width: 500px; margin: 0 auto; }
+.trust-body strong { color: var(--white); }
+
+
 /* ── DEPLOY ── */
 .deploy {
   display: grid;
@@ -1335,37 +1354,68 @@ td, p {
   </div>
 </section>
 <div class="divider"></div>
-
 <section class="profiles rv" id="profiles">
-  <div class="profiles-top">
-    <div class="sp-tag green">Profiles</div>
-    <h2 class="sp-headline" style="font-size:clamp(28px,4vw,48px);">One profile. <em class="green">One mandate.</em></h2>
+  <div class="profiles-top" style="text-align: center; max-width: 800px;">
+    <div class="sp-tag green">Execution Control</div>
+    <h2 class="sp-headline" style="font-size:clamp(28px,4vw,48px);">You don't blow accounts from bad trades.<br><em class="green">You blow them when nothing stops you.</em></h2>
+    <p class="sp-body" style="margin: 0 auto 40px;">MT5 will execute everything. Shield decides what's allowed.</p>
+    
+    <div class="billing-toggle">
+      <span class="bt-label" id="lbl-monthly" onclick="setBilling(false)">Monthly</span>
+      <div class="bt-switch active" id="billing-switch" onclick="toggleBilling()">
+        <div class="bt-knob"></div>
+      </div>
+      <span class="bt-label active" id="lbl-annual" onclick="setBilling(true)">Annual <span class="bt-save">2 Months Free</span></span>
+    </div>
   </div>
-  <div style="max-width:640px;">
-      <div class="p-card">
-      <div class="pc-header inst"><span class="pc-name">Institutional</span><span class="pc-tier">Profile 01</span></div>
+
+  <div style="max-width:640px; margin: 0 auto;">
+    <div class="p-card">
+      <div class="pc-header inst"><span class="pc-name">Shield Terminal</span><span class="pc-tier">Institutional</span></div>
       <div class="pc-body">
-        <div class="pc-tagline">For prop firm challenges and funded accounts</div>
-        <div class="pc-for">FTMO &middot; FundedNext &middot; Seacrest &middot; MyFundedFX &middot; All prop firms</div>
+        <div class="pc-tagline">Execution control for funded traders.</div>
+        <div class="pc-for">No override. No exceptions.</div>
+        
         <table class="pc-table">
-          <tr><td>Daily Floor</td><td>−1.00%</td></tr>
-          <tr><td>Heat Cap</td><td>2.5%</td></tr>
-          <tr><td>Velocity Halt</td><td>0.5% / 5 min</td></tr>
-          <tr><td>Session Sweep</td><td>21:55 UTC — No Override</td></tr>
-          <tr><td>Override</td><td>None</td></tr>
+          <tr><td>"No SL = No Trade"</td><td>Execution Lock</td></tr>
+          <tr><td>Max Risk Per Trade</td><td>Enforced</td></tr>
+          <tr><td>Stop Loss Correction</td><td>Automatic</td></tr>
+          <tr><td>Heat Cap Across Portfolio</td><td>Enforced</td></tr>
+          <tr><td>Session Shutdown</td><td>21:55 UTC</td></tr>
+          <tr><td>Velocity Halt</td><td>Active</td></tr>
         </table>
-        <div class="pc-toggles-label">Enforcement Layer</div>
-        <div class="pc-toggle"><span class="pct-name">Execution Panel<small>On-chart execution gateway</small></span><span class="pct-state on">LOCKED</span></div>
-        <div class="pc-toggle"><span class="pct-name">Ratchet Protection<small>Automatic gain lock-in tiers</small></span><span class="pct-state on">LOCKED</span></div>
-        <div class="pc-toggle"><span class="pct-name">Trail Floor<small>Dynamic floor tracks HWM</small></span><span class="pct-state on">LOCKED</span></div>
-        <div class="pc-toggle"><span class="pct-name">Web Dashboard<small>Live telemetry to control room</small></span><span class="pct-state on">ON</span></div>
-        <div class="pc-toggle"><span class="pct-name">Telegram Alerts<small>Push notifications on triggers</small></span><span class="pct-state user">USER</span></div>
-        <div class="pc-price"><span class="pc-price-val">$99</span><span class="pc-price-per">/ month</span></div><div style="font-size:11px;color:var(--sub);margin-top:8px;line-height:1.5;">Less than 1% of a $10k funded account.<br>Less than one bad decision.</div>
-        <a href="https://paystack.com/buy/shield-brockway" class="pc-cta">Deploy Institutional</a>
+        
+        <div style="margin-top: 20px; padding: 16px; background: var(--red-05); border: 1px solid var(--red-20); border-radius: 4px;">
+          <div style="font-family: var(--mono); font-size: 9px; color: var(--red); font-weight: 800; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px;">The Real Cost</div>
+          <div style="font-size: 11px; color: var(--sub); line-height: 1.6; font-weight: 600;">
+            One blown challenge: <strong style="color: var(--white);">$100 – $500</strong><br>
+            One revenge trade: <strong style="color: var(--white);">Your entire account</strong>
+          </div>
+        </div>
+
+        <div class="pc-price">
+          <span class="pc-price-strike" id="price-strike">$1,188</span>
+          <span class="pc-price-val" id="price-val">$990</span>
+          <span class="pc-price-per" id="price-per">/ year</span>
+        </div>
+        <div class="pc-subtext" id="price-sub">Locked discipline. Less than one bad decision.</div>
+        
+        <a href="https://paystack.com/buy/shield-brockway-annual" id="checkout-link" class="pc-cta">Deploy Shield &rarr;</a>
       </div>
     </div>
   </div>
 </section>
+
+<section class="trust-block rv">
+  <h2 class="trust-hed">This is not a trading bot.</h2>
+  <p class="trust-body">
+    Shield has no strategy. It does not predict the market. It does not generate signals.<br><br>
+    <strong>It enforces rules.</strong><br>
+    The ones you already know... but don't follow when it matters.
+  </p>
+</section>
+<div class="divider"></div>
+
 
 <div class="divider"></div>
 <section class="deploy rv" id="deploy">
@@ -1421,6 +1471,37 @@ const obs = new IntersectionObserver(entries => {
 }, { threshold: 0.08 });
 document.querySelectorAll('.rv').forEach(el => obs.observe(el));
 </script>
+
+<script>
+// Pricing Toggle Logic
+let isAnnual = true;
+
+function toggleBilling() {
+  setBilling(!isAnnual);
+}
+
+function setBilling(annual) {
+  isAnnual = annual;
+  document.getElementById('billing-switch').classList.toggle('active', isAnnual);
+  document.getElementById('lbl-annual').classList.toggle('active', isAnnual);
+  document.getElementById('lbl-monthly').classList.toggle('active', !isAnnual);
+
+  if(isAnnual) {
+    document.getElementById('price-val').innerText = '$990';
+    document.getElementById('price-per').innerText = '/ year';
+    document.getElementById('price-strike').innerText = '$1,188';
+    document.getElementById('price-sub').innerText = 'Locked discipline. Less than one bad decision.';
+    document.getElementById('checkout-link').href = 'https://paystack.com/buy/shield-brockway-annual'; // Add your annual Paystack link here
+  } else {
+    document.getElementById('price-val').innerText = '$99';
+    document.getElementById('price-per').innerText = '/ month';
+    document.getElementById('price-strike').innerText = '';
+    document.getElementById('price-sub').innerText = 'Less than 1% of a $10k account.';
+    document.getElementById('checkout-link').href = 'https://paystack.com/buy/shield-brockway';
+  }
+}
+</script>
+
 
 </body>
 </html>
