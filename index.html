@@ -81,7 +81,7 @@ body::after {
 .nav-right { display: flex; align-items: center; gap: 32px; }
 .nav-link { font-family: var(--mono); font-size: 10px; color: var(--sub); text-decoration: none; letter-spacing: 1.5px; text-transform: uppercase; transition: color 0.2s; font-weight: 600; }
 .nav-link:hover { color: var(--white); }
-.nav-cta { font-family: var(--mono); font-size: 9px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; padding: 8px 22px; background: var(--blue); color: var(--white); text-decoration: none; transition: all 0.25s; }
+.nav-cta { cursor: pointer; border: none; font-family: var(--mono); font-size: 9px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; padding: 8px 22px; background: var(--blue); color: var(--white); text-decoration: none; transition: all 0.25s; }
 .nav-cta:hover { background: var(--blue-hi); box-shadow: 0 0 24px var(--blue-20); }
 
 @media (max-width: 768px) { .nav { padding: 0 20px; } .nav-link, .nav-sep, .nav-corp { display: none; } }
@@ -132,7 +132,7 @@ body::after {
 .hero-body strong { color: var(--white); font-weight: 600; }
 .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; opacity: 0; animation: fadeUp 0.8s 0.9s ease forwards; }
 
-.btn-main { display: inline-flex; align-items: center; gap: 10px; padding: 16px 40px; background: var(--blue); color: var(--white); font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; text-decoration: none; transition: all 0.3s; position: relative; overflow: hidden; margin-bottom: 40px !important; z-index: 10;}
+.btn-main { border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; padding: 16px 40px; background: var(--blue); color: var(--white); font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; text-decoration: none; transition: all 0.3s; position: relative; overflow: hidden; margin-bottom: 40px !important; z-index: 10;}
 .btn-main::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent); transform: translateX(-100%); transition: transform 0.5s; }
 .btn-main:hover::after { transform: translateX(100%); }
 .btn-main:hover { background: var(--blue-hi); box-shadow: 0 4px 40px var(--blue-20); transform: translateY(-1px); }
@@ -279,7 +279,7 @@ body::after {
 .pc-price { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border); display: flex; align-items: baseline; gap: 8px; margin-bottom: 20px; }
 .pc-price-val { font-family: var(--sans); font-weight: 800; font-size: 44px; color: var(--white); letter-spacing: -1px; }
 .pc-price-per { font-family: var(--mono); font-size: 11px; color: var(--muted); font-weight: 600;}
-.pc-cta { display: block; text-align: center; padding: 14px 0; font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; text-decoration: none; transition: all 0.25s; cursor: pointer; }
+.pc-cta { border: none; display: block; width: 100%; text-align: center; padding: 14px 0; font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; text-decoration: none; transition: all 0.25s; cursor: pointer; }
 .p-card:first-child .pc-cta { background: var(--green); color: var(--bg); }
 .p-card:first-child .pc-cta:hover { background: #33FF99; box-shadow: 0 0 20px var(--green-20); }
 
@@ -323,7 +323,7 @@ body::after {
 .fc-hed { font-family: var(--sans); font-weight: 900; font-size: clamp(36px, 6vw, 80px); line-height: 0.9; letter-spacing: -0.035em; color: var(--white); margin-bottom: 20px; }
 .fc-hed .serif { font-family: var(--serif); font-weight: 400; font-style: italic; color: var(--blue); }
 .fc-sub { font-size: 16px; color: var(--sub); max-width: 520px; margin: 0 auto 44px; line-height: 1.75; font-weight: 600; }
-.fc-btn { display: inline-flex; align-items: center; gap: 12px; padding: 18px 56px; background: var(--blue); color: var(--white); font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; text-decoration: none; transition: all 0.3s; position: relative; overflow: hidden; }
+.fc-btn { border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 12px; padding: 18px 56px; background: var(--blue); color: var(--white); font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; text-decoration: none; transition: all 0.3s; position: relative; overflow: hidden; }
 .fc-btn::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent); transform: translateX(-100%); transition: transform 0.5s; }
 .fc-btn:hover::after { transform: translateX(100%); }
 .fc-btn:hover { background: var(--blue-hi); transform: translateY(-2px); box-shadow: 0 8px 60px var(--blue-20); }
@@ -362,6 +362,23 @@ body, html, * {
 td, p {
   -webkit-text-stroke: 0.4px currentColor !important;
 }
+
+/* ── DEPLOY MODAL ── */
+.modal-overlay { position: fixed; inset: 0; background: rgba(5,6,7,0.95); backdrop-filter: blur(10px); z-index: 9999; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+.modal-overlay.active { opacity: 1; pointer-events: all; }
+.modal-card { background: var(--surface); border: 1px solid var(--border); width: 100%; max-width: 440px; padding: 40px; position: relative; transform: translateY(20px); transition: transform 0.3s; }
+.modal-overlay.active .modal-card { transform: translateY(0); }
+.modal-close { position: absolute; top: 20px; right: 24px; color: var(--muted); cursor: pointer; font-family: var(--mono); font-size: 24px; transition: color 0.2s;}
+.modal-close:hover { color: var(--white); }
+.modal-hed { font-family: var(--serif); font-size: 32px; color: var(--white); margin-bottom: 8px; font-style: italic; }
+.modal-sub { font-size: 13px; color: var(--sub); margin-bottom: 28px; font-weight: 600; }
+.frm-group { margin-bottom: 20px; }
+.frm-lbl { display: block; font-family: var(--mono); font-size: 9px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; font-weight: 700; }
+.frm-input { width: 100%; background: var(--elevated); border: 1px solid var(--border); color: var(--white); font-family: var(--mono); font-size: 13px; padding: 14px 16px; outline: none; transition: border-color 0.2s; }
+.frm-input:focus { border-color: var(--blue); }
+.frm-select { width: 100%; background: var(--elevated); border: 1px solid var(--border); color: var(--white); font-family: var(--mono); font-size: 13px; padding: 14px 16px; outline: none; appearance: none; cursor: pointer; }
+.frm-submit { width: 100%; display: block; padding: 16px; background: var(--blue); color: var(--white); font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; border: none; cursor: pointer; transition: all 0.3s; margin-top: 10px; }
+.frm-submit:hover { background: var(--blue-hi); box-shadow: 0 4px 30px var(--blue-20); }
 </style>
 </head>
 <body>
@@ -379,7 +396,7 @@ td, p {
     <a href="#architecture" class="nav-link">Architecture</a>
     <a href="#profiles" class="nav-link">Profiles</a>
     <a href="#deploy" class="nav-link">Deploy</a>
-    <a href="https://tally.so/r/pbWKZV" class="nav-cta">Apply for Deployment</a>
+    <button class="nav-cta" onclick="openModal()">Apply for Deployment</button>
   </div>
 </nav>
 
@@ -429,7 +446,7 @@ td, p {
       <strong>No override. No negotiation.</strong>
     </p>
     <div class="hero-actions">
-      <a href="https://tally.so/r/pbWKZV" class="btn-main">Apply for Deployment <span>&rarr;</span></a>
+      <button class="btn-main" onclick="openModal()">Apply for Deployment <span>&rarr;</span></button>
       <a href="#architecture" class="btn-ghost">View Architecture</a>
     </div>
   </div>
@@ -506,7 +523,7 @@ td, p {
           <div class="spec-cell"><div class="spec-k">Risk %</div><div class="spec-v">Hardcoded (0.5%)</div></div>
           <div class="spec-cell"><div class="spec-k">Override</div><div class="spec-v red">Impossible</div></div>
         </div>
-        <a href="https://tally.so/r/pbWKZV" class="btn-main" style="width:100%;justify-content:center;">Apply for Deployment &rarr;</a>
+        <button class="btn-main" onclick="openModal()" style="width:100%;justify-content:center;margin-bottom:0 !important;">Apply for Deployment &rarr;</button>
       </div>
     </div>
   </div>
@@ -618,7 +635,7 @@ td, p {
         </div>
         <div class="pc-subtext" id="price-sub">Locked discipline. Less than one bad decision.</div>
         
-        <a href="https://tally.so/r/pbWKZV" id="checkout-link" class="pc-cta">Apply for Deployment &rarr;</a>
+        <button class="pc-cta" onclick="openModal()">Apply for Deployment &rarr;</button>
       </div>
     </div>
   </div>
@@ -665,7 +682,7 @@ td, p {
     <div class="fc-tag">Execution Control</div>
     <h2 class="fc-hed">Stop <span class="serif">overriding</span><br>your own rules.</h2>
     <p class="fc-sub">You don't execute trades anymore. You define risk. Shield handles the rest.</p>
-    <a href="https://tally.so/r/pbWKZV" class="fc-btn">Apply for Deployment &rarr;</a>
+    <button class="fc-btn" onclick="openModal()">Apply for Deployment &rarr;</button>
     <div class="fc-proof">Systems operational &mdash; V2.4 Stable</div>
   </div>
 </section>
@@ -678,6 +695,36 @@ td, p {
     <a href="mailto:support@brockwayltd.com" class="footer-link">Contact</a>
   </div>
 </footer>
+
+<div class="modal-overlay" id="deployModal">
+  <div class="modal-card">
+    <div class="modal-close" onclick="closeModal()">&times;</div>
+    <div class="modal-hed">Shield Deployment</div>
+    <div class="modal-sub">Enter your terminal details to proceed to checkout.</div>
+    <form id="deployForm">
+      <div class="frm-group">
+        <label class="frm-lbl">Full Name</label>
+        <input type="text" id="frmName" class="frm-input" required>
+      </div>
+      <div class="frm-group">
+        <label class="frm-lbl">Email Address</label>
+        <input type="email" id="frmEmail" class="frm-input" required>
+      </div>
+      <div class="frm-group">
+        <label class="frm-lbl">Exact MT5 Account ID</label>
+        <input type="text" id="frmMT5" class="frm-input" required>
+      </div>
+      <div class="frm-group">
+        <label class="frm-lbl">Subscription Plan</label>
+        <select id="frmPlan" class="frm-select">
+          <option value="monthly">Monthly ($100)</option>
+          <option value="annual">Annual ($1,000)</option>
+        </select>
+      </div>
+      <button type="submit" class="frm-submit" id="btnSubmit">Proceed to Payment &rarr;</button>
+    </form>
+  </div>
+</div>
 
 <script>
 // Scroll reveal
@@ -704,15 +751,51 @@ function setBilling(annual) {
     document.getElementById('price-per').innerText = '/ year';
     document.getElementById('price-strike').innerText = '$1,200';
     document.getElementById('price-sub').innerText = 'Locked discipline. Less than one bad decision.';
-    document.getElementById('checkout-link').href = 'https://tally.so/r/pbWKZV'; 
+    document.getElementById('frmPlan').value = 'annual';
   } else {
     document.getElementById('price-val').innerText = '$100';
     document.getElementById('price-per').innerText = '/ month';
     document.getElementById('price-strike').innerText = '';
     document.getElementById('price-sub').innerText = 'Less than 1% of a $10k account.';
-    document.getElementById('checkout-link').href = 'https://tally.so/r/pbWKZV';
+    document.getElementById('frmPlan').value = 'monthly';
   }
 }
+
+// Modal Logic
+function openModal() { document.getElementById('deployModal').classList.add('active'); }
+function closeModal() { document.getElementById('deployModal').classList.remove('active'); }
+
+// Intercept Form Submit & Send to Make.com
+document.getElementById('deployForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const btn = document.getElementById('btnSubmit');
+  btn.innerText = 'Routing...';
+  btn.style.opacity = '0.7';
+
+  const payload = {
+    name: document.getElementById('frmName').value,
+    email: document.getElementById('frmEmail').value,
+    mt5_id: document.getElementById('frmMT5').value,
+    plan: document.getElementById('frmPlan').value
+  };
+
+  // WARNING: Replace this URL with your Make.com Webhook 1 URL
+  fetch('YOUR_MAKE_WEBHOOK_URL_HERE', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(res => res.text())
+  .then(url => {
+    // Make.com MUST return the Kora URL as raw text in the webhook response body
+    window.location.href = url; 
+  })
+  .catch(err => {
+    btn.innerText = 'Error. Try Again.';
+    btn.style.opacity = '1';
+    console.error('Make.com routing error:', err);
+  });
+});
 </script>
 
 </body>
