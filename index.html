@@ -97,10 +97,7 @@ body::after {
 }
 .nav-logo {
   width: 28px; height: 28px;
-  
-  border: 1px solid rgba(145,206,79,0.3);
-  object-fit: cover;
-  box-shadow: 0 0 12px rgba(145,206,79,0.15);
+  object-fit: contain;
 }
 .nav-mark-text {
   font-family: var(--sans);
@@ -243,7 +240,7 @@ body::after {
 .hero-content {
   position: relative;
   z-index: 2;
-  padding: 0 48px;
+  padding: 0 48px 140px;
   max-width: 1400px;
   margin: 0 auto;
   width: 100%;
@@ -256,7 +253,7 @@ body::after {
   letter-spacing: 6px;
   text-transform: uppercase;
   color: var(--blue);
-  margin-bottom: 36px;
+  margin-bottom: 24px;
   display: flex;
   align-items: center;
   gap: 14px;
@@ -300,7 +297,7 @@ body::after {
   line-height: 1.05;
   letter-spacing: -0.02em;
   color: var(--sub);
-  margin-bottom: 48px;
+  margin-bottom: 28px;
   opacity: 0;
   animation: fadeUp 0.8s 0.7s ease forwards;
 }
@@ -311,7 +308,7 @@ body::after {
   line-height: 1.8;
   color: var(--body);
   font-weight: 500;
-  margin-bottom: 44px;
+  margin-bottom: 28px;
   opacity: 0;
   animation: fadeUp 0.8s 0.8s ease forwards;
 }
@@ -1462,7 +1459,7 @@ document.querySelectorAll('.rv').forEach(el => obs.observe(el));
       </div>
       <div>
         <label style="display:block;font-family:var(--mono);font-size:9px;color:var(--sub);letter-spacing:2px;margin-bottom:6px;font-weight:600;">MT5 ACCOUNT ID</label>
-        <input type="text" name="mt5_account_id" id="mt5Field" required placeholder="e.g. 12345678" pattern="[0-9]+" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--white);font-family:var(--mono);font-size:14px;font-weight:500;padding:12px 14px;outline:none;">
+        <input type="text" name="mt5_id" id="mt5Field" required placeholder="e.g. 12345678" pattern="[0-9]+" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--white);font-family:var(--mono);font-size:14px;font-weight:500;padding:12px 14px;outline:none;">
       </div>
       <button type="submit" id="checkoutBtn" style="margin-top:8px;background:var(--blue);color:var(--white);border:none;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:2px;padding:16px;cursor:pointer;transition:background .2s;">PROCEED TO PAYMENT &rarr;</button>
       <div id="checkoutError" style="font-family:var(--mono);font-size:10px;color:var(--red);text-align:center;min-height:14px;font-weight:500;"></div>
@@ -1473,7 +1470,7 @@ document.querySelectorAll('.rv').forEach(el => obs.observe(el));
 
 <script>
 (function(){
-  var WEBHOOK='https://hook.eu1.make.com/rp1a0dmoy0kf84u6p2wom7kol1qmj73a';
+  var WEBHOOK='https://hook.eu1.make.com/8n42wpvaheqzaqp1d8flhsueo2hs6641';
   var modal=document.getElementById('checkoutModal');
   var form=document.getElementById('checkoutForm');
   var btn=document.getElementById('checkoutBtn');
@@ -1503,31 +1500,40 @@ document.querySelectorAll('.rv').forEach(el => obs.observe(el));
     e.preventDefault();
     err.textContent='';
     btn.disabled=true;
-    btn.textContent='PROCESSING...';
+    btn.textContent='ROUTING...';
 
     var payload={
       name:document.getElementById('nameField').value.trim(),
       email:document.getElementById('emailField').value.trim(),
-      mt5_account_id:document.getElementById('mt5Field').value.trim(),
+      mt5_id:document.getElementById('mt5Field').value.trim(),
       plan:planField.value,
-      amount:amountField.value,
-      timestamp:new Date().toISOString()
+      amount:amountField.value
     };
 
-    // Server-side redirect: form POST, browser follows the redirect response
-    var hiddenForm=document.createElement('form');
-    hiddenForm.method='POST';
-    hiddenForm.action=WEBHOOK;
-    hiddenForm.style.display='none';
-    Object.keys(payload).forEach(function(k){
-      var input=document.createElement('input');
-      input.type='hidden';
-      input.name=k;
-      input.value=payload[k];
-      hiddenForm.appendChild(input);
+    // Make.com returns the Korapay checkout URL as raw text in the response body.
+    // We fetch it, then redirect the browser.
+    fetch(WEBHOOK,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload)
+    })
+    .then(function(res){return res.text()})
+    .then(function(url){
+      url=(url||'').trim();
+      if(url.indexOf('http')===0){
+        window.location.href=url;
+      }else{
+        err.textContent='Routing error. Please try again.';
+        btn.disabled=false;
+        btn.textContent='PROCEED TO PAYMENT \u2192';
+      }
+    })
+    .catch(function(e){
+      err.textContent='Connection error. Please try again.';
+      btn.disabled=false;
+      btn.textContent='PROCEED TO PAYMENT \u2192';
+      console.error('Checkout error:',e);
     });
-    document.body.appendChild(hiddenForm);
-    hiddenForm.submit();
   });
 })();
 </script>
