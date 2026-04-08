@@ -157,7 +157,7 @@ body::after {
   overflow: hidden;
 }
 
-/* Shield HUD — 7-layer arc visualization */
+/* Shield HUD — 8-layer arc visualization */
 .shield-hud {
   position: absolute;
   top: 40%; right: -5%;
@@ -1136,7 +1136,7 @@ body::after {
       <circle class="hud-ring" cx="300" cy="300" r="120"/>
       <circle class="hud-ring-d" cx="300" cy="300" r="80"/>
       <circle class="hud-ring" cx="300" cy="300" r="40"/>
-      <!-- Rotating arcs — 7 protection layers -->
+      <!-- Rotating arcs — 8 protection layers -->
       <circle class="hud-arc a1" cx="300" cy="300" r="275"/>
       <circle class="hud-arc a2" cx="300" cy="300" r="235"/>
       <circle class="hud-arc a3" cx="300" cy="300" r="195"/>
@@ -1152,6 +1152,7 @@ body::after {
       <text class="hud-label" x="540" y="300">Session</text>
       <text class="hud-label" x="60" y="300">News</text>
       <text class="hud-label" x="300" y="585">Velocity</text>
+      <text class="hud-label" x="300" y="565">Guillotine</text>
       <!-- Center dot -->
       <circle class="hud-center" cx="300" cy="300" r="3"/>
       <!-- Cross hairs -->
@@ -1264,8 +1265,8 @@ body::after {
 <section class="arch rv" id="architecture">
   <div class="arch-top">
     <div class="sp-tag blue">Architecture</div>
-    <h2 class="sp-headline" style="font-size:clamp(28px,4vw,48px);">Seven layers. <em class="blue">Zero gaps.</em></h2>
-    <p class="sp-body" style="max-width:600px;">Defence-in-depth. Each layer enforces independently. Seven independent governors, any one of which stops a breach.</p>
+    <h2 class="sp-headline" style="font-size:clamp(28px,4vw,48px);">Eight layers. <em class="blue">Zero gaps.</em></h2>
+    <p class="sp-body" style="max-width:600px;">Defence-in-depth. Each layer enforces independently. Eight independent governors, any one of which stops a breach.</p>
   </div>
   <table class="layer-table">
     <thead><tr><th>Layer</th><th>Component</th><th>Description</th><th>Status</th></tr></thead>
@@ -1325,19 +1326,37 @@ body::after {
 <section class="profiles rv" id="profiles">
   <div class="profiles-top">
     <div class="sp-tag green">Pricing</div>
-    <h2 class="sp-headline" style="font-size:clamp(28px,4vw,48px);">One profile. <em class="green">Two terms.</em></h2>
+    <h2 class="sp-headline" style="font-size:clamp(28px,4vw,48px);">Three profiles. <em class="green">One mandate.</em></h2>
+    <p style="font-family:var(--mono);font-size:12px;color:var(--text);font-weight:500;letter-spacing:1px;margin-top:16px;max-width:640px;">Shield adapts to your account class. Pick the profile at deployment. All 8 enforcement layers remain mandatory within each profile &mdash; no override.</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:32px;max-width:900px;">
+      <div style="background:var(--surface);border:1px solid var(--border);padding:18px 20px;">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--blue);letter-spacing:2px;font-weight:700;margin-bottom:6px;">PROFILE 01</div>
+        <div style="font-family:var(--sans);font-size:15px;color:var(--white);font-weight:700;margin-bottom:4px;">Prop Strict</div>
+        <div style="font-size:11px;color:var(--text);font-weight:500;line-height:1.5;">FTMO, FundedNext, day-trading challenges. Floor &minus;1%. Session close 21:55 UTC.</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);padding:18px 20px;">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--green);letter-spacing:2px;font-weight:700;margin-bottom:6px;">PROFILE 02</div>
+        <div style="font-family:var(--sans);font-size:15px;color:var(--white);font-weight:700;margin-bottom:4px;">Swing</div>
+        <div style="font-size:11px;color:var(--text);font-weight:500;line-height:1.5;">Overnight holds allowed. Floor &minus;1%. Same enforcement, longer horizon.</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);padding:18px 20px;">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--amber);letter-spacing:2px;font-weight:700;margin-bottom:6px;">PROFILE 03</div>
+        <div style="font-family:var(--sans);font-size:15px;color:var(--white);font-weight:700;margin-bottom:4px;">Personal</div>
+        <div style="font-size:11px;color:var(--text);font-weight:500;line-height:1.5;">Your own capital. Floor &minus;3%. Heat cap 5%. Relaxed thresholds.</div>
+      </div>
+    </div>
   </div>
   <div id="pricing" style="max-width:840px;display:grid;grid-template-columns:1fr 1fr;gap:20px;">
       <div class="p-card">
       <div class="pc-header inst"><span class="pc-name">Monthly</span><span class="pc-tier">Flexible</span></div>
       <div class="pc-body">
         <div class="pc-tagline">Month-to-month. Cancel anytime.</div>
-        <div class="pc-for">FTMO &middot; FundedNext &middot; Seacrest &middot; MyFundedFX &middot; All prop firms</div>
+        <div class="pc-for">All 3 profiles &middot; Prop firm &middot; Swing &middot; Personal</div>
         <table class="pc-table">
-          <tr><td>Daily Floor</td><td>−1.00%</td></tr>
-          <tr><td>Heat Cap</td><td>2.5%</td></tr>
-          <tr><td>Velocity Halt</td><td>0.5% / 5 min</td></tr>
-          <tr><td>Session Sweep</td><td>21:55 UTC</td></tr>
+          <tr><td>Profile Access</td><td>All 3</td></tr>
+          <tr><td>Enforcement Layers</td><td>8 of 8</td></tr>
+          <tr><td>Guillotine (Layer 8)</td><td>Active</td></tr>
+          <tr><td>Web Dashboard</td><td>Included</td></tr>
           <tr><td>Override</td><td>None</td></tr>
         </table>
         <div class="pc-toggles-label">Enforcement Layer</div>
@@ -1357,12 +1376,12 @@ body::after {
       <div class="pc-header inst"><span class="pc-name">Annual</span><span class="pc-tier">Best Value</span></div>
       <div class="pc-body">
         <div class="pc-tagline">12 months. 2 months free.</div>
-        <div class="pc-for">FTMO &middot; FundedNext &middot; Seacrest &middot; MyFundedFX &middot; All prop firms</div>
+        <div class="pc-for">All 3 profiles &middot; Prop firm &middot; Swing &middot; Personal</div>
         <table class="pc-table">
-          <tr><td>Daily Floor</td><td>−1.00%</td></tr>
-          <tr><td>Heat Cap</td><td>2.5%</td></tr>
-          <tr><td>Velocity Halt</td><td>0.5% / 5 min</td></tr>
-          <tr><td>Session Sweep</td><td>21:55 UTC</td></tr>
+          <tr><td>Profile Access</td><td>All 3</td></tr>
+          <tr><td>Enforcement Layers</td><td>8 of 8</td></tr>
+          <tr><td>Guillotine (Layer 8)</td><td>Active</td></tr>
+          <tr><td>Web Dashboard</td><td>Included</td></tr>
           <tr><td>Override</td><td>None</td></tr>
         </table>
         <div class="pc-toggles-label">Enforcement Layer</div>
@@ -1387,7 +1406,7 @@ body::after {
     <h2 class="sp-headline" style="font-size:clamp(24px,3vw,36px);">Live in four steps.<br><em class="blue">No code required.</em></h2>
     <p class="sp-body">Shield is a compiled MQL5 Expert Advisor. Receive the <code style="font-family:var(--mono);font-size:11px;background:var(--blue-05);color:var(--blue);padding:1px 5px;border:1px solid var(--blue-10);">.ex5</code> file, drop it in MT5, enter your key.</p>
     <div class="steps">
-      <div class="step"><div class="step-n"></div><div class="step-inner"><div class="step-title">Subscribe</div><div class="step-desc">Pay $100/month. License key generated and emailed in 60 seconds.</div></div></div>
+      <div class="step"><div class="step-n"></div><div class="step-inner"><div class="step-title">Subscribe</div><div class="step-desc">Pay $100/month or $1,000/year. License key generated and emailed in 60 seconds.</div></div></div>
       <div class="step"><div class="step-n"></div><div class="step-inner"><div class="step-title">Install EA</div><div class="step-desc">Drop <code>.ex5</code> into MT5 <code>Experts</code> folder. Restart terminal.</div></div></div>
       <div class="step"><div class="step-n"></div><div class="step-inner"><div class="step-title">Configure</div><div class="step-desc">Attach to chart. Enter license key. Shield auto-configures for your prop firm. Daily floor, exposure cap, and session sweep activate immediately.</div></div></div>
       <div class="step"><div class="step-n"></div><div class="step-inner"><div class="step-title">Enforced</div><div class="step-desc">Floor hardcoded. Session bounded. Exposure capped. Trade normally — Shield handles the rest.</div></div></div>
