@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Shield by Brockway — Privacy Policy">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="shield-apple-touch-180.png">
+<title>Privacy Policy — Shield by Brockway</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=Libre+Franklin:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #050607; --surface: #0A0B0D; --border: #1C1D20;
+  --text: #E0E3ED; --sub: #9BA0AB; --white: #F0F1F5;
+  --blue: #0094FF; --mono: 'IBM Plex Mono', monospace;
+  --sans: 'Libre Franklin', sans-serif; --serif: 'Instrument Serif', serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  background: var(--bg); color: var(--text);
+  font-family: var(--sans); font-weight: 500;
+  font-size: 15px; line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+}
+.nav {
+  padding: 20px 32px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  max-width: 1200px; margin: 0 auto;
+}
+.nav-mark { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--white); }
+.nav-mark img { width: 28px; height: 28px; }
+.nav-mark span { font-family: var(--sans); font-weight: 800; font-size: 16px; letter-spacing: 3px; }
+.nav-back { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--blue); text-decoration: none; letter-spacing: 1px; }
+.nav-back:hover { color: var(--white); }
+main {
+  max-width: 760px; margin: 0 auto; padding: 60px 32px 80px;
+}
+.kicker {
+  font-family: var(--mono); font-size: 10px; color: var(--blue);
+  letter-spacing: 4px; font-weight: 700; margin-bottom: 16px;
+}
+h1 {
+  font-family: var(--serif); font-size: clamp(36px, 5vw, 56px);
+  color: var(--white); font-weight: 400; line-height: 1.1; margin-bottom: 16px;
+}
+.updated {
+  font-family: var(--mono); font-size: 11px; color: var(--sub);
+  font-weight: 500; margin-bottom: 48px; letter-spacing: 1px;
+}
+h2 {
+  font-family: var(--sans); font-weight: 700; font-size: 20px;
+  color: var(--white); margin: 40px 0 16px; letter-spacing: -0.3px;
+}
+p { margin-bottom: 16px; font-weight: 500; }
+ul { margin: 16px 0 16px 24px; }
+li { margin-bottom: 8px; font-weight: 500; }
+.notice {
+  border-left: 2px solid var(--blue);
+  background: rgba(0, 148, 255, 0.04);
+  padding: 16px 20px; margin: 32px 0;
+  font-family: var(--mono); font-size: 12px; font-weight: 500;
+  color: var(--text); line-height: 1.7;
+}
+.footer {
+  border-top: 1px solid var(--border); padding: 32px;
+  text-align: center; font-family: var(--mono); font-size: 10px;
+  color: var(--sub); font-weight: 500; letter-spacing: 1px;
+}
+.footer a { color: var(--blue); text-decoration: none; }
+</style>
+</head>
+<body>
+<nav class="nav">
+  <a href="index.html" class="nav-mark">
+    <img src="shield-logomark.svg?v=3" alt="Shield">
+    <span>SHIELD</span>
+  </a>
+  <a href="index.html" class="nav-back">&larr; Return to Shield</a>
+</nav>
+
+<main>
+  <div class="kicker">LEGAL</div>
+  <h1>Privacy Policy</h1>
+  <div class="updated">Effective April 2026 &middot; Brockway Trading &amp; Technical Analysis Limited</div>
+
+  <div class="notice">
+    Shield is designed to collect the minimum telemetry required to operate the risk governance system. Brockway does not sell, share, or monetize user data under any circumstance.
+  </div>
+
+  <h2>1. Data We Collect</h2>
+  <p>When you subscribe to Shield, we collect:</p>
+  <ul>
+    <li>Your name and email address (for license delivery and support)</li>
+    <li>Your MT5 account ID (for license binding)</li>
+    <li>Payment confirmation data from Korapay (we do not store card details)</li>
+  </ul>
+  <p>When Shield is running on your account, the EA posts telemetry to our infrastructure every 10 seconds:</p>
+  <ul>
+    <li>Account balance and equity</li>
+    <li>Number of open positions</li>
+    <li>Risk state (high water mark, floor distance, trigger events)</li>
+    <li>Session metadata (broker time, license key hash)</li>
+  </ul>
+
+  <h2>2. What We Do Not Collect</h2>
+  <p>Shield does not collect trade-level data, strategy logic, broker credentials, or any personally identifiable information beyond what is listed above. We have no visibility into your trading decisions or strategy.</p>
+
+  <h2>3. How We Use Your Data</h2>
+  <ul>
+    <li>To power your live dashboard at brockwayltd.com</li>
+    <li>To deliver support and license management</li>
+    <li>To aggregate anonymized performance metrics for product improvement</li>
+  </ul>
+
+  <h2>4. Data Storage</h2>
+  <p>Telemetry data is stored on Supabase infrastructure. Rolling telemetry older than 30 days is automatically purged. Account identity data is retained for the duration of your subscription plus 12 months for tax and dispute resolution purposes.</p>
+
+  <h2>5. Third Parties</h2>
+  <p>We use the following processors:</p>
+  <ul>
+    <li><strong>Korapay</strong> &mdash; payment processing</li>
+    <li><strong>Supabase</strong> &mdash; telemetry database</li>
+    <li><strong>Brevo</strong> &mdash; transactional email delivery</li>
+    <li><strong>Railway</strong> &mdash; API infrastructure</li>
+  </ul>
+
+  <h2>6. Your Rights</h2>
+  <p>You may request a copy of all data we hold about you, or request deletion of your account and associated data, at any time by emailing <a href="mailto:privacy@brockwayltd.com" style="color:var(--blue);">privacy@brockwayltd.com</a>.</p>
+
+  <h2>7. Security</h2>
+  <p>All telemetry is transmitted over HTTPS. License keys are hashed before storage. Service keys and API credentials are held in environment variables and are never exposed to the client.</p>
+
+  <h2>8. Updates</h2>
+  <p>This privacy policy may be updated as our infrastructure evolves. Material changes will be communicated to active subscribers via email.</p>
+</main>
+
+<div class="footer">
+  Brockway Trading &amp; Technical Analysis Limited &middot; <a href="index.html">brockwayltd.com</a>
+</div>
+</body>
+</html>

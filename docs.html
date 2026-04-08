@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Shield by Brockway — Documentation">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="shield-apple-touch-180.png">
+<title>Documentation — Shield by Brockway</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=Libre+Franklin:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #050607; --surface: #0A0B0D; --panel: #0E0F11; --border: #1C1D20;
+  --text: #E0E3ED; --sub: #9BA0AB; --white: #F0F1F5;
+  --blue: #0094FF; --green: #00D26A; --amber: #FF9500;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'Libre Franklin', sans-serif; --serif: 'Instrument Serif', serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  background: var(--bg); color: var(--text);
+  font-family: var(--sans); font-weight: 500;
+  font-size: 15px; line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+}
+.nav {
+  padding: 20px 32px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  max-width: 1200px; margin: 0 auto;
+}
+.nav-mark { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--white); }
+.nav-mark img { width: 28px; height: 28px; }
+.nav-mark span { font-family: var(--sans); font-weight: 800; font-size: 16px; letter-spacing: 3px; }
+.nav-back { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--blue); text-decoration: none; letter-spacing: 1px; }
+.nav-back:hover { color: var(--white); }
+main {
+  max-width: 820px; margin: 0 auto; padding: 60px 32px 80px;
+}
+.kicker {
+  font-family: var(--mono); font-size: 10px; color: var(--blue);
+  letter-spacing: 4px; font-weight: 700; margin-bottom: 16px;
+}
+h1 {
+  font-family: var(--serif); font-size: clamp(36px, 5vw, 56px);
+  color: var(--white); font-weight: 400; line-height: 1.1; margin-bottom: 16px;
+}
+.subtitle {
+  font-family: var(--mono); font-size: 12px; color: var(--sub);
+  font-weight: 500; margin-bottom: 48px; letter-spacing: 1px;
+}
+h2 {
+  font-family: var(--sans); font-weight: 800; font-size: 22px;
+  color: var(--white); margin: 48px 0 16px; letter-spacing: -0.3px;
+}
+h3 {
+  font-family: var(--mono); font-weight: 700; font-size: 11px;
+  color: var(--blue); margin: 24px 0 10px; letter-spacing: 2px;
+}
+p { margin-bottom: 14px; font-weight: 500; }
+ol, ul { margin: 12px 0 16px 24px; }
+li { margin-bottom: 8px; font-weight: 500; }
+code {
+  font-family: var(--mono); font-size: 12px; font-weight: 600;
+  background: var(--panel); color: var(--blue);
+  padding: 2px 8px; border: 1px solid var(--border);
+}
+.notice {
+  border-left: 2px solid var(--blue);
+  background: rgba(0, 148, 255, 0.04);
+  padding: 16px 20px; margin: 32px 0;
+  font-family: var(--mono); font-size: 12px; font-weight: 500;
+  color: var(--text); line-height: 1.7;
+}
+.step {
+  background: var(--surface); border: 1px solid var(--border);
+  padding: 20px 24px; margin: 16px 0;
+}
+.step-num {
+  font-family: var(--mono); font-size: 9px; color: var(--blue);
+  letter-spacing: 2px; font-weight: 700; margin-bottom: 8px;
+}
+.step-title {
+  font-family: var(--sans); font-weight: 700; font-size: 16px;
+  color: var(--white); margin-bottom: 8px;
+}
+.layer-grid {
+  display: grid; grid-template-columns: 1fr; gap: 1px;
+  background: var(--border); margin: 20px 0;
+}
+.layer {
+  background: var(--panel); padding: 16px 20px;
+}
+.layer-name {
+  font-family: var(--mono); font-size: 10px; color: var(--blue);
+  letter-spacing: 2px; font-weight: 700; margin-bottom: 4px;
+}
+.layer-desc { font-size: 13px; color: var(--text); font-weight: 500; }
+.footer {
+  border-top: 1px solid var(--border); padding: 32px;
+  text-align: center; font-family: var(--mono); font-size: 10px;
+  color: var(--sub); font-weight: 500; letter-spacing: 1px;
+}
+.footer a { color: var(--blue); text-decoration: none; }
+@media (min-width: 640px) {
+  .layer-grid { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <a href="index.html" class="nav-mark">
+    <img src="shield-logomark.svg?v=3" alt="Shield">
+    <span>SHIELD</span>
+  </a>
+  <a href="index.html" class="nav-back">&larr; Return to Shield</a>
+</nav>
+
+<main>
+  <div class="kicker">TECHNICAL DOCUMENTATION</div>
+  <h1>Shield Documentation</h1>
+  <div class="subtitle">Installation &middot; Configuration &middot; Architecture &middot; Troubleshooting</div>
+
+  <div class="notice">
+    This documentation covers the current Shield v2 release. Full API reference, advanced configuration guides, and integration recipes will be added as the product matures.
+  </div>
+
+  <h2>Installation</h2>
+
+  <div class="step">
+    <div class="step-num">STEP 01</div>
+    <div class="step-title">Receive your license key</div>
+    <p>After payment confirmation via Korapay, you will receive an email from Brockway containing your license key and the Shield EA file (<code>Shield_v2.ex5</code>). The key is bound to the MT5 account ID you provided at checkout.</p>
+  </div>
+
+  <div class="step">
+    <div class="step-num">STEP 02</div>
+    <div class="step-title">Install the EA in MetaTrader 5</div>
+    <ol>
+      <li>Open MT5. Go to <code>File &rarr; Open Data Folder</code></li>
+      <li>Navigate to <code>MQL5/Experts/</code></li>
+      <li>Copy <code>Shield_v2.ex5</code> into this folder</li>
+      <li>Restart MT5 or right-click Experts panel &rarr; Refresh</li>
+    </ol>
+  </div>
+
+  <div class="step">
+    <div class="step-num">STEP 03</div>
+    <div class="step-title">Whitelist the WebRequest URLs</div>
+    <p>Shield requires network access to post telemetry. In MT5:</p>
+    <ol>
+      <li>Go to <code>Tools &rarr; Options &rarr; Expert Advisors</code></li>
+      <li>Check <strong>Allow WebRequest for listed URL</strong></li>
+      <li>Add: <code>https://shield-api-production-8317.up.railway.app</code></li>
+      <li>Add: <code>https://api.telegram.org</code> (for Telegram alerts)</li>
+      <li>Click OK</li>
+    </ol>
+  </div>
+
+  <div class="step">
+    <div class="step-num">STEP 04</div>
+    <div class="step-title">Attach Shield to a chart</div>
+    <p>Drag <code>Shield_v2</code> from the Navigator panel onto any chart. In the inputs panel, enter:</p>
+    <ul>
+      <li><code>InpLicenseKey</code> &mdash; your license key from the email</li>
+      <li><code>InpDailyFloor</code> &mdash; your prop firm's daily loss limit (e.g. -4.0 for FTMO)</li>
+      <li><code>InpMaxDrawdown</code> &mdash; your prop firm's max drawdown (e.g. -8.0)</li>
+      <li>All other inputs: leave at defaults (Ratchet, Velocity, News, Alerts all ON)</li>
+    </ul>
+    <p>Enable <strong>AutoTrading</strong> in the top toolbar. Shield is now armed.</p>
+  </div>
+
+  <div class="step">
+    <div class="step-num">STEP 05</div>
+    <div class="step-title">Verify telemetry is live</div>
+    <p>Open your dashboard at <a href="https://brockwayltd.com" style="color:var(--blue);">brockwayltd.com</a> and enter your license key. You should see your account appear with live equity, balance, and risk state within 10 seconds.</p>
+  </div>
+
+  <h2>The Seven Layers of Enforcement</h2>
+
+  <p>Shield enforces seven distinct protection layers simultaneously. Any one of these can stop a trade or close a position.</p>
+
+  <div class="layer-grid">
+    <div class="layer">
+      <div class="layer-name">01 &middot; GUILLOTINE</div>
+      <div class="layer-desc">Closes any position opened without a stop loss, or any position that would push exposure above the heat cap, within milliseconds of entry.</div>
+    </div>
+    <div class="layer">
+      <div class="layer-name">02 &middot; FLOOR</div>
+      <div class="layer-desc">Hard daily loss limit. When breached, Shield closes all positions and locks the account until next trading day.</div>
+    </div>
+    <div class="layer">
+      <div class="layer-name">03 &middot; RATCHET</div>
+      <div class="layer-desc">Automatic gain lock-in. As equity grows through defined tiers, the floor ratchets upward to protect realized gains.</div>
+    </div>
+    <div class="layer">
+      <div class="layer-name">04 &middot; TRAIL</div>
+      <div class="layer-desc">Dynamic floor that tracks the high water mark, protecting equity from round-trips below peak.</div>
+    </div>
+    <div class="layer">
+      <div class="layer-name">05 &middot; HEAT CAP</div>
+      <div class="layer-desc">Limits total open exposure across all positions. Prevents over-leveraging into a single setup.</div>
+    </div>
+    <div class="layer">
+      <div class="layer-name">06 &middot; SESSION</div>
+      <div class="layer-desc">Hard close at 21:55 UTC. No overnight exposure. No override. Protects from weekend gaps.</div>
+    </div>
+    <div class="layer">
+      <div class="layer-name">07 &middot; NEWS FILTER</div>
+      <div class="layer-desc">Blocks new positions during high-impact news windows. Prevents execution during volatility spikes.</div>
+    </div>
+    <div class="layer">
+      <div class="layer-name">08 &middot; VELOCITY HALT</div>
+      <div class="layer-desc">Detects rapid drawdown (0.5% / 5 minutes) and halts trading temporarily. Flash crash protection.</div>
+    </div>
+  </div>
+
+  <h2>Troubleshooting</h2>
+
+  <h3>Telemetry not reaching the dashboard</h3>
+  <p>Verify the Railway URL is whitelisted in <code>Tools &rarr; Options &rarr; Expert Advisors</code>. Check the Experts log for <code>SHIELD DASH | Error</code> messages. Silent when healthy is normal behavior.</p>
+
+  <h3>Telegram alerts not arriving</h3>
+  <p>Ensure <code>https://api.telegram.org</code> is whitelisted. Confirm your bot token and chat ID are set correctly in the EA inputs. Test by forcing a trigger (e.g. breach a test floor on a demo account).</p>
+
+  <h3>License key rejected</h3>
+  <p>License keys are bound to the MT5 account ID you provided at checkout. If you changed accounts or brokers, contact support to rebind. Do not share license keys &mdash; rebinding is free within the same subscription.</p>
+
+  <h3>Contact support</h3>
+  <p>For anything else: <a href="mailto:support@brockwayltd.com" style="color:var(--blue);">support@brockwayltd.com</a></p>
+</main>
+
+<div class="footer">
+  Brockway Trading &amp; Technical Analysis Limited &middot; <a href="index.html">brockwayltd.com</a>
+</div>
+</body>
+</html>
