@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Shield by Brockway — Terms of Service">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="shield-apple-touch-180.png">
+<title>Terms of Service — Shield by Brockway</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=Libre+Franklin:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #050607; --surface: #0A0B0D; --border: #1C1D20;
+  --text: #E0E3ED; --sub: #9BA0AB; --white: #F0F1F5;
+  --blue: #0094FF; --mono: 'IBM Plex Mono', monospace;
+  --sans: 'Libre Franklin', sans-serif; --serif: 'Instrument Serif', serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  background: var(--bg); color: var(--text);
+  font-family: var(--sans); font-weight: 500;
+  font-size: 15px; line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+}
+.nav {
+  padding: 20px 32px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  max-width: 1200px; margin: 0 auto;
+}
+.nav-mark { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--white); }
+.nav-mark img { width: 28px; height: 28px; }
+.nav-mark span { font-family: var(--sans); font-weight: 800; font-size: 16px; letter-spacing: 3px; }
+.nav-back { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--blue); text-decoration: none; letter-spacing: 1px; }
+.nav-back:hover { color: var(--white); }
+main {
+  max-width: 760px; margin: 0 auto; padding: 60px 32px 80px;
+}
+.kicker {
+  font-family: var(--mono); font-size: 10px; color: var(--blue);
+  letter-spacing: 4px; font-weight: 700; margin-bottom: 16px;
+}
+h1 {
+  font-family: var(--serif); font-size: clamp(36px, 5vw, 56px);
+  color: var(--white); font-weight: 400; line-height: 1.1; margin-bottom: 16px;
+}
+.updated {
+  font-family: var(--mono); font-size: 11px; color: var(--sub);
+  font-weight: 500; margin-bottom: 48px; letter-spacing: 1px;
+}
+h2 {
+  font-family: var(--sans); font-weight: 700; font-size: 20px;
+  color: var(--white); margin: 40px 0 16px; letter-spacing: -0.3px;
+}
+p { margin-bottom: 16px; font-weight: 500; }
+.notice {
+  border-left: 2px solid var(--blue);
+  background: rgba(0, 148, 255, 0.04);
+  padding: 16px 20px; margin: 32px 0;
+  font-family: var(--mono); font-size: 12px; font-weight: 500;
+  color: var(--text); line-height: 1.7;
+}
+.footer {
+  border-top: 1px solid var(--border); padding: 32px;
+  text-align: center; font-family: var(--mono); font-size: 10px;
+  color: var(--sub); font-weight: 500; letter-spacing: 1px;
+}
+.footer a { color: var(--blue); text-decoration: none; }
+</style>
+</head>
+<body>
+<nav class="nav">
+  <a href="index.html" class="nav-mark">
+    <img src="shield-logomark.svg?v=3" alt="Shield">
+    <span>SHIELD</span>
+  </a>
+  <a href="index.html" class="nav-back">&larr; Return to Shield</a>
+</nav>
+
+<main>
+  <div class="kicker">LEGAL</div>
+  <h1>Terms of Service</h1>
+  <div class="updated">Effective April 2026 &middot; Brockway Trading &amp; Technical Analysis Limited</div>
+
+  <div class="notice">
+    This is a provisional terms document for the Shield product. A full legally-reviewed version will replace this notice prior to general availability. By deploying Shield during the current phase, you acknowledge that these terms may be updated.
+  </div>
+
+  <h2>1. The Product</h2>
+  <p>Shield is a risk governance expert advisor (EA) for the MetaTrader 5 platform. It enforces daily loss floors, heat caps, velocity halts, and session boundaries on trading accounts. Shield is strategy-agnostic and does not place or signal trades on behalf of the user.</p>
+
+  <h2>2. License</h2>
+  <p>A Shield subscription grants one (1) license key bound to a specific MT5 account ID. The license is non-transferable between accounts without prior written consent from Brockway. License keys are generated upon successful payment confirmation.</p>
+
+  <h2>3. Subscription &amp; Billing</h2>
+  <p>Shield is offered on a monthly ($100 USD) or annual ($1,000 USD) subscription basis. Payments are processed through Korapay. Subscriptions auto-renew unless cancelled before the next billing cycle. Refunds are handled on a case-by-case basis within 7 days of initial payment.</p>
+
+  <h2>4. Risk Disclosure</h2>
+  <p>Trading foreign exchange and CFDs carries substantial risk of loss. Shield is a risk governance tool and does not guarantee profitability or protection against all forms of loss. Market gaps, broker execution delays, and extreme volatility may cause losses that exceed Shield's enforcement thresholds. Past performance is not indicative of future results.</p>
+
+  <h2>5. Data &amp; Telemetry</h2>
+  <p>Shield posts encrypted telemetry (balance, equity, position count, risk state) to Brockway's infrastructure for the purpose of powering the customer dashboard. See our <a href="privacy.html" style="color:var(--blue);">Privacy Policy</a> for details on data handling.</p>
+
+  <h2>6. Acceptable Use</h2>
+  <p>Users agree not to reverse engineer, redistribute, sublicense, or resell Shield. Sharing license keys across multiple MT5 accounts is prohibited and will result in immediate termination without refund.</p>
+
+  <h2>7. Limitation of Liability</h2>
+  <p>Brockway shall not be liable for any indirect, incidental, consequential, or punitive damages arising from the use of Shield, including but not limited to trading losses, missed opportunities, or broker disputes. The maximum liability shall not exceed the subscription fees paid in the preceding 12 months.</p>
+
+  <h2>8. Governing Law</h2>
+  <p>These terms are governed by the laws of the Federal Republic of Nigeria. Disputes shall be resolved through arbitration in Lagos.</p>
+
+  <h2>9. Contact</h2>
+  <p>For questions about these terms, contact: <a href="mailto:legal@brockwayltd.com" style="color:var(--blue);">legal@brockwayltd.com</a></p>
+</main>
+
+<div class="footer">
+  Brockway Trading &amp; Technical Analysis Limited &middot; <a href="index.html">brockwayltd.com</a>
+</div>
+</body>
+</html>
