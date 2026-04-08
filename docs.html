@@ -182,36 +182,36 @@ code {
 
   <div class="layer-grid">
     <div class="layer">
-      <div class="layer-name">01 &middot; GUILLOTINE</div>
-      <div class="layer-desc">Closes any position opened without a stop loss, or any position that would push exposure above the heat cap, within milliseconds of entry.</div>
-    </div>
-    <div class="layer">
-      <div class="layer-name">02 &middot; FLOOR</div>
+      <div class="layer-name">01 &middot; FLOOR</div>
       <div class="layer-desc">Hard daily loss limit. When breached, Shield closes all positions and locks the account until next trading day.</div>
     </div>
     <div class="layer">
-      <div class="layer-name">03 &middot; RATCHET</div>
+      <div class="layer-name">02 &middot; RATCHET</div>
       <div class="layer-desc">Automatic gain lock-in. As equity grows through defined tiers, the floor ratchets upward to protect realized gains.</div>
     </div>
     <div class="layer">
-      <div class="layer-name">04 &middot; TRAIL</div>
+      <div class="layer-name">03 &middot; TRAIL</div>
       <div class="layer-desc">Dynamic floor that tracks the high water mark, protecting equity from round-trips below peak.</div>
     </div>
     <div class="layer">
-      <div class="layer-name">05 &middot; HEAT CAP</div>
+      <div class="layer-name">04 &middot; HEAT CAP</div>
       <div class="layer-desc">Limits total open exposure across all positions. Prevents over-leveraging into a single setup.</div>
     </div>
     <div class="layer">
-      <div class="layer-name">06 &middot; SESSION</div>
-      <div class="layer-desc">Hard close at 21:55 UTC. No overnight exposure. No override. Protects from weekend gaps.</div>
+      <div class="layer-name">05 &middot; SESSION</div>
+      <div class="layer-desc">Hard close at 21:55 UTC in Prop Strict profile. No overnight exposure. No override. Protects from weekend gaps.</div>
     </div>
     <div class="layer">
-      <div class="layer-name">07 &middot; NEWS FILTER</div>
+      <div class="layer-name">06 &middot; NEWS FILTER</div>
       <div class="layer-desc">Blocks new positions during high-impact news windows. Prevents execution during volatility spikes.</div>
     </div>
     <div class="layer">
-      <div class="layer-name">08 &middot; VELOCITY HALT</div>
+      <div class="layer-name">07 &middot; VELOCITY HALT</div>
       <div class="layer-desc">Detects rapid drawdown (0.5% / 5 minutes) and halts trading temporarily. Flash crash protection.</div>
+    </div>
+    <div class="layer">
+      <div class="layer-name">08 &middot; GUILLOTINE</div>
+      <div class="layer-desc">Reactive enforcement via OnTradeTransaction. Closes any position opened without a stop loss, exceeding per-trade risk, or breaching the heat cap &mdash; within milliseconds of entry.</div>
     </div>
   </div>
 
@@ -230,8 +230,4 @@ code {
   <p>For anything else: <a href="mailto:support@brockwayltd.com" style="color:var(--blue);">support@brockwayltd.com</a></p>
 </main>
 
-<div class="footer">
-  Brockway Trading &amp; Technical Analysis Limited &middot; <a href="index.html">brockwayltd.com</a>
-</div>
-</body>
-</html>
+<di
