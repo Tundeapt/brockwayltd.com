@@ -1365,7 +1365,7 @@ body::after {
         <div class="pc-toggle"><span class="pct-name">Velocity Halt<small>Flash crash protection</small></span><span class="pct-state on">LOCKED</span></div>
         <div class="pc-toggle"><span class="pct-name">Web Dashboard<small>Live telemetry feed</small></span><span class="pct-state on">ON</span></div>
         <div class="pc-toggle"><span class="pct-name">Telegram Alerts<small>Push on triggers</small></span><span class="pct-state on">ON</span></div>
-        <div class="pc-price"><span class="pc-price-val">$100</span><span class="pc-price-per">/ month</span></div>
+        <div class="pc-price"><span class="pc-price-val">$100</span><span class="pc-price-per">/ month / account</span></div>
         <div style="font-size:12px;color:var(--text);margin-top:8px;line-height:1.6;font-weight:500;">Less than 1% of a $10k funded account.<br>Less than one bad decision.</div>
         <button class="pc-cta" onclick="openCheckout('monthly')" type="button">Subscribe Monthly &rarr;</button>
       </div>
@@ -1390,7 +1390,7 @@ body::after {
         <div class="pc-toggle"><span class="pct-name">Velocity Halt<small>Flash crash protection</small></span><span class="pct-state on">LOCKED</span></div>
         <div class="pc-toggle"><span class="pct-name">Web Dashboard<small>Live telemetry feed</small></span><span class="pct-state on">ON</span></div>
         <div class="pc-toggle"><span class="pct-name">Telegram Alerts<small>Push on triggers</small></span><span class="pct-state on">ON</span></div>
-        <div class="pc-price"><span class="pc-price-val">$1,000</span><span class="pc-price-per">/ year</span></div>
+        <div class="pc-price"><span class="pc-price-val">$1,000</span><span class="pc-price-per">/ year / account</span></div>
         <div style="font-size:12px;color:var(--text);margin-top:8px;line-height:1.6;font-weight:500;">Two months free. One locked account pays for it.</div>
         <button class="pc-cta" onclick="openCheckout('annual')" type="button">Subscribe Annual &rarr;</button>
       </div>
@@ -1463,7 +1463,7 @@ document.querySelectorAll('.rv').forEach(el => obs.observe(el));
     <div style="padding:32px 28px 24px;border-bottom:1px solid var(--border);">
       <div style="font-family:var(--mono);font-size:9px;color:var(--blue);letter-spacing:3px;font-weight:600;margin-bottom:8px;">DEPLOY SHIELD</div>
       <div style="font-family:var(--serif);font-size:26px;color:var(--white);font-weight:400;line-height:1.2;">Reserve your <em style="color:var(--blue);">license</em></div>
-      <div id="planSummary" style="font-family:var(--mono);font-size:11px;color:var(--text);margin-top:10px;font-weight:500;">Monthly &middot; $100 / month</div>
+      <div id="planSummary" style="font-family:var(--mono);font-size:11px;color:var(--text);margin-top:10px;font-weight:500;">Monthly &middot; $100 / month / MT5 account</div>
     </div>
     <form id="checkoutForm" style="padding:24px 28px;display:flex;flex-direction:column;gap:16px;">
       <input type="hidden" id="planField" name="plan" value="monthly">
@@ -1476,13 +1476,9 @@ document.querySelectorAll('.rv').forEach(el => obs.observe(el));
         <label style="display:block;font-family:var(--mono);font-size:9px;color:var(--sub);letter-spacing:2px;margin-bottom:6px;font-weight:600;">EMAIL</label>
         <input type="email" name="email" id="emailField" required placeholder="you@domain.com" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--white);font-family:var(--mono);font-size:14px;font-weight:500;padding:12px 14px;outline:none;">
       </div>
-      <div>
-        <label style="display:block;font-family:var(--mono);font-size:9px;color:var(--sub);letter-spacing:2px;margin-bottom:6px;font-weight:600;">MT5 ACCOUNT ID</label>
-        <input type="text" name="mt5_id" id="mt5Field" required placeholder="e.g. 12345678" pattern="[0-9]+" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--white);font-family:var(--mono);font-size:14px;font-weight:500;padding:12px 14px;outline:none;">
-      </div>
       <button type="submit" id="checkoutBtn" style="margin-top:8px;background:var(--blue);color:var(--white);border:none;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:2px;padding:16px;cursor:pointer;transition:background .2s;">PROCEED TO PAYMENT &rarr;</button>
       <div id="checkoutError" style="font-family:var(--mono);font-size:10px;color:var(--red);text-align:center;min-height:14px;font-weight:500;"></div>
-      <div style="font-family:var(--mono);font-size:9px;color:var(--sub);text-align:center;letter-spacing:1px;line-height:1.6;font-weight:500;">Secured by Korapay &middot; License issued on payment confirmation</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--sub);text-align:center;letter-spacing:1px;line-height:1.6;font-weight:500;">Secured by Korapay &middot; License key emailed on payment<br>Portable across MT5 accounts &middot; One active session per license</div>
     </form>
   </div>
 </div>
@@ -1502,7 +1498,7 @@ document.querySelectorAll('.rv').forEach(el => obs.observe(el));
     var isAnnual=plan==='annual';
     planField.value=isAnnual?'annual':'monthly';
     amountField.value=isAnnual?'1000':'100';
-    summary.textContent=isAnnual?'Annual \u00b7 $1,000 / year \u00b7 Save $200':'Monthly \u00b7 $100 / month';
+    summary.textContent=isAnnual?'Annual \u00b7 $1,000 / year / MT5 account \u00b7 Save $200':'Monthly \u00b7 $100 / month / MT5 account';
     err.textContent='';
     modal.style.display='flex';
     document.body.style.overflow='hidden';
@@ -1524,7 +1520,6 @@ document.querySelectorAll('.rv').forEach(el => obs.observe(el));
     var payload={
       name:document.getElementById('nameField').value.trim(),
       email:document.getElementById('emailField').value.trim(),
-      mt5_id:document.getElementById('mt5Field').value.trim(),
       plan:planField.value,
       amount:amountField.value
     };
