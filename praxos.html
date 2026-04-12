@@ -3,34 +3,34 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Praxos Apex | Terminal v2.2</title>
+  <title>Praxos Apex | Terminal v2.6</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap');
     body { background:#03070b; color:#e2e8f0; font-family: 'JetBrains+Mono', monospace; }
     .glass { background:rgba(10, 15, 20, 0.95); border:1px solid rgba(16, 185, 129, 0.2); }
-    .term-border { border-left: 4px solid #10b981; }
+    .term-border { border-left: 4px solid #ef4444; } /* Red accent for Risk Mitigation */
     ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb { background: #ef4444; border-radius: 4px; }
   </style>
 </head>
 <body class="min-h-screen p-4 md:p-8">
   <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
     <div class="lg:col-span-4 space-y-6">
-      <header class="mb-8 border-b border-emerald-500/20 pb-4">
-        <h1 class="text-3xl font-black tracking-tighter text-white">PRAXOS <span class="text-emerald-500">APEX</span></h1>
-        <p class="text-[10px] text-emerald-500/70 uppercase tracking-[0.2em] mt-1">v2.2 [LATTICE CORE]</p>
+      <header class="mb-8 border-b border-red-500/20 pb-4">
+        <h1 class="text-3xl font-black tracking-tighter text-white">PRAXOS <span class="text-red-500">APEX</span></h1>
+        <p class="text-[10px] text-red-500/70 uppercase tracking-[0.2em] mt-1">v2.6 [THREAT MATRIX ENABLED]</p>
       </header>
       <div class="glass rounded-xl p-5">
-        <input id="files" type="file" accept="image/*" multiple class="block w-full text-xs text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-emerald-500/10 file:text-emerald-500 cursor-pointer mb-6" />
-        <button id="runBtn" class="w-full py-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-black font-black uppercase text-[12px] tracking-[0.2em] transition-all mb-4">Execute Framework</button>
-        <div class="h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden"><div id="progressBar" class="h-full bg-emerald-500 w-0 transition-all shadow-[0_0_10px_#10b981]"></div></div>
+        <input id="files" type="file" accept="image/*" multiple class="block w-full text-xs text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-red-500/10 file:text-red-500 cursor-pointer mb-6" />
+        <button id="runBtn" class="w-full py-4 rounded-lg bg-red-600 hover:bg-red-500 text-black font-black uppercase text-[12px] tracking-[0.2em] transition-all mb-4 shadow-[0_0_15px_rgba(239,68,68,0.3)]">Scan Lattice Threats</button>
+        <div class="h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden"><div id="progressBar" class="h-full bg-red-500 w-0 transition-all shadow-[0_0_10px_#ef4444]"></div></div>
       </div>
     </div>
     <div class="lg:col-span-8 flex flex-col h-full">
       <div class="glass rounded-xl p-6 flex flex-col h-full term-border relative">
-        <textarea id="terminal" readonly class="flex-grow w-full min-h-[550px] bg-transparent text-[13px] text-emerald-400 font-medium leading-relaxed resize-none" placeholder="AWAITING DATA TENSORS..."></textarea>
+        <textarea id="terminal" readonly class="flex-grow w-full min-h-[550px] bg-transparent text-[13px] text-red-400 font-medium leading-relaxed resize-none" placeholder="AWAITING DATA TENSORS..."></textarea>
       </div>
     </div>
   </div>
@@ -41,7 +41,7 @@ const els = { files: document.getElementById("files"), runBtn: document.getEleme
 els.runBtn.onclick = async () => {
   const files = [...els.files.files];
   if (files.length !== 3) return alert("Upload exactly 3 images.");
-  els.terminal.value = ">> INITIALIZING V2.2 LATTICE CORE...";
+  els.terminal.value = ">> INITIALIZING V2.6 THREAT MATRIX...";
   const texts = [];
   for (let i = 0; i < files.length; i++) {
     const res = await Tesseract.recognize(files[i], "eng");
@@ -77,7 +77,7 @@ function autoSort(texts) {
   });
   let counts = {}; entityPool.forEach(e => counts[e] = (counts[e] || 0) + 1);
   let sorted = Object.keys(counts).sort((a,b) => counts[b] - counts[a]);
-  let tA = sorted[0], tB = sorted[1];
+  let tA = sorted[0] || "TEAM_A", tB = sorted[1] || "TEAM_B";
   let h2hIdx = texts.findIndex(t => t.toUpperCase().includes(tA) && t.toUpperCase().includes(tB));
   if(h2hIdx === -1) h2hIdx = 0;
   let h2hText = texts[h2hIdx], rem = texts.filter((_,i)=>i!==h2hIdx);
@@ -89,29 +89,68 @@ function autoSort(texts) {
 
 function runLogic(hN, aN, h2h, home, away) {
   if(h2h.length === 0) return ">> ERROR: DATA TENSOR FAILURE.";
-  let h2hW = h2h.filter(r=>r.h>r.a).length/h2h.length, draws = h2h.filter(r=>r.h===r.a).length/h2h.length;
+  
+  let h2hW = h2h.filter(r=>r.h>r.a).length;
+  let h2hL = h2h.filter(r=>r.a>r.h).length;
+  let draws = h2h.filter(r=>r.h===r.a).length / h2h.length;
   let h2hAvg = h2h.reduce((s,r)=>s+r.t,0)/h2h.length;
-  let macroAvg = (home.reduce((s,r)=>s+r.t,0)/home.length + away.reduce((s,r)=>s+r.t,0)/away.length)/2;
   
+  let hMacroG = home.length ? home.reduce((s,r)=>s+r.t,0)/home.length : 2.0;
+  let aMacroG = away.length ? away.reduce((s,r)=>s+r.t,0)/away.length : 2.0;
+  let macroAvg = (hMacroG + aMacroG) / 2;
+
+  let awayIsBoogeyman = (h2hL > 0 && h2hW === 0);
+  let homeIsBoogeyman = (h2hW > 0 && h2hL === 0);
   let burnout = (macroAvg >= 3.0 && h2hAvg >= 2.8);
-  let friction = (h2hAvg <= 2.1 && macroAvg >= 2.8);
+  let absoluteFriction = (h2hAvg <= 1.8);
+  let momentumOverride = (hMacroG >= 3.5 || aMacroG >= 3.5) && !absoluteFriction;
+
+  let threats = [];
   
-  let primaryLabel = draws >= 0.35 ? "Draw (X) Risk / 1X Protection" : (h2hW >= 0.6 ? `${hN} Moneyline (1)` : "1X (Home) or X2 (Away)");
-  let primaryConf = draws >= 0.35 ? Math.floor(78 + (draws * 15)) : Math.floor(82 + (h2hW * 10));
-  primaryConf = Math.min(99, primaryConf);
-
-  let secLabel = "Over 2.5 Goals / BTTS YES", secConf = Math.min(99, Math.floor(75 + (macroAvg * 4)));
-  let note = "No extreme structural anomaly detected.";
-
-  if (burnout) {
-    secLabel = "Under 3.5 Goals / BTTS NO"; secConf = 85;
-    note = "🚨 LATTICE BURNOUT 🚨. Tactical regression is mathematically probable.";
-  } else if (friction) {
-    secLabel = "Under 3.5 Goals"; secConf = 85;
-    note = "🚨 FRICTION VETO 🚨. H2H history indicates tactical grind.";
+  // Lean Logic
+  let leanLabel = "1X (Home) or X2 (Away)";
+  let leanConf = 75;
+  if (awayIsBoogeyman) {
+    leanLabel = `X2 (Away Protection) / Boogeyman Lock`;
+    leanConf = Math.min(99, Math.floor(82 + ((h2hL/h2h.length) * 10)));
+    threats.push(`🚨 BOOGEYMAN EXCEPTION: ${aN} holds absolute structural dominance.`);
+  } else if (homeIsBoogeyman) {
+    leanLabel = `1X (Home Protection) / Boogeyman Lock`;
+    leanConf = Math.min(99, Math.floor(82 + ((h2hW/h2h.length) * 10)));
+    threats.push(`🚨 BOOGEYMAN EXCEPTION: ${hN} holds absolute structural dominance.`);
+  } else if (draws >= 0.35) {
+    leanLabel = "Draw (X) Risk / Home 1X Protection";
+    leanConf = Math.min(99, Math.floor(78 + (draws * 15)));
+  } else {
+    leanLabel = (h2hW > h2hL) ? `${hN} Moneyline (1)` : `${aN} Moneyline (2)`;
+    leanConf = Math.min(99, Math.floor(75 + (Math.abs(h2hW - h2hL) * 5)));
   }
 
-  return `**NODE: ${hN} VS ${aN}**\n\nPRIMARY VECTOR: ${primaryLabel}\nConfidence: ${primaryConf}%\n\nSECONDARY CONSTRAINT: ${secLabel}\nConfidence: ${secConf}%\n\n*(System Note: ${note})*`;
+  // Anchor Logic
+  let anchorLabel = "Under 3.5 Goals";
+  let anchorConf = 80;
+  if (absoluteFriction) {
+    anchorLabel = "Under 3.5 Goals / BTTS NO Risk";
+    anchorConf = 92;
+    threats.push(`🚨 ABSOLUTE FRICTION VETO: Derby lock detected. Momentum neutralized.`);
+  } else if (momentumOverride) {
+    anchorLabel = "Over 2.5 Goals / BTTS YES";
+    anchorConf = Math.min(99, Math.floor(80 + (Math.max(hMacroG, aMacroG) * 3)));
+    threats.push(`🚨 VELOCITY MOMENTUM OVERRIDE: Macro-velocity exceeds chaos threshold.`);
+  } else if (burnout) {
+    anchorLabel = "Under 3.5 Goals / BTTS NO";
+    anchorConf = 88;
+    threats.push(`🚨 LATTICE BURNOUT: Tactical regression is mathematically probable.`);
+  } else if (macroAvg <= 2.3) {
+    anchorLabel = "Under 3.5 Goals";
+    anchorConf = 85;
+    threats.push(`⚠️ STANDARD FRICTION: Defensive stabilization expected.`);
+  } else {
+    anchorLabel = macroAvg >= 2.6 ? "Over 1.5 Goals / Risk Over 2.5" : "Under 3.5 Goals";
+    if (threats.length === 0) threats.push(`✅ NODE STABILIZED: No extreme structural anomalies detected.`);
+  }
+
+  return `**NODE: ${hN} VS ${aN}**\n\n========================================\n>> THREAT MATRIX <<\n${threats.join('\n')}\n========================================\n\n>> PRIMARY STRUCTURAL ANCHOR <<\nTARGET: ${anchorLabel}\nCONFIDENCE: ${anchorConf}%\n\n========================================\n\n>> DIRECTIONAL LEAN (HIGH VARIANCE) <<\nTARGET: ${leanLabel}\nCONFIDENCE: ${leanConf}%`;
 }
 </script>
 </body>
