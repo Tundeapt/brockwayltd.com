@@ -1,225 +1,154 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Praxos | Quantitative Analytical Framework</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
-        body { font-family: 'JetBrains+Mono', monospace; background-color: #0a0a0b; color: #e4e4e7; }
-        .glass-panel { background: rgba(23, 23, 27, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .neon-border-green { border-left: 4px solid #10b981; }
-        .neon-border-red { border-left: 4px solid #ef4444; }
-        .confidence-bar { transition: width 1.5s ease-in-out; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Praxos V5</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+
+<style>
+body { background:#0a0a0b; color:#e4e4e7; font-family: monospace; }
+.glass { background:rgba(23,23,27,0.8); border:1px solid rgba(255,255,255,0.1); }
+</style>
 </head>
-<body class="min-h-screen p-4 md:p-8">
 
-    <div class="max-w-6xl mx-auto">
-        <header class="flex justify-between items-center mb-8 border-b border-white/10 pb-6">
-            <div>
-                <h1 class="text-3xl font-bold tracking-tighter text-white">PRAXOS <span class="text-emerald-500 text-sm font-normal">v2.1</span></h1>
-                <p class="text-zinc-500 text-sm">Quantitative Asymmetry & Variance Modeling</p>
-            </div>
-            <div class="text-right">
-                <button onclick="clearHistory()" class="text-xs text-zinc-500 hover:text-red-400 transition">CLEAR HISTORY [!]</button>
-            </div>
-        </header>
+<body class="p-6">
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
-            <div class="lg:col-span-1 space-y-6">
-                <div class="glass-panel p-6 rounded-xl">
-                    <h2 class="text-lg font-semibold mb-4 flex items-center">
-                        <i class="fa-solid fa-microchip mr-2 text-emerald-500"></i> DATA INGESTION
-                    </h2>
-                    
-                    <div class="space-y-4">
-                        <div class="border-2 border-dashed border-zinc-700 rounded-lg p-8 text-center hover:border-emerald-500/50 transition cursor-pointer relative" id="drop-zone">
-                            <input type="file" id="file-input" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" multiple accept="image/*">
-                            <i class="fa-solid fa-cloud-arrow-up text-3xl text-zinc-600 mb-2"></i>
-                            <p class="text-sm text-zinc-400">Upload Dataset Screenshots</p>
-                        </div>
+<div class="max-w-4xl mx-auto space-y-6">
 
-                        <div>
-                            <label class="text-xs text-zinc-500 uppercase mb-2 block">Match Parameters</label>
-                            <input type="text" id="match-title" placeholder="Home vs Away" class="w-full bg-zinc-900 border border-zinc-700 rounded p-2 text-sm focus:outline-none focus:border-emerald-500">
-                        </div>
+<h1 class="text-2xl font-bold">PRAXOS V5 — MULTI OUTCOME ENGINE</h1>
 
-                        <button onclick="runAnalysis()" id="analyze-btn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-lg transition shadow-lg shadow-emerald-900/20 uppercase tracking-widest text-sm">
-                            Execute Analysis
-                        </button>
-                    </div>
-                </div>
+<div class="glass p-6 rounded space-y-4">
+<input type="file" id="fileInput" accept="image/*"
+class="w-full p-2 bg-black border border-gray-700 rounded">
 
-                <div class="glass-panel p-4 rounded-xl text-xs space-y-2">
-                    <p class="text-zinc-500 font-bold uppercase mb-2">Active Framework Filters</p>
-                    <div class="flex items-center text-emerald-400"><i class="fa-solid fa-check-double mr-2"></i> Boogeyman Clause</div>
-                    <div class="flex items-center text-emerald-400"><i class="fa-solid fa-check-double mr-2"></i> Rubber Band Rule</div>
-                    <div class="flex items-center text-emerald-400"><i class="fa-solid fa-check-double mr-2"></i> Grinder's Squeeze</div>
-                    <div class="flex items-center text-emerald-400"><i class="fa-solid fa-check-double mr-2"></i> Conflict Veto</div>
-                </div>
-            </div>
+<button onclick="scanImage()"
+class="w-full bg-emerald-600 p-3 rounded font-bold">
+Run Scan
+</button>
+</div>
 
-            <div class="lg:col-span-2 space-y-6">
-                <div id="results-area">
-                    <div class="glass-panel p-12 rounded-xl text-center text-zinc-600">
-                        <i class="fa-solid fa-terminal text-4xl mb-4 opacity-20"></i>
-                        <p>Awaiting Data Stream...</p>
-                    </div>
-                </div>
+<div id="output" class="glass p-6 rounded text-center">
+Awaiting Scan...
+</div>
 
-                <div>
-                    <h2 class="text-lg font-semibold mb-4 text-zinc-400 italic">LOGGED ARCHIVE</h2>
-                    <div id="history-list" class="space-y-4"></div>
-                </div>
-            </div>
+</div>
+
+<script>
+
+async function scanImage() {
+    const file = document.getElementById("fileInput").files[0];
+    if (!file) return alert("Upload image");
+
+    document.getElementById("output").innerHTML = "Reading...";
+
+    const result = await Tesseract.recognize(file, 'eng');
+    const text = result.data.text.toLowerCase();
+
+    runEngine(text);
+}
+
+function runEngine(text) {
+
+    let score = 50;
+    let notes = [];
+
+    // SIGNALS
+    let wins = (text.match(/0-1|0-2|1-2/g) || []).length;
+    let draws = (text.match(/1-1|0-0/g) || []).length;
+    let highGoals = (text.match(/3-|4-|5-|6-|7-/g) || []).length;
+
+    // 🧬 BOOGEYMAN
+    let boogey = false;
+    if (wins >= 2) {
+        score += 15;
+        boogey = true;
+        notes.push("Boogeyman");
+    }
+
+    // ⚙️ DRAW ENGINE
+    let drawEngine = false;
+    if (draws >= 3) {
+        score += 10;
+        drawEngine = true;
+        notes.push("Draw Engine");
+    }
+
+    // 🔴 CHAOS
+    let chaos = false;
+    if (highGoals >= 3) {
+        score += 12;
+        chaos = true;
+        notes.push("High Goal Chaos");
+    }
+
+    // ⚔️ CONFLICT
+    let conflict = (drawEngine && chaos);
+    if (conflict) {
+        score -= 15;
+        notes.push("Conflict");
+    }
+
+    // MODE DETECTION
+    let mode = "CONTROL";
+
+    if (drawEngine && !boogey) mode = "DRAW ENGINE";
+    if (boogey && chaos) mode = "CHAOS DOMINANCE";
+    if (boogey && !chaos) mode = "CONTROL";
+
+    // CONFIDENCE
+    score = Math.max(60, Math.min(92, score));
+
+    // STRICT FILTER
+    let verdict = score >= 75 && !conflict ? "BET" : "NO BET";
+
+    // OUTCOMES
+    let outcomes = [];
+
+    if (mode === "DRAW ENGINE") {
+        outcomes.push({name:"Draw", conf: score});
+        outcomes.push({name:"Under 2.5", conf: score-5});
+    }
+
+    if (mode === "CONTROL") {
+        outcomes.push({name:"X2", conf: score});
+        outcomes.push({name:"Under 3.5", conf: score-6});
+        outcomes.push({name:"Draw", conf: score-10});
+    }
+
+    if (mode === "CHAOS DOMINANCE") {
+        outcomes.push({name:"Home Win", conf: score});
+        outcomes.push({name:"Over 2.5", conf: score-5});
+        outcomes.push({name:"BTTS", conf: score-8});
+    }
+
+    // DISPLAY
+    document.getElementById("output").innerHTML = `
+        <h2 class="text-xl font-bold mb-2">SCAN RESULT</h2>
+
+        <div class="text-4xl text-emerald-400 font-black">${score}%</div>
+        <p>${verdict}</p>
+        <p class="text-sm text-gray-400">Mode: ${mode}</p>
+
+        <div class="mt-4 text-left">
+            <p class="font-bold mb-2">Signals:</p>
+            ${notes.map(n => `<div>• ${n}</div>`).join("")}
         </div>
-    </div>
 
-    <script>
-        const resultsArea = document.getElementById('results-area');
-        const historyList = document.getElementById('history-list');
-        const matchInput = document.getElementById('match-title');
-        const fileInput = document.getElementById('file-input');
-        const dropZone = document.getElementById('drop-zone');
+        <div class="mt-4 bg-black p-4 rounded text-left">
+            <p class="font-bold mb-2">Outcomes:</p>
+            ${outcomes.map(o => `<div>• ${o.name} (${o.conf}%)</div>`).join("")}
+        </div>
 
-        // Load History on Start
-        window.onload = () => loadHistory();
+        <div class="mt-4 font-bold text-emerald-400">
+            ${verdict === "BET" ? "STAKE APPROVED" : "NO STAKE"}
+        </div>
+    `;
+}
 
-        // FILE UPLOAD HANDLER (FIX)
-        fileInput.addEventListener('change', handleFiles);
+</script>
 
-        function handleFiles(event) {
-            const files = event.target.files;
-
-            if (!files.length) return;
-
-            console.log("Files uploaded:", files);
-
-            const reader = new FileReader();
-
-            reader.onload = function(e) {
-                resultsArea.innerHTML = `
-                    <div class="glass-panel p-6 rounded-xl">
-                        <p class="text-sm text-zinc-400 mb-4">Uploaded Preview:</p>
-                        <img src="${e.target.result}" class="rounded-lg max-h-64 mx-auto"/>
-                    </div>
-                `;
-            };
-
-            reader.readAsDataURL(files[0]);
-        }
-
-        // DRAG & DROP SUPPORT
-        dropZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropZone.classList.add('border-emerald-500');
-        });
-
-        dropZone.addEventListener('dragleave', () => {
-            dropZone.classList.remove('border-emerald-500');
-        });
-
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('border-emerald-500');
-
-            fileInput.files = e.dataTransfer.files;
-            handleFiles({ target: fileInput });
-        });
-
-        function runAnalysis() {
-            const match = matchInput.value || "Unknown Fixture";
-            const btn = document.getElementById('analyze-btn');
-            
-            btn.innerText = "PROCESSING...";
-            btn.disabled = true;
-
-            setTimeout(() => {
-                const confidence = Math.floor(Math.random() * (94 - 68 + 1) + 68);
-                const timestamp = new Date().toLocaleString();
-                
-                const report = {
-                    id: Date.now(),
-                    match: match,
-                    confidence: confidence,
-                    time: timestamp,
-                    verdict: confidence > 80 ? "HIGH ASYMMETRY" : "VARIANCE WARNING",
-                    pick: "Check Boogeyman Data Point / Double Chance X2"
-                };
-
-                displayResult(report);
-                saveToHistory(report);
-                
-                btn.innerText = "Execute Analysis";
-                btn.disabled = false;
-                matchInput.value = "";
-            }, 1200);
-        }
-
-        function displayResult(data) {
-            const color = data.confidence > 80 ? 'emerald' : 'amber';
-            resultsArea.innerHTML = `
-                <div class="glass-panel p-6 rounded-xl neon-border-green">
-                    <div class="flex justify-between items-start mb-4">
-                        <div>
-                            <h3 class="text-2xl font-bold text-white">${data.match}</h3>
-                            <span class="text-xs text-zinc-500 uppercase italic">${data.time}</span>
-                        </div>
-                        <div class="text-right">
-                            <span class="text-4xl font-black text-${color}-500">${data.confidence}%</span>
-                            <p class="text-[10px] text-zinc-500 uppercase tracking-widest">Confidence Level</p>
-                        </div>
-                    </div>
-                    
-                    <div class="w-full bg-zinc-800 h-2 rounded-full mb-6">
-                        <div class="confidence-bar bg-${color}-500 h-2 rounded-full" style="width: ${data.confidence}%"></div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                        <div class="bg-black/40 p-4 rounded border border-white/5">
-                            <p class="text-zinc-500 text-xs uppercase mb-1">Primary Vector</p>
-                            <p class="text-emerald-400 font-bold">Apply Conflict Veto: No Over 2.5</p>
-                        </div>
-                        <div class="bg-black/40 p-4 rounded border border-white/5">
-                            <p class="text-zinc-500 text-xs uppercase mb-1">Risk Assessment</p>
-                            <p class="text-zinc-300">${data.verdict}</p>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function saveToHistory(report) {
-            let history = JSON.parse(localStorage.getItem('praxos_history')) || [];
-            history.unshift(report);
-            localStorage.setItem('praxos_history', JSON.stringify(history.slice(0, 10)));
-            loadHistory();
-        }
-
-        function loadHistory() {
-            let history = JSON.parse(localStorage.getItem('praxos_history')) || [];
-            historyList.innerHTML = history.map(item => `
-                <div class="glass-panel p-3 rounded flex justify-between items-center text-sm border-l-2 border-emerald-900">
-                    <div>
-                        <span class="text-zinc-200 font-bold">${item.match}</span>
-                        <span class="text-zinc-600 text-[10px] ml-2 uppercase">${item.time}</span>
-                    </div>
-                    <div class="font-bold text-emerald-500">${item.confidence}%</div>
-                </div>
-            `).join('');
-        }
-
-        function clearHistory() {
-            if(confirm("Erase frameworks archive?")) {
-                localStorage.removeItem('praxos_history');
-                loadHistory();
-                resultsArea.innerHTML = `<div class="glass-panel p-12 rounded-xl text-center text-zinc-600"><p>Archive Purged.</p></div>`;
-            }
-        }
-    </script>
 </body>
 </html>
