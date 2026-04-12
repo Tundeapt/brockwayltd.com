@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Praxos Scanner</title>
+  <title>Praxos Scanner Elite</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <style>
@@ -14,20 +14,54 @@
     .warn { color:#ffbf5f; }
     .bad { color:#ff667a; }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    select, input, button, textarea {
+      outline: none;
+    }
   </style>
 </head>
 <body class="min-h-screen p-4 md:p-6">
   <div class="max-w-7xl mx-auto">
     <div class="mb-6">
-      <h1 class="text-3xl md:text-4xl font-black tracking-tight">PRAXOS SCANNER</h1>
-      <p class="soft mt-2">Upload 3 screenshots in one go: H2H, home recent form, away recent form.</p>
+      <h1 class="text-3xl md:text-4xl font-black tracking-tight">PRAXOS SCANNER ELITE</h1>
+      <p class="soft mt-2">Upload exactly 3 screenshots and assign each role manually for stable parsing.</p>
     </div>
 
     <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
       <div class="xl:col-span-4 space-y-6">
         <div class="panel rounded-2xl p-4">
           <h2 class="text-xl font-bold mb-4">Upload</h2>
+
           <input id="files" type="file" accept="image/*" multiple class="block w-full text-sm mb-4" />
+
+          <div class="space-y-3 mb-4">
+            <div class="grid grid-cols-2 gap-2 items-center">
+              <label class="soft text-sm">File 1 role</label>
+              <select id="role0" class="rounded-lg bg-slate-900 p-2 text-sm">
+                <option value="h2h">H2H</option>
+                <option value="home">Home Form</option>
+                <option value="away">Away Form</option>
+              </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 items-center">
+              <label class="soft text-sm">File 2 role</label>
+              <select id="role1" class="rounded-lg bg-slate-900 p-2 text-sm">
+                <option value="home">Home Form</option>
+                <option value="h2h">H2H</option>
+                <option value="away">Away Form</option>
+              </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 items-center">
+              <label class="soft text-sm">File 3 role</label>
+              <select id="role2" class="rounded-lg bg-slate-900 p-2 text-sm">
+                <option value="away">Away Form</option>
+                <option value="h2h">H2H</option>
+                <option value="home">Home Form</option>
+              </select>
+            </div>
+          </div>
+
           <div class="flex gap-3">
             <button id="runBtn" class="flex-1 px-4 py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 font-bold">Run Praxos</button>
             <button id="clearBtn" class="px-4 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 font-semibold">Clear</button>
@@ -103,6 +137,9 @@
 <script>
 const els = {
   files: document.getElementById("files"),
+  role0: document.getElementById("role0"),
+  role1: document.getElementById("role1"),
+  role2: document.getElementById("role2"),
   runBtn: document.getElementById("runBtn"),
   clearBtn: document.getElementById("clearBtn"),
   log: document.getElementById("log"),
@@ -165,14 +202,13 @@ els.clearBtn.onclick = clearUI;
 els.runBtn.onclick = async () => {
   try {
     const files = [...els.files.files].filter(f => f.type.startsWith("image/"));
-
     if (files.length !== 3) {
       alert("Please upload exactly 3 images.");
       return;
     }
 
     if (!window.Tesseract) {
-      alert("Tesseract failed to load. Refresh the page and try again.");
+      alert("Tesseract failed to load. Reload page.");
       return;
     }
 
@@ -180,16 +216,36 @@ els.runBtn.onclick = async () => {
     els.log.value = "";
     log("Starting Praxos scan...");
 
+    const roles = [els.role0.value, els.role1.value, els.role2.value];
+    const roleSet = new Set(roles);
+    if (roleSet.size !== 3) {
+      alert("Assign one unique role to each file: H2H, Home Form, Away Form.");
+      return;
+    }
+
     const scanned = [];
     for (let i = 0; i < files.length; i++) {
       const text = await runOCR(files[i], i, files.length);
-      scanned.push({ file: files[i], text });
+      scanned.push({
+        file: files[i],
+        text,
+        role: roles[i]
+      });
     }
 
-    const matchup = detectMatchupFromHeaders(scanned);
+    const h2hShot = scanned.find(x => x.role === "h2h");
+    const homeShot = scanned.find(x => x.role === "home");
+    const awayShot = scanned.find(x => x.role === "away");
+
+    if (!h2hShot || !homeShot || !awayShot) {
+      alert("Could not map the three image roles.");
+      return;
+    }
+
+    const matchup = detectMatchupFromH2H(h2hShot.text);
     if (!matchup.home || !matchup.away) {
-      log("Could not reliably detect fixture header.");
-      alert("Praxos could not reliably detect the match teams from the screenshot headers.");
+      log("Could not detect matchup from H2H screenshot.");
+      alert("Praxos could not detect the fixture from the H2H screenshot.");
       return;
     }
 
@@ -197,28 +253,17 @@ els.runBtn.onclick = async () => {
     els.awayTeam.textContent = matchup.away;
     log(`Detected matchup: ${matchup.home} vs ${matchup.away}`);
 
-    const assigned = assignImagesStrict(scanned, matchup);
-    if (!assigned.h2h || !assigned.home || !assigned.away) {
-      log("Could not assign H2H / HOME / AWAY images.");
-      alert("Praxos could not confidently classify the 3 screenshots.");
-      return;
-    }
-
-    log(`Assigned H2H: ${assigned.h2h.file.name}`);
-    log(`Assigned HOME: ${assigned.home.file.name}`);
-    log(`Assigned AWAY: ${assigned.away.file.name}`);
-
-    const h2hRows = parseScreenshotStrict(assigned.h2h.text, matchup.home, matchup.away, "h2h");
-    const homeRows = parseScreenshotStrict(assigned.home.text, matchup.home, matchup.away, "home");
-    const awayRows = parseScreenshotStrict(assigned.away.text, matchup.home, matchup.away, "away");
+    const h2hRows = parseScreenshotStrict(h2hShot.text, matchup.home, matchup.away, "h2h");
+    const homeRows = parseScreenshotStrict(homeShot.text, matchup.home, matchup.away, "home");
+    const awayRows = parseScreenshotStrict(awayShot.text, matchup.home, matchup.away, "away");
 
     els.h2hData.textContent = JSON.stringify(h2hRows, null, 2);
     els.homeData.textContent = JSON.stringify(homeRows, null, 2);
     els.awayData.textContent = JSON.stringify(awayRows, null, 2);
 
-    if (h2hRows.length < 1 || homeRows.length < 3 || awayRows.length < 3) {
-      log("Not enough valid parsed rows.");
-      alert("Not enough valid rows were parsed. Use clearer screenshots.");
+    if (h2hRows.length < 1 || homeRows.length < 2 || awayRows.length < 2) {
+      log("Not enough valid rows were parsed.");
+      alert("Not enough valid rows were parsed. Use clearer screenshots or re-check role assignment.");
       return;
     }
 
@@ -237,7 +282,7 @@ els.runBtn.onclick = async () => {
   } catch (err) {
     console.error(err);
     log("ERROR: " + err.message);
-    alert("Praxos crashed. Open browser console to inspect.");
+    alert("Praxos crashed. Open browser console if needed.");
   }
 };
 
@@ -285,12 +330,12 @@ function looksLikeTeam(s) {
   if (!s) return false;
   const t = s.trim();
   if (!/[A-Za-z]/.test(t)) return false;
-  if (/^(summary|odds|h2h|standings|lineups|news|football|head-to-head matches|head-to-head|stats)$/i.test(t)) return false;
+  if (/^(summary|commentary|odds|h2h|standings|lineups|news|football|head-to-head matches|head-to-head|stats)$/i.test(t)) return false;
   if (/^\d{4}$/.test(t)) return false;
   if (/^\d{1,2}\.\d{1,2}\.?$/.test(t)) return false;
   if (/^\d{1,2}:\d{2}$/.test(t)) return false;
   if (/^[WDL]$/.test(t)) return false;
-  return t.length >= 3 && t.length <= 50;
+  return t.length >= 3 && t.length <= 60;
 }
 
 function parseScore(line) {
@@ -302,103 +347,61 @@ function parseScore(line) {
   return { home, away };
 }
 
-function extractFixtureCandidates(text) {
+function detectMatchupFromH2H(text) {
   const lines = text.split("\n").map(x => x.trim()).filter(Boolean);
-  const candidates = [];
 
-  for (let i = 0; i < lines.length - 1; i++) {
+  for (let i = 0; i < lines.length - 3; i++) {
     const a = lines[i];
     const b = lines[i + 1];
-    if (looksLikeTeam(a) && looksLikeTeam(b) && !sameTeam(a, b)) {
-      candidates.push([a, b]);
+
+    if (!looksLikeTeam(a) || !looksLikeTeam(b) || sameTeam(a, b)) continue;
+
+    for (let j = 2; j <= 6; j++) {
+      if (parseScore(lines[i + j] || "")) {
+        return { home: a, away: b };
+      }
     }
   }
 
-  return candidates;
-}
-
-function detectMatchupFromHeaders(scanned) {
-  const pairScore = new Map();
-
-  for (const item of scanned) {
-    const candidates = extractFixtureCandidates(item.text).slice(0, 8);
-    for (const [a, b] of candidates) {
-      const key = `${normalizeName(a)}|||${normalizeName(b)}`;
-      const prev = pairScore.get(key) || { score: 0, home: a, away: b };
-      prev.score += 1;
-      pairScore.set(key, prev);
-    }
-  }
-
-  const ranked = [...pairScore.values()].sort((a, b) => b.score - a.score);
-  if (!ranked.length) return { home: "", away: "" };
-
-  return {
-    home: ranked[0].home,
-    away: ranked[0].away
-  };
-}
-
-function assignImagesStrict(scanned, matchup) {
-  const homeKey = normalizeName(matchup.home);
-  const awayKey = normalizeName(matchup.away);
-
-  const scored = scanned.map(item => {
-    const t = normalizeName(item.text);
-
-    const hasH2HHeader = t.includes("head to head matches") || t.includes("head to head");
-    const hasHome = t.includes(homeKey);
-    const hasAway = t.includes(awayKey);
-
-    const fixturePairs = extractFixtureCandidates(item.text);
-    const hasExactPair =
-      fixturePairs.some(([a, b]) => sameTeam(a, matchup.home) && sameTeam(b, matchup.away)) ||
-      fixturePairs.some(([a, b]) => sameTeam(a, matchup.away) && sameTeam(b, matchup.home));
-
-    const h2hScore =
-      (hasH2HHeader ? 60 : 0) +
-      (hasExactPair ? 30 : 0) +
-      (hasHome ? 10 : 0) +
-      (hasAway ? 10 : 0);
-
-    const homeScore =
-      (!hasH2HHeader ? 10 : -20) +
-      (hasHome ? 30 : 0) +
-      (hasAway ? 0 : 5);
-
-    const awayScore =
-      (!hasH2HHeader ? 10 : -20) +
-      (hasAway ? 30 : 0) +
-      (hasHome ? 0 : 5);
-
-    return { ...item, h2hScore, homeScore, awayScore };
-  });
-
-  const h2h = [...scored].sort((a, b) => b.h2hScore - a.h2hScore)[0];
-  const rest = scored.filter(x => x.file.name !== h2h.file.name);
-
-  const home = [...rest].sort((a, b) => b.homeScore - a.homeScore)[0];
-  const away = rest.find(x => x.file.name !== home.file.name);
-
-  return { h2h, home, away };
+  return { home: "", away: "" };
 }
 
 function parseScreenshotStrict(text, homeTeam, awayTeam, type) {
   const lines = text.split("\n").map(x => x.trim()).filter(Boolean);
   const rows = [];
 
-  for (let i = 0; i < lines.length - 4; i++) {
+  for (let i = 0; i < lines.length - 1; i++) {
     const a = lines[i];
     const b = lines[i + 1];
 
     if (!looksLikeTeam(a) || !looksLikeTeam(b) || sameTeam(a, b)) continue;
 
     let foundScore = null;
-    for (let j = 2; j <= 5; j++) {
-      const s = parseScore(lines[i + j] || "");
-      if (s) {
-        foundScore = s;
+
+    for (let j = 2; j <= 8; j++) {
+      const candidate = parseScore(lines[i + j] || "");
+      if (candidate) {
+        foundScore = candidate;
         break;
+      }
+    }
+
+    if (!foundScore) {
+      const joined = [
+        lines[i],
+        lines[i + 1],
+        lines[i + 2] || "",
+        lines[i + 3] || "",
+        lines[i + 4] || ""
+      ].join(" ");
+
+      const nums = joined.match(/\b\d{1,2}\b/g);
+      if (nums && nums.length >= 2) {
+        const h = +nums[nums.length - 2];
+        const aw = +nums[nums.length - 1];
+        if (h <= 15 && aw <= 15) {
+          foundScore = { home: h, away: aw };
+        }
       }
     }
 
@@ -446,7 +449,7 @@ function parseScreenshotStrict(text, homeTeam, awayTeam, type) {
     }
   }
 
-  return dedupeRows(rows).slice(0, 10);
+  return dedupeRows(rows).slice(0, 12);
 }
 
 function dedupeRows(rows) {
@@ -475,7 +478,7 @@ function analyzePraxos({ homeTeam, awayTeam, h2hRows, homeRows, awayRows, thresh
 
   const primary = buildPrimary(homeStrength, awayStrength, drawTrap);
   const secondary = buildSecondary(goalSignal, bttsSignal);
-  const markets = buildMarkets(primary, secondary, goalSignal, bttsSignal, drawTrap);
+  const markets = buildMarkets(primary, secondary);
   const qualified = markets.filter(x => x.confidence >= threshold).sort((a, b) => b.confidence - a.confidence);
 
   const top = qualified[0]?.confidence || primary[0].confidence;
@@ -516,46 +519,50 @@ function calcStats(rows, type) {
 
 function buildPrimary(homeStrength, awayStrength, drawTrap) {
   let p = [];
+
   if (homeStrength > awayStrength + 5) {
     p = [
-      { label: "1X", confidence: clamp(Math.round(homeStrength + 8 - drawTrap * 0.2), 50, 88) },
-      { label: "1", confidence: clamp(Math.round(homeStrength - drawTrap * 0.25), 50, 84) }
+      { label: "1X", confidence: clamp(Math.round(homeStrength + 8 - drawTrap * 0.2), 50, 88), market: "Primary" },
+      { label: "1", confidence: clamp(Math.round(homeStrength - drawTrap * 0.25), 50, 84), market: "Primary" }
     ];
   } else if (awayStrength > homeStrength + 5) {
     p = [
-      { label: "X2", confidence: clamp(Math.round(awayStrength + 8 - drawTrap * 0.2), 50, 88) },
-      { label: "2", confidence: clamp(Math.round(awayStrength - drawTrap * 0.25), 50, 84) }
+      { label: "X2", confidence: clamp(Math.round(awayStrength + 8 - drawTrap * 0.2), 50, 88), market: "Primary" },
+      { label: "2", confidence: clamp(Math.round(awayStrength - drawTrap * 0.25), 50, 84), market: "Primary" }
     ];
   } else {
     p = [
-      { label: "X", confidence: clamp(Math.round(58 + drawTrap * 0.5), 50, 82) },
-      { label: "1X", confidence: clamp(Math.round(60 + (homeStrength - awayStrength)), 50, 84) }
+      { label: "X", confidence: clamp(Math.round(58 + drawTrap * 0.5), 50, 82), market: "Primary" },
+      { label: "1X", confidence: clamp(Math.round(60 + (homeStrength - awayStrength)), 50, 84), market: "Primary" }
     ];
   }
-  return p.sort((a,b)=>b.confidence-a.confidence);
+
+  return p.sort((a,b) => b.confidence - a.confidence);
 }
 
 function buildSecondary(goalSignal, bttsSignal) {
   const s1 = goalSignal < 2.6
-    ? { label: "Under 3.5", confidence: clamp(Math.round(60 + (2.6 - goalSignal) * 8), 50, 86) }
-    : { label: "Over 2.5", confidence: clamp(Math.round(56 + (goalSignal - 2.6) * 8), 50, 84) };
+    ? { label: "Under 3.5", confidence: clamp(Math.round(60 + (2.6 - goalSignal) * 8), 50, 86), market: "Goals" }
+    : { label: "Over 2.5", confidence: clamp(Math.round(56 + (goalSignal - 2.6) * 8), 50, 84), market: "Goals" };
 
   const s2 = bttsSignal > 0.52
-    ? { label: "BTTS", confidence: clamp(Math.round(56 + (bttsSignal - 0.52) * 30), 50, 82) }
-    : { label: "No BTTS", confidence: clamp(Math.round(56 + (0.52 - bttsSignal) * 30), 50, 82) };
+    ? { label: "BTTS", confidence: clamp(Math.round(56 + (bttsSignal - 0.52) * 30), 50, 82), market: "BTTS" }
+    : { label: "No BTTS", confidence: clamp(Math.round(56 + (0.52 - bttsSignal) * 30), 50, 82), market: "BTTS" };
 
   return [s1, s2];
 }
 
-function buildMarkets(primary, secondary, goalSignal, bttsSignal, drawTrap) {
-  const p1 = primary[0], p2 = primary[1];
-  const s1 = secondary[0], s2 = secondary[1];
+function buildMarkets(primary, secondary) {
+  const p1 = primary[0];
+  const p2 = primary[1];
+  const s1 = secondary[0];
+  const s2 = secondary[1];
 
   const out = [
     { label: p1.label, market: "Primary", confidence: p1.confidence },
     { label: p2.label, market: "Primary", confidence: p2.confidence },
-    { label: s1.label, market: "Goals", confidence: s1.confidence },
-    { label: s2.label, market: s2.label.includes("BTTS") ? "BTTS" : "Goals", confidence: s2.confidence },
+    { label: s1.label, market: s1.market, confidence: s1.confidence },
+    { label: s2.label, market: s2.market, confidence: s2.confidence },
   ];
 
   if (p1.label === "1X") out.push({ label:"Home +0.5", market:"Handicap", confidence: clamp(p1.confidence + 2, 50, 88) });
@@ -566,7 +573,7 @@ function buildMarkets(primary, secondary, goalSignal, bttsSignal, drawTrap) {
   out.push({ label:`${p1.label} + ${s1.label}`, market:"Combo", confidence: clamp(Math.round((p1.confidence*0.55)+(s1.confidence*0.45)-2), 50, 88) });
   out.push({ label:`${p1.label} + ${s2.label}`, market:"Combo", confidence: clamp(Math.round((p1.confidence*0.55)+(s2.confidence*0.45)-2), 50, 88) });
 
-  return out.sort((a,b)=>b.confidence-a.confidence);
+  return out.sort((a,b) => b.confidence - a.confidence);
 }
 
 function buildScores(primaryTop, secondaryTop, drawTrap) {
@@ -588,7 +595,7 @@ function buildScores(primaryTop, secondaryTop, drawTrap) {
 
   while (scores.length < 4) scores.push("1-1");
 
-  return scores.slice(0,4).map((s,i)=>({
+  return scores.slice(0,4).map((s,i) => ({
     score:s,
     confidence:[76,71,66,61][i]
   }));
@@ -596,19 +603,21 @@ function buildScores(primaryTop, secondaryTop, drawTrap) {
 
 function totalGoals(s) {
   const [a,b] = s.split("-").map(Number);
-  return a+b;
+  return a + b;
 }
 
 function bothTeamsScore(s) {
   const [a,b] = s.split("-").map(Number);
-  return a>0 && b>0;
+  return a > 0 && b > 0;
 }
 
 function unique(arr) {
   return [...new Set(arr)];
 }
 
-function clamp(n,min,max){ return Math.max(min, Math.min(max,n)); }
+function clamp(n,min,max){
+  return Math.max(min, Math.min(max,n));
+}
 
 function renderResult(result) {
   els.modeStake.textContent = `${result.mode} / ${result.stake}`;
