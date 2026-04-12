@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Praxos Apex | Terminal Edition</title>
+  <title>Praxos Apex | Autonomous Terminal</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <style>
@@ -11,7 +11,6 @@
     body { background:#03070b; color:#e2e8f0; font-family: 'JetBrains+Mono', monospace; }
     .glass { background:rgba(10, 15, 20, 0.95); border:1px solid rgba(16, 185, 129, 0.2); }
     .term-border { border-left: 4px solid #10b981; }
-    .soft { color:#64748b; }
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 4px; }
     textarea:focus, input:focus, select:focus { outline: none; border-color: #10b981; }
@@ -23,26 +22,25 @@
     <div class="lg:col-span-4 space-y-6">
       <header class="mb-8 border-b border-emerald-500/20 pb-4">
         <h1 class="text-3xl font-black tracking-tighter text-white">PRAXOS <span class="text-emerald-500">APEX</span></h1>
-        <p class="text-[10px] text-emerald-500/70 uppercase tracking-[0.2em] mt-1">Live Terminal Execution</p>
+        <p class="text-[10px] text-emerald-500/70 uppercase tracking-[0.2em] mt-1">Autonomous Multi-Tensor Engine</p>
       </header>
 
       <div class="glass rounded-xl p-5">
         <h2 class="text-[11px] font-bold text-zinc-400 uppercase tracking-widest mb-4">Data Ingestion</h2>
-        <input id="files" type="file" accept="image/*" multiple class="block w-full text-xs text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-emerald-500/10 file:text-emerald-500 hover:file:bg-emerald-500/20 cursor-pointer mb-4" />
+        
+        <input id="files" type="file" accept="image/*" multiple class="block w-full text-xs text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-emerald-500/10 file:text-emerald-500 hover:file:bg-emerald-500/20 cursor-pointer mb-6" />
 
-        <div id="roleBox" class="space-y-3 mb-4"></div>
-
-        <button id="runBtn" class="w-full py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-black font-black uppercase text-[11px] tracking-widest transition-all mb-4">
+        <button id="runBtn" class="w-full py-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-black font-black uppercase text-[12px] tracking-[0.2em] transition-all mb-4 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
           Execute Framework
         </button>
 
         <div>
           <div class="flex justify-between text-[10px] font-bold text-emerald-500 uppercase mb-1">
-            <span id="statusText">Awaiting Datasets...</span>
+            <span id="statusText">Awaiting Datasets (Upload 3)</span>
             <span id="progressText">0%</span>
           </div>
           <div class="h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden">
-            <div id="progressBar" class="h-full bg-emerald-500 w-0 transition-all duration-300"></div>
+            <div id="progressBar" class="h-full bg-emerald-500 w-0 transition-all duration-300 shadow-[0_0_10px_#10b981]"></div>
           </div>
         </div>
       </div>
@@ -56,7 +54,7 @@
         </div>
         
         <textarea id="terminal" readonly class="flex-grow w-full min-h-[500px] bg-transparent text-[13px] text-emerald-400 font-medium leading-relaxed resize-none" placeholder="INITIALIZING PRAXOS CORE...
-AWAITING MULTI-TENSOR INGESTION."></textarea>
+AWAITING MULTI-TENSOR INGESTION. NO MANUAL SORTING REQUIRED."></textarea>
       </div>
     </div>
 
@@ -65,7 +63,6 @@ AWAITING MULTI-TENSOR INGESTION."></textarea>
 <script>
 const els = {
   files: document.getElementById("files"),
-  roleBox: document.getElementById("roleBox"),
   runBtn: document.getElementById("runBtn"),
   copyBtn: document.getElementById("copyBtn"),
   terminal: document.getElementById("terminal"),
@@ -75,31 +72,13 @@ const els = {
 };
 
 function logTerm(msg) { els.terminal.value = msg; }
+function appendTerm(msg) { els.terminal.value += "\n" + msg; }
 function setProgress(v, text) {
   const n = Math.max(0, Math.min(100, Math.round(v)));
   els.progressBar.style.width = n + "%";
   els.progressText.textContent = n + "%";
   if(text) els.statusText.textContent = text;
 }
-
-els.files.addEventListener("change", () => {
-  els.roleBox.innerHTML = "";
-  const files = [...els.files.files];
-  files.forEach((file, idx) => {
-    const row = document.createElement("div");
-    row.className = "flex gap-2 items-center";
-    row.innerHTML = `
-      <div class="text-[10px] text-zinc-400 truncate w-1/2">${file.name}</div>
-      <select class="roleSelect flex-grow bg-black/50 border border-emerald-500/20 rounded px-2 py-1.5 text-[10px] text-emerald-500 uppercase font-bold" data-index="${idx}">
-        <option value="">-- Role --</option>
-        <option value="h2h">H2H Data</option>
-        <option value="home">Home Form</option>
-        <option value="away">Away Form</option>
-      </select>
-    `;
-    els.roleBox.appendChild(row);
-  });
-});
 
 els.copyBtn.onclick = () => {
   els.terminal.select();
@@ -112,36 +91,27 @@ els.runBtn.onclick = async () => {
   try {
     const files = [...els.files.files];
     if (files.length !== 3) return alert("Requires exactly 3 screenshots.");
-    
-    const roles = [...document.querySelectorAll(".roleSelect")].map(x => x.value);
-    if (!roles.includes("h2h") || !roles.includes("home") || !roles.includes("away")) {
-      return alert("Assign H2H, Home, and Away roles.");
-    }
 
     logTerm(">> INGESTING NODE DATA...\n>> ACTIVATING TESSERACT OCR...");
-    const scanned = [];
+    const texts = [];
     for (let i = 0; i < files.length; i++) {
       setProgress((i/3)*100, `SCANNING IMAGE ${i+1}/3`);
       const text = await runOCR(files[i]);
-      scanned.push({ role: roles[i], text });
+      texts.push(text);
     }
-    setProgress(100, "PROCESSING LOGIC");
+    setProgress(90, "ANALYZING FREQUENCY TENSORS");
+    appendTerm(">> AUTONOMOUSLY SORTING DATASETS...");
 
-    const h2hText = scanned.find(x => x.role === "h2h").text;
-    const homeText = scanned.find(x => x.role === "home").text;
-    const awayText = scanned.find(x => x.role === "away").text;
+    // 1. Autonomous Sorting & Naming
+    const sorted = autoSortDatasets(texts);
+    
+    // 2. Data Extraction (Robust)
+    const h2hRows = extractScoresRobust(sorted.h2hText, 10);
+    const homeRows = extractScoresRobust(sorted.homeText, 10);
+    const awayRows = extractScoresRobust(sorted.awayText, 10);
 
-    // Entity Detection
-    const homeTeam = detectMainTeam(homeText) || "HOME_TEAM";
-    const awayTeam = detectMainTeam(awayText) || "AWAY_TEAM";
-
-    // Data Extraction
-    const h2hRows = extractScoresSimple(h2hText, 8);
-    const homeRows = extractScoresSimple(homeText, 8);
-    const awayRows = extractScoresSimple(awayText, 8);
-
-    // Praxos Engine
-    const report = executePraxosLogic(homeTeam, awayTeam, h2hRows, homeRows, awayRows);
+    // 3. Execution
+    const report = executePraxosLogic(sorted.homeName, sorted.awayName, h2hRows, homeRows, awayRows);
     logTerm(report);
     setProgress(100, "EXECUTION COMPLETE");
 
@@ -155,50 +125,100 @@ async function runOCR(file) {
   return res.data.text.replace(/\r/g, "\n").replace(/[|]/g, " ").replace(/[^ \S\n]+/g, " ").trim();
 }
 
-function detectMainTeam(text) {
+/* --- THE BRAIN: AUTONOMOUS ROLE DETECTION --- */
+function autoSortDatasets(texts) {
+  // Get word frequencies for each image
+  let freqs = texts.map(t => getFreqs(t));
+  
+  // Combine to find the top 2 overall teams
+  let totalFreqs = {};
+  freqs.forEach(f => {
+    for(let k in f) totalFreqs[k] = (totalFreqs[k] || 0) + f[k];
+  });
+  
+  let sortedTeams = Object.keys(totalFreqs).sort((a,b) => totalFreqs[b] - totalFreqs[a]);
+  let tA = sortedTeams[0] || "TEAM_A";
+  let tB = sortedTeams[1] || "TEAM_B";
+
+  // Identify H2H: The image where the occurrence difference between tA and tB is the smallest
+  let diffs = freqs.map(f => Math.abs((f[tA]||0) - (f[tB]||0)));
+  let h2hIdx = diffs.indexOf(Math.min(...diffs));
+  
+  let h2hText = texts[h2hIdx];
+  let remaining = texts.map((t, i) => ({text: t, idx: i})).filter(x => x.idx !== h2hIdx);
+  
+  // Identify Form A vs Form B
+  let f0 = freqs[remaining[0].idx];
+  let form1Text = remaining[0].text;
+  let form2Text = remaining[1].text;
+  
+  let form1Team = (f0[tA]||0) > (f0[tB]||0) ? tA : tB;
+  let tAText = form1Team === tA ? form1Text : form2Text;
+  let tBText = form1Team === tB ? form1Text : form2Text;
+
+  // Determine Home vs Away based on H2H layout
+  let firstA = h2hText.toUpperCase().indexOf(tA);
+  let firstB = h2hText.toUpperCase().indexOf(tB);
+  
+  let homeName, awayName, homeText, awayText;
+  if (firstA !== -1 && firstB !== -1 && firstA < firstB) {
+      homeName = tA; awayName = tB;
+      homeText = tAText; awayText = tBText;
+  } else {
+      homeName = tB; awayName = tA;
+      homeText = tBText; awayText = tAText;
+  }
+
+  return { h2hText, homeText, awayText, homeName, awayName };
+}
+
+function getFreqs(text) {
   let clean = text.replace(/(Summary|Odds|H2H|Standings|Lineups|Advertisement|Stats|Video|Awarded)/gi, "");
   clean = clean.replace(/\b\d{1,2}\.\d{1,2}\.?\b/g, " ").replace(/\b20\d{2}\b/g, " ").replace(/\b\d+\b/g, " ").replace(/\b[WDL]\b/g, " ");
-  
   const counts = {};
   clean.split('\n').forEach(line => {
-    let t = line.trim();
+    let t = line.trim().toUpperCase();
     if (t.length > 3) counts[t] = (counts[t] || 0) + 1;
   });
-  
-  let top = "UNKNOWN"; let max = 0;
-  for (let [k, v] of Object.entries(counts)) {
-    if (v > max) { max = v; top = k; }
-  }
-  return top.toUpperCase();
+  return counts;
 }
 
-function extractScoresSimple(text, limit) {
+/* --- REBUILT SCORING EXTRACTOR (FIXED DEDUPLICATION BUG) --- */
+function extractScoresRobust(text, limit) {
+  let rows = [];
   const lines = text.split("\n").map(x => x.trim()).filter(Boolean);
-  const rows = [];
+  
+  // Primary Pass: Find obvious scores like 1-0, 1 0, 1:0
   lines.forEach(line => {
     let clean = line.replace(/\b\d{1,2}\.\d{1,2}\.?\b/g, " ").replace(/\b20\d{2}\b/g, " ");
-    let m;
-    const rgx = [/(\d{1,2})\s*[-:]\s*(\d{1,2})/g, /\b(\d{1,2})\s+(\d{1,2})\b/g];
-    rgx.forEach(r => {
-      while ((m = r.exec(clean)) !== null) {
-        let a = parseInt(m[1]), b = parseInt(m[2]);
-        if (a<=12 && b<=12) rows.push({ h: a, a: b, t: a+b });
-      }
-    });
+    let m = clean.match(/(\d{1,2})\s*[-: ]\s*(\d{1,2})/);
+    if (m) {
+       let a = parseInt(m[1]), b = parseInt(m[2]);
+       if (a <= 12 && b <= 12) rows.push({ h: a, a: b, t: a+b });
+    }
   });
-  
-  // Dedupe & Limit
-  let unique = []; let seen = new Set();
-  rows.forEach(r => {
-    let key = `${r.h}-${r.a}`;
-    if(!seen.has(key)) { seen.add(key); unique.push(r); }
-  });
-  return unique.slice(0, limit);
+
+  // Fallback Pass: If Tesseract broke scores into vertical stacks, pair raw numbers
+  if (rows.length < 3) {
+     let nums = text.replace(/\b\d{1,2}\.\d{1,2}\.?\b/g, " ")
+                    .replace(/\b20\d{2}\b/g, " ")
+                    .match(/\b\d{1,2}\b/g);
+     if (nums) {
+         rows = []; // Reset and rebuild from raw numbers
+         for(let i=0; i<nums.length-1; i+=2) {
+             let a = parseInt(nums[i]), b = parseInt(nums[i+1]);
+             if(a<=12 && b<=12) rows.push({h:a, a:b, t:a+b});
+         }
+     }
+  }
+  return rows.slice(0, limit);
 }
 
-/* --- THE PRAXOS CORE ENGINE (CALIBRATED TO YOUR OUTPUT) --- */
+/* --- THE PRAXOS APEX ENGINE --- */
 function executePraxosLogic(homeName, awayName, h2h, home, away) {
-  if(!h2h.length || !home.length || !away.length) return ">> ERROR: INSUFFICIENT DATA EXTRACTED. CHECK CROP.";
+  if(h2h.length < 1 || home.length < 2 || away.length < 2) {
+      return `>> ERROR: INSUFFICIENT DATA EXTRACTED.\nH2H Rows: ${h2h.length} | Home Rows: ${home.length} | Away Rows: ${away.length}\nCheck screenshot crop.`;
+  }
 
   // Analytics
   let h2hHomeWins = h2h.filter(r => r.h > r.a).length / h2h.length;
@@ -212,11 +232,8 @@ function executePraxosLogic(homeName, awayName, h2h, home, away) {
                  (home.filter(r=>r.h>0 && r.a>0).length/home.length * 0.3) + 
                  (away.filter(r=>r.h>0 && r.a>0).length/away.length * 0.3);
 
-  // Variable Assignments
-  let primaryLabel = "";
-  let primaryConf = 0;
-  let secLabel = "";
-  let secConf = 0;
+  let primaryLabel = ""; let primaryConf = 0;
+  let secLabel = ""; let secConf = 0;
   let sysNote = "";
 
   // 1. BOOGEYMAN / DOMINANCE CHECK
@@ -248,17 +265,7 @@ function executePraxosLogic(homeName, awayName, h2h, home, away) {
     secConf = Math.floor(88 - (avgGoals * 2));
   }
 
-  // Format exactly as requested
-  return `**NODE: ${homeName} VS ${awayName}**
-PRIMARY VECTOR:
-Target: ${primaryLabel}
-Confidence: ${primaryConf}%
-
-SECONDARY CONSTRAINT:
-Target: ${secLabel}
-Confidence: ${secConf}%
-
-${sysNote}`;
+  return `**NODE: ${homeName} VS ${awayName}**\n\nPRIMARY VECTOR:\nTarget: ${primaryLabel}\nConfidence: ${primaryConf}%\n\nSECONDARY CONSTRAINT:\nTarget: ${secLabel}\nConfidence: ${secConf}%\n\n${sysNote}`;
 }
 </script>
 </body>
