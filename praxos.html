@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Praxos Apex | Terminal v1.9</title>
+  <title>Praxos Apex | Terminal v2.0</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <style>
@@ -13,172 +13,95 @@
     .term-border { border-left: 4px solid #10b981; }
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 4px; }
-    textarea:focus, input:focus, select:focus { outline: none; border-color: #10b981; }
   </style>
 </head>
 <body class="min-h-screen p-4 md:p-8">
   <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
-    
     <div class="lg:col-span-4 space-y-6">
       <header class="mb-8 border-b border-emerald-500/20 pb-4">
         <h1 class="text-3xl font-black tracking-tighter text-white">PRAXOS <span class="text-emerald-500">APEX</span></h1>
-        <p class="text-[10px] text-emerald-500/70 uppercase tracking-[0.2em] mt-1">v1.9 [STALEMATE CALIBRATED]</p>
+        <p class="text-[10px] text-emerald-500/70 uppercase tracking-[0.2em] mt-1">v2.0 [BURNOUT CALIBRATED]</p>
       </header>
-
       <div class="glass rounded-xl p-5">
-        <h2 class="text-[11px] font-bold text-zinc-400 uppercase tracking-widest mb-4">Data Ingestion</h2>
-        <input id="files" type="file" accept="image/*" multiple class="block w-full text-xs text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-emerald-500/10 file:text-emerald-500 hover:file:bg-emerald-500/20 cursor-pointer mb-6" />
-        <button id="runBtn" class="w-full py-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-black font-black uppercase text-[12px] tracking-[0.2em] transition-all mb-4 shadow-[0_0_15px_rgba(16,185,129,0.3)]">Execute Framework</button>
-        <div class="flex justify-between text-[10px] font-bold text-emerald-500 uppercase mb-1">
-          <span id="statusText">Awaiting Tensors</span>
-          <span id="progressText">0%</span>
-        </div>
-        <div class="h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden">
-          <div id="progressBar" class="h-full bg-emerald-500 w-0 transition-all shadow-[0_0_10px_#10b981]"></div>
-        </div>
+        <input id="files" type="file" accept="image/*" multiple class="block w-full text-xs text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-emerald-500/10 file:text-emerald-500 cursor-pointer mb-6" />
+        <button id="runBtn" class="w-full py-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-black font-black uppercase text-[12px] tracking-[0.2em] transition-all mb-4">Execute Framework</button>
+        <div class="h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden"><div id="progressBar" class="h-full bg-emerald-500 w-0 transition-all shadow-[0_0_10px_#10b981]"></div></div>
       </div>
     </div>
-
     <div class="lg:col-span-8 flex flex-col h-full">
       <div class="glass rounded-xl p-6 flex flex-col h-full term-border relative">
-        <div class="flex justify-between items-center mb-4 border-b border-emerald-500/20 pb-4">
-          <h2 class="text-[12px] font-black text-emerald-500 uppercase tracking-widest">>> System Output</h2>
-          <button id="copyBtn" class="text-[10px] bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-3 py-1.5 rounded uppercase font-bold">Copy Report</button>
-        </div>
-        <textarea id="terminal" readonly class="flex-grow w-full min-h-[500px] bg-transparent text-[13px] text-emerald-400 font-medium leading-relaxed resize-none" placeholder="READY FOR INGESTION..."></textarea>
+        <textarea id="terminal" readonly class="flex-grow w-full min-h-[550px] bg-transparent text-[13px] text-emerald-400 font-medium leading-relaxed resize-none" placeholder="AWAITING DATA TENSORS..."></textarea>
       </div>
     </div>
   </div>
 
 <script>
-const els = { files: document.getElementById("files"), runBtn: document.getElementById("runBtn"), copyBtn: document.getElementById("copyBtn"), terminal: document.getElementById("terminal"), progressBar: document.getElementById("progressBar"), progressText: document.getElementById("progressText"), statusText: document.getElementById("statusText") };
-function logTerm(msg) { els.terminal.value = msg; }
-function setProgress(v, text) { let n = Math.round(v); els.progressBar.style.width = n + "%"; els.progressText.textContent = n + "%"; if(text) els.statusText.textContent = text; }
+const els = { files: document.getElementById("files"), runBtn: document.getElementById("runBtn"), terminal: document.getElementById("terminal"), progressBar: document.getElementById("progressBar") };
 
 els.runBtn.onclick = async () => {
-  try {
-    const files = [...els.files.files];
-    if (files.length !== 3) return alert("Please upload exactly 3 images (H2H, Home, Away).");
-    logTerm(">> INITIALIZING V1.9 STALEMATE PROTOCOLS...");
-    const texts = [];
-    for (let i = 0; i < files.length; i++) {
-      setProgress((i/3)*100, `OCR SCAN: TENSOR ${i+1}`);
-      const res = await Tesseract.recognize(files[i], "eng");
-      texts.push(res.data.text.replace(/\r/g, "\n").trim());
-    }
-    setProgress(90, "CALIBRATING LATTICE WEIGHTS");
-    const sorted = autoSortDatasets(texts);
-    const modernH2HText = truncateDeadZones(sorted.h2hText);
-    const h2h = extractScoresRobust(modernH2HText, 10);
-    const home = extractScoresRobust(sorted.homeText, 10);
-    const away = extractScoresRobust(sorted.awayText, 10);
-    logTerm(executePraxosLogic(sorted.homeName, sorted.awayName, h2h, home, away));
-    setProgress(100, "EXECUTION SUCCESSFUL");
-  } catch (err) { logTerm(">> FATAL ERROR: " + err.message); }
+  const files = [...els.files.files];
+  if (files.length !== 3) return alert("Upload 3 images.");
+  els.terminal.value = ">> INITIALIZING V2.0 BURNOUT PROTOCOLS...";
+  const texts = [];
+  for (let i = 0; i < files.length; i++) {
+    const res = await Tesseract.recognize(files[i], "eng");
+    texts.push(res.data.text.replace(/\r/g, "\n").trim());
+    els.progressBar.style.width = ((i+1)/3*100) + "%";
+  }
+  const sorted = autoSort(texts);
+  const h2h = extract(truncate(sorted.h2hText));
+  const home = extract(sorted.homeText);
+  const away = extract(sorted.awayText);
+  els.terminal.value = runLogic(sorted.homeName, sorted.awayName, h2h, home, away);
 };
 
-function truncateDeadZones(text) {
-   let chunks = text.split(/\b(20\d{2})\b/);
-   if (chunks.length === 1) return text; 
-   let valid = chunks[0];
-   for(let i=1; i<chunks.length; i+=2) { if (parseInt(chunks[i]) >= 2023) valid += " " + chunks[i+1]; }
-   return valid;
+function truncate(t) { return t.split(/\b(20\d{2})\b/).filter((c,i)=>i===0||parseInt(c)>=2023).join(" "); }
+function extract(t) { 
+  let r=[]; 
+  const lines = t.split("\n");
+  lines.forEach(l => {
+    let m = l.match(/(\d)\s*[-: ]\s*(\d)/);
+    if(m) r.push({h:parseInt(m[1]), a:parseInt(m[2]), t:parseInt(m[1])+parseInt(m[2])});
+  });
+  return r.slice(0,10);
 }
 
-function autoSortDatasets(texts) {
-  let entityPool = [];
-  texts.forEach(t => {
-    let lines = t.split('\n').map(l => l.trim().toUpperCase());
-    lines.forEach(l => {
-        let cleanLine = l.replace(/[^A-Z\s]/g, "").trim();
-        if(cleanLine.length > 3 && !/SUMMARY|ODDS|STANDINGS|NEWS|LINEUPS|H2H/.test(cleanLine)) entityPool.push(cleanLine);
-    });
-  });
-  const counts = {};
-  entityPool.forEach(e => counts[e] = (counts[e] || 0) + 1);
-  let sortedEntities = Object.keys(counts).sort((a,b) => counts[b] - counts[a]);
-  let tA = sortedEntities[0] || "TEAM_A", tB = sortedEntities[1] || "TEAM_B";
-
-  let h2hIdx = texts.map(t => {
-      let upper = t.toUpperCase();
-      return (upper.includes(tA) && upper.includes(tB)) ? 2 : (upper.includes(tA) || upper.includes(tB) ? 1 : 0);
-  }).indexOf(2);
+function autoSort(texts) {
+  let pools = texts.map(t => t.split('\n').map(l => l.replace(/[^A-Z\s]/g, "").trim()).filter(l => l.length > 3 && !/SUMMARY|ODDS|H2H|NEWS|LINEUPS/.test(l)));
+  let flat = pools.flat();
+  let counts = {}; flat.forEach(e => counts[e] = (counts[e] || 0) + 1);
+  let sorted = Object.keys(counts).sort((a,b) => counts[b] - counts[a]);
+  let tA = sorted[0], tB = sorted[1];
+  let h2hIdx = texts.findIndex(t => t.toUpperCase().includes(tA) && t.toUpperCase().includes(tB));
   if(h2hIdx === -1) h2hIdx = 0;
-
-  let h2hText = texts[h2hIdx], remaining = texts.filter((_,i)=>i!==h2hIdx);
-  let isTeamAHome = remaining[0].toUpperCase().includes(tA);
-  let tAText = isTeamAHome ? remaining[0] : remaining[1], tBText = isTeamAHome ? remaining[1] : remaining[0];
-  let posA = h2hText.toUpperCase().indexOf(tA), posB = h2hText.toUpperCase().indexOf(tB);
-  return (posA < posB) ? {h2hText, homeText:tAText, awayText:tBText, homeName:tA, awayName:tB} : {h2hText, homeText:tBText, awayText:tAText, homeName:tB, awayName:tA};
+  let h2hText = texts[h2hIdx], rem = texts.filter((_,i)=>i!==h2hIdx);
+  let isAHome = rem[0].toUpperCase().includes(tA);
+  return (h2hText.toUpperCase().indexOf(tA) < h2hText.toUpperCase().indexOf(tB)) 
+    ? {h2hText, homeText:isAHome?rem[0]:rem[1], awayText:isAHome?rem[1]:rem[0], homeName:tA, awayName:tB}
+    : {h2hText, homeText:isAHome?rem[1]:rem[0], awayText:isAHome?rem[0]:rem[1], homeName:tB, awayName:tA};
 }
 
-function extractScoresRobust(text, limit) {
-  let rows = [];
-  let clean = text.replace(/\b\d{1,2}\.\d{1,2}\.?\b/g, " ").replace(/\b(19|20)\d{2}\b/g, " ");
-  const lines = clean.split("\n").map(x => x.trim()).filter(Boolean);
-  lines.forEach(line => {
-    let m = line.match(/(\d{1,2})\s*[-: ]\s*(\d{1,2})/);
-    if (m) { let a = parseInt(m[1]), b = parseInt(m[2]); if (a <= 9 && b <= 9) rows.push({ h: a, a: b, t: a+b }); }
-  });
-  if (rows.length === 0) {
-      let nums = []; lines.forEach(l => { let m = l.match(/\s+(\d{1,2})$|^(\d{1,2})$/); if(m) nums.push(parseInt(m[1]||m[2])); });
-      for(let i=0; i<nums.length-1; i+=2) { if(nums[i]<=9 && nums[i+1]<=9) rows.push({h:nums[i], a:nums[i+1], t:nums[i]+nums[i+1]}); }
+function runLogic(hN, aN, h2h, home, away) {
+  let h2hW = h2h.filter(r=>r.h>r.a).length/h2h.length, draws = h2h.filter(r=>r.h===r.a).length/h2h.length;
+  let h2hAvg = h2h.reduce((s,r)=>s+r.t,0)/h2h.length;
+  let macroAvg = (home.reduce((s,r)=>s+r.t,0)/home.length + away.reduce((s,r)=>s+r.t,0)/away.length)/2;
+  
+  // V2.0 BURNOUT LOGIC
+  let burnout = (macroAvg >= 3.0 && h2hAvg >= 2.8); 
+  let primaryLabel = draws >= 0.35 ? "Draw (X) Risk / 1X Protection" : (h2hW >= 0.6 ? `${hN} Moneyline (1)` : "1X (Home) or X2 (Away)");
+  let secLabel = "Over 2.5 Goals / BTTS YES", secConf = Math.min(99, Math.floor(75 + (macroAvg * 4)));
+  let note = "No extreme structural anomaly.";
+
+  if (burnout) {
+    secLabel = "Under 3.5 Goals / BTTS NO"; secConf = 85;
+    note = "🚨 LATTICE BURNOUT 🚨. Macro-velocity is dangerously high. Tactical regression to a defensive lock (0-0/1-0) is mathematically probable.";
+  } else if (h2hAvg <= 2.2 && macroAvg >= 2.8) {
+    secLabel = "Under 3.5 Goals"; secConf = 85;
+    note = "🚨 FRICTION VETO 🚨.";
   }
-  return rows.slice(0, limit);
+
+  return `**NODE: ${hN} VS ${aN}**\n\nPRIMARY VECTOR: ${primaryLabel}\n\nSECONDARY CONSTRAINT: ${secLabel}\nConfidence: ${secConf}%\n\n*(System Note: ${note})*`;
 }
-
-function executePraxosLogic(homeName, awayName, h2h, home, away) {
-  if(home.length < 2 || away.length < 2) return ">> ERROR: DATA TENSOR FAILURE.";
-  let voidH2H = h2h.length === 0, sysNote = "";
-  
-  let h2hHomeWins = voidH2H ? 0 : h2h.filter(r => r.h > r.a).length / h2h.length;
-  let h2hAwayWins = voidH2H ? 0 : h2h.filter(r => r.a > r.h).length / h2h.length;
-  let draws = voidH2H ? 0 : h2h.filter(r => r.h === r.a).length / h2h.length;
-  let h2hAvg = voidH2H ? 0 : (h2h.reduce((s,r)=>s+r.t,0)/h2h.length);
-  let macroAvg = (home.reduce((s,r)=>s+r.t,0)/home.length * 0.5) + (away.reduce((s,r)=>s+r.t,0)/away.length * 0.5);
-  let avgG = voidH2H ? macroAvg : (h2hAvg * 0.45) + (macroAvg * 0.55);
-  let btts = voidH2H ? 0.5 : (h2h.filter(r=>r.h>0 && r.a>0).length/h2h.length * 0.4) + 0.3;
-
-  let primaryLabel = "1X (Home) or X2 (Away) - Standard Variance", primaryConf = 75;
-  
-  // V1.9 SYMMETRY & BOOGEYMAN
-  if (!voidH2H && (h2hHomeWins >= 0.65 || h2hAwayWins >= 0.65)) {
-    let dominant = h2hHomeWins > h2hAwayWins ? homeName : awayName;
-    let vector = h2hHomeWins > h2hAwayWins ? "1" : "2";
-    let protection = h2hHomeWins > h2hAwayWins ? "1X" : "X2";
-    primaryLabel = Math.max(h2hHomeWins, h2hAwayWins) >= 0.8 ? `${dominant} Moneyline (${vector})` : `${protection} / ${dominant} Moneyline (${vector})`;
-    primaryConf = Math.min(99, Math.floor(82 + (Math.max(h2hHomeWins, h2hAwayWins) * 10)));
-    sysNote += (sysNote ? "\n" : "") + `*(System Note: 🚨 BOOGEYMAN DETECTED 🚨. Structural dominance by ${dominant}).*`;
-  } else if (draws >= 0.35) {
-    let side = h2hHomeWins >= h2hAwayWins ? "1X" : "X2";
-    primaryLabel = `Draw (X) Risk / ${side} Protection`;
-    primaryConf = Math.min(99, Math.floor(78 + (draws * 15)));
-    sysNote += (sysNote ? "\n" : "") + "*(System Note: 🚨 DRAW GRAVITY 🚨).*";
-  }
-
-  let secLabel = "", secConf = 0;
-  
-  // V1.9 STALEMATE GRAVITY TRIGGER (The "Prague Patch")
-  let lastScore = h2h[0] ? h2h[0].t : 3;
-  let stalemateTrap = (lastScore <= 1 && macroAvg >= 2.8 && !voidH2H);
-
-  if (stalemateTrap) {
-    secLabel = "Under 3.5 Goals / BTTS NO"; secConf = 85;
-    sysNote += (sysNote ? "\n" : "") + "*(System Note: 🚨 STALEMATE GRAVITY 🚨. Last H2H was a defensive lock. Deflating Over 2.5 bias).*";
-  } else if (h2hAvg <= 2.2 && macroAvg >= 2.8 && !voidH2H) {
-    secLabel = "Under 3.5 Goals / BTTS NO"; secConf = 85;
-    sysNote += (sysNote ? "\n" : "") + "*(System Note: 🚨 FRICTION VETO 🚨).*";
-  } else if (avgG > 2.6) {
-    secLabel = btts > 0.6 ? "Over 2.5 Goals / BTTS YES" : "Over 2.5 Goals"; 
-    secConf = Math.min(99, Math.floor(75 + (avgG * 4)));
-  } else {
-    secLabel = "Under 3.5 Goals / BTTS NO"; secConf = 85;
-  }
-
-  if (sysNote === "") sysNote = "*(System Note: No extreme structural anomaly detected).*";
-  return `**NODE: ${homeName} VS ${awayName}**\n\nPRIMARY VECTOR:\nTarget: ${primaryLabel}\nConfidence: ${primaryConf}%\n\nSECONDARY CONSTRAINT:\nTarget: ${secLabel}\nConfidence: ${secConf}%\n\n${sysNote}`;
-}
-els.copyBtn.onclick = () => { els.terminal.select(); document.execCommand('copy'); els.copyBtn.innerText = "COPIED!"; setTimeout(() => els.copyBtn.innerText = "Copy Report", 2000); };
 </script>
 </body>
 </html>
