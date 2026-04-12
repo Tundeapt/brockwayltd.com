@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Praxos Apex | Autonomous Terminal</title>
+  <title>Praxos Apex | Autonomous Terminal v1.1</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <style>
@@ -22,7 +22,7 @@
     <div class="lg:col-span-4 space-y-6">
       <header class="mb-8 border-b border-emerald-500/20 pb-4">
         <h1 class="text-3xl font-black tracking-tighter text-white">PRAXOS <span class="text-emerald-500">APEX</span></h1>
-        <p class="text-[10px] text-emerald-500/70 uppercase tracking-[0.2em] mt-1">Autonomous Multi-Tensor Engine</p>
+        <p class="text-[10px] text-emerald-500/70 uppercase tracking-[0.2em] mt-1">Autonomous Multi-Tensor Engine v1.1</p>
       </header>
 
       <div class="glass rounded-xl p-5">
@@ -53,7 +53,7 @@
           <button id="copyBtn" class="text-[10px] bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-3 py-1.5 rounded uppercase font-bold transition-all">Copy Report</button>
         </div>
         
-        <textarea id="terminal" readonly class="flex-grow w-full min-h-[500px] bg-transparent text-[13px] text-emerald-400 font-medium leading-relaxed resize-none" placeholder="INITIALIZING PRAXOS CORE...
+        <textarea id="terminal" readonly class="flex-grow w-full min-h-[500px] bg-transparent text-[13px] text-emerald-400 font-medium leading-relaxed resize-none" placeholder="INITIALIZING PRAXOS CORE v1.1...
 AWAITING MULTI-TENSOR INGESTION. NO MANUAL SORTING REQUIRED."></textarea>
       </div>
     </div>
@@ -102,15 +102,12 @@ els.runBtn.onclick = async () => {
     setProgress(90, "ANALYZING FREQUENCY TENSORS");
     appendTerm(">> AUTONOMOUSLY SORTING DATASETS...");
 
-    // 1. Autonomous Sorting & Naming
     const sorted = autoSortDatasets(texts);
     
-    // 2. Data Extraction (Robust)
     const h2hRows = extractScoresRobust(sorted.h2hText, 10);
     const homeRows = extractScoresRobust(sorted.homeText, 10);
     const awayRows = extractScoresRobust(sorted.awayText, 10);
 
-    // 3. Execution
     const report = executePraxosLogic(sorted.homeName, sorted.awayName, h2hRows, homeRows, awayRows);
     logTerm(report);
     setProgress(100, "EXECUTION COMPLETE");
@@ -125,12 +122,10 @@ async function runOCR(file) {
   return res.data.text.replace(/\r/g, "\n").replace(/[|]/g, " ").replace(/[^ \S\n]+/g, " ").trim();
 }
 
-/* --- THE BRAIN: AUTONOMOUS ROLE DETECTION --- */
+/* --- V1.1 AUTONOMOUS ROLE DETECTION (STRICT ALPHA SANITIZATION) --- */
 function autoSortDatasets(texts) {
-  // Get word frequencies for each image
   let freqs = texts.map(t => getFreqs(t));
   
-  // Combine to find the top 2 overall teams
   let totalFreqs = {};
   freqs.forEach(f => {
     for(let k in f) totalFreqs[k] = (totalFreqs[k] || 0) + f[k];
@@ -140,14 +135,12 @@ function autoSortDatasets(texts) {
   let tA = sortedTeams[0] || "TEAM_A";
   let tB = sortedTeams[1] || "TEAM_B";
 
-  // Identify H2H: The image where the occurrence difference between tA and tB is the smallest
   let diffs = freqs.map(f => Math.abs((f[tA]||0) - (f[tB]||0)));
   let h2hIdx = diffs.indexOf(Math.min(...diffs));
   
   let h2hText = texts[h2hIdx];
   let remaining = texts.map((t, i) => ({text: t, idx: i})).filter(x => x.idx !== h2hIdx);
   
-  // Identify Form A vs Form B
   let f0 = freqs[remaining[0].idx];
   let form1Text = remaining[0].text;
   let form2Text = remaining[1].text;
@@ -156,12 +149,21 @@ function autoSortDatasets(texts) {
   let tAText = form1Team === tA ? form1Text : form2Text;
   let tBText = form1Team === tB ? form1Text : form2Text;
 
-  // Determine Home vs Away based on H2H layout
-  let firstA = h2hText.toUpperCase().indexOf(tA);
-  let firstB = h2hText.toUpperCase().indexOf(tB);
-  
+  // Smarter Home/Away Assignment: Count occurrences in H2H to see who is listed first
   let homeName, awayName, homeText, awayText;
-  if (firstA !== -1 && firstB !== -1 && firstA < firstB) {
+  let aFirst = 0; let bFirst = 0;
+  
+  let h2hLines = h2hText.toUpperCase().split('\n');
+  h2hLines.forEach(line => {
+      let idxA = line.indexOf(tA);
+      let idxB = line.indexOf(tB);
+      if(idxA !== -1 && idxB !== -1) {
+          if(idxA < idxB) aFirst++;
+          else bFirst++;
+      }
+  });
+
+  if (aFirst >= bFirst) {
       homeName = tA; awayName = tB;
       homeText = tAText; awayText = tBText;
   } else {
@@ -173,48 +175,44 @@ function autoSortDatasets(texts) {
 }
 
 function getFreqs(text) {
+  // STRICT OCR CLEANUP: Remove logos (©, ®), numbers, dates, punctuation
   let clean = text.replace(/(Summary|Odds|H2H|Standings|Lineups|Advertisement|Stats|Video|Awarded)/gi, "");
-  clean = clean.replace(/\b\d{1,2}\.\d{1,2}\.?\b/g, " ").replace(/\b20\d{2}\b/g, " ").replace(/\b\d+\b/g, " ").replace(/\b[WDL]\b/g, " ");
+  clean = clean.replace(/[^a-zA-Z\s]/g, " "); // ONLY ALLOW LETTERS AND SPACES
+  clean = clean.replace(/\b[WDL]\b/g, " "); // Strip W D L
+  
   const counts = {};
   clean.split('\n').forEach(line => {
     let t = line.trim().toUpperCase();
+    // Only count words longer than 3 characters (filters out misread logos like 'C' or 'G')
     if (t.length > 3) counts[t] = (counts[t] || 0) + 1;
   });
   return counts;
 }
 
-/* --- REBUILT SCORING EXTRACTOR (FIXED DEDUPLICATION BUG) --- */
+/* --- V1.1 SCORING EXTRACTOR (SANITY WALLS ADDED) --- */
 function extractScoresRobust(text, limit) {
   let rows = [];
   const lines = text.split("\n").map(x => x.trim()).filter(Boolean);
   
-  // Primary Pass: Find obvious scores like 1-0, 1 0, 1:0
   lines.forEach(line => {
     let clean = line.replace(/\b\d{1,2}\.\d{1,2}\.?\b/g, " ").replace(/\b20\d{2}\b/g, " ");
     let m = clean.match(/(\d{1,2})\s*[-: ]\s*(\d{1,2})/);
     if (m) {
        let a = parseInt(m[1]), b = parseInt(m[2]);
-       if (a <= 12 && b <= 12) rows.push({ h: a, a: b, t: a+b });
+       // SANITY WALL: OCR sometimes reads 0 as 8. Discard impossible/rare scores > 7
+       if (a <= 7 && b <= 7) rows.push({ h: a, a: b, t: a+b });
     }
   });
 
-  // Fallback Pass: If Tesseract broke scores into vertical stacks, pair raw numbers
-  if (rows.length < 3) {
-     let nums = text.replace(/\b\d{1,2}\.\d{1,2}\.?\b/g, " ")
-                    .replace(/\b20\d{2}\b/g, " ")
-                    .match(/\b\d{1,2}\b/g);
-     if (nums) {
-         rows = []; // Reset and rebuild from raw numbers
-         for(let i=0; i<nums.length-1; i+=2) {
-             let a = parseInt(nums[i]), b = parseInt(nums[i+1]);
-             if(a<=12 && b<=12) rows.push({h:a, a:b, t:a+b});
-         }
-     }
-  }
-  return rows.slice(0, limit);
+  let unique = []; let seen = new Set();
+  rows.forEach(r => {
+    let key = `${r.h}-${r.a}`;
+    if(!seen.has(key)) { seen.add(key); unique.push(r); }
+  });
+  return unique.slice(0, limit);
 }
 
-/* --- THE PRAXOS APEX ENGINE --- */
+/* --- V1.1 PRAXOS APEX ENGINE (MODERN ERA OVERRIDE) --- */
 function executePraxosLogic(homeName, awayName, h2h, home, away) {
   if(h2h.length < 1 || home.length < 2 || away.length < 2) {
       return `>> ERROR: INSUFFICIENT DATA EXTRACTED.\nH2H Rows: ${h2h.length} | Home Rows: ${home.length} | Away Rows: ${away.length}\nCheck screenshot crop.`;
@@ -223,6 +221,10 @@ function executePraxosLogic(homeName, awayName, h2h, home, away) {
   // Analytics
   let h2hHomeWins = h2h.filter(r => r.h > r.a).length / h2h.length;
   let draws = h2h.filter(r => r.h === r.a).length / h2h.length;
+  
+  // Modern Era Check (Last 5 H2H matches)
+  let recentH2H = h2h.slice(0, 5);
+  let recentHomeWins = recentH2H.filter(r => r.h > r.a).length / recentH2H.length;
   
   let avgGoals = (h2h.reduce((s,r)=>s+r.t,0)/h2h.length * 0.4) + 
                  (home.reduce((s,r)=>s+r.t,0)/home.length * 0.3) + 
@@ -236,10 +238,11 @@ function executePraxosLogic(homeName, awayName, h2h, home, away) {
   let secLabel = ""; let secConf = 0;
   let sysNote = "";
 
-  // 1. BOOGEYMAN / DOMINANCE CHECK
-  if (h2hHomeWins >= 0.65) {
-    primaryLabel = h2hHomeWins >= 0.8 ? `${homeName} Moneyline (1)` : `1X (Home Protection) / ${homeName} Moneyline (1)`;
-    primaryConf = Math.floor(82 + (h2hHomeWins * 10)); // 88% - 92%
+  // 1. MODERN ERA BOOGEYMAN OVERRIDE
+  if (recentHomeWins >= 0.8 || h2hHomeWins >= 0.65) {
+    let baseWin = Math.max(recentHomeWins, h2hHomeWins);
+    primaryLabel = baseWin >= 0.8 ? `${homeName} Moneyline (1)` : `1X (Home Protection) / ${homeName} Moneyline (1)`;
+    primaryConf = Math.floor(82 + (baseWin * 10)); // 88% - 92%
     sysNote = `*(System Note: Extreme Head-to-Head Boogeyman dominance by ${homeName} detected. Structural history overrides localized form fluctuations).*`;
   } 
   // 2. DRAW GRAVITY CHECK
