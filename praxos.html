@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Praxos Apex | Autonomous Terminal v1.4</title>
+  <title>Praxos Apex | Autonomous Terminal v1.5</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <style>
@@ -22,26 +22,19 @@
     <div class="lg:col-span-4 space-y-6">
       <header class="mb-8 border-b border-emerald-500/20 pb-4">
         <h1 class="text-3xl font-black tracking-tighter text-white">PRAXOS <span class="text-emerald-500">APEX</span></h1>
-        <p class="text-[10px] text-emerald-500/70 uppercase tracking-[0.2em] mt-1">Friction Veto Active (v1.4)</p>
+        <p class="text-[10px] text-emerald-500/70 uppercase tracking-[0.2em] mt-1">Friction Protocol v1.5 [STABLE]</p>
       </header>
 
       <div class="glass rounded-xl p-5">
         <h2 class="text-[11px] font-bold text-zinc-400 uppercase tracking-widest mb-4">Data Ingestion</h2>
-        
         <input id="files" type="file" accept="image/*" multiple class="block w-full text-xs text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-emerald-500/10 file:text-emerald-500 hover:file:bg-emerald-500/20 cursor-pointer mb-6" />
-
-        <button id="runBtn" class="w-full py-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-black font-black uppercase text-[12px] tracking-[0.2em] transition-all mb-4 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
-          Execute Framework
-        </button>
-
-        <div>
-          <div class="flex justify-between text-[10px] font-bold text-emerald-500 uppercase mb-1">
-            <span id="statusText">Awaiting Datasets (Upload 3)</span>
-            <span id="progressText">0%</span>
-          </div>
-          <div class="h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden">
-            <div id="progressBar" class="h-full bg-emerald-500 w-0 transition-all duration-300 shadow-[0_0_10px_#10b981]"></div>
-          </div>
+        <button id="runBtn" class="w-full py-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-black font-black uppercase text-[12px] tracking-[0.2em] transition-all mb-4 shadow-[0_0_15px_rgba(16,185,129,0.3)]">Execute Framework</button>
+        <div class="flex justify-between text-[10px] font-bold text-emerald-500 uppercase mb-1">
+          <span id="statusText">Awaiting Datasets</span>
+          <span id="progressText">0%</span>
+        </div>
+        <div class="h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden">
+          <div id="progressBar" class="h-full bg-emerald-500 w-0 transition-all shadow-[0_0_10px_#10b981]"></div>
         </div>
       </div>
     </div>
@@ -52,258 +45,129 @@
           <h2 class="text-[12px] font-black text-emerald-500 uppercase tracking-widest">>> System Output</h2>
           <button id="copyBtn" class="text-[10px] bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-3 py-1.5 rounded uppercase font-bold transition-all">Copy Report</button>
         </div>
-        
-        <textarea id="terminal" readonly class="flex-grow w-full min-h-[500px] bg-transparent text-[13px] text-emerald-400 font-medium leading-relaxed resize-none" placeholder="INITIALIZING PRAXOS CORE v1.4...
-TEMPORAL ENGINE & FRICTION VETO ACTIVE."></textarea>
+        <textarea id="terminal" readonly class="flex-grow w-full min-h-[500px] bg-transparent text-[13px] text-emerald-400 font-medium leading-relaxed resize-none" placeholder="INITIALIZING PRAXOS CORE v1.5..."></textarea>
       </div>
     </div>
-
   </div>
 
 <script>
-const els = {
-  files: document.getElementById("files"),
-  runBtn: document.getElementById("runBtn"),
-  copyBtn: document.getElementById("copyBtn"),
-  terminal: document.getElementById("terminal"),
-  progressBar: document.getElementById("progressBar"),
-  progressText: document.getElementById("progressText"),
-  statusText: document.getElementById("statusText"),
-};
-
+const els = { files: document.getElementById("files"), runBtn: document.getElementById("runBtn"), copyBtn: document.getElementById("copyBtn"), terminal: document.getElementById("terminal"), progressBar: document.getElementById("progressBar"), progressText: document.getElementById("progressText"), statusText: document.getElementById("statusText") };
 function logTerm(msg) { els.terminal.value = msg; }
-function appendTerm(msg) { els.terminal.value += "\n" + msg; }
-function setProgress(v, text) {
-  const n = Math.max(0, Math.min(100, Math.round(v)));
-  els.progressBar.style.width = n + "%";
-  els.progressText.textContent = n + "%";
-  if(text) els.statusText.textContent = text;
-}
-
-els.copyBtn.onclick = () => {
-  els.terminal.select();
-  document.execCommand('copy');
-  els.copyBtn.innerText = "COPIED!";
-  setTimeout(() => els.copyBtn.innerText = "Copy Report", 2000);
-};
+function setProgress(v, text) { let n = Math.round(v); els.progressBar.style.width = n + "%"; els.progressText.textContent = n + "%"; if(text) els.statusText.textContent = text; }
 
 els.runBtn.onclick = async () => {
   try {
     const files = [...els.files.files];
-    if (files.length !== 3) return alert("Requires exactly 3 screenshots.");
-
-    logTerm(">> INGESTING NODE DATA...\n>> ACTIVATING TESSERACT OCR...");
+    if (files.length !== 3) return alert("Upload exactly 3 images.");
+    logTerm(">> INITIALIZING TESSERACT OCR...");
     const texts = [];
     for (let i = 0; i < files.length; i++) {
       setProgress((i/3)*100, `SCANNING IMAGE ${i+1}/3`);
-      const text = await runOCR(files[i]);
-      texts.push(text);
+      const res = await Tesseract.recognize(files[i], "eng");
+      texts.push(res.data.text.replace(/\r/g, "\n").trim());
     }
-    setProgress(90, "ANALYZING FREQUENCY TENSORS");
-    appendTerm(">> AUTONOMOUSLY SORTING DATASETS...");
-
+    setProgress(90, "CALIBRATING TENSORS");
     const sorted = autoSortDatasets(texts);
-    
-    // v1.3: TEMPORAL TRUNCATION
-    let modernH2HText = truncateDeadZones(sorted.h2hText);
-
-    // v1.2: WATERFALL EXTRACTION
-    const h2hRows = extractScoresRobust(modernH2HText, 10);
-    const homeRows = extractScoresRobust(sorted.homeText, 10);
-    const awayRows = extractScoresRobust(sorted.awayText, 10);
-
-    const report = executePraxosLogic(sorted.homeName, sorted.awayName, h2hRows, homeRows, awayRows);
-    logTerm(report);
+    const modernH2HText = truncateDeadZones(sorted.h2hText);
+    const h2h = extractScoresRobust(modernH2HText, 10);
+    const home = extractScoresRobust(sorted.homeText, 10);
+    const away = extractScoresRobust(sorted.awayText, 10);
+    logTerm(executePraxosLogic(sorted.homeName, sorted.awayName, h2h, home, away));
     setProgress(100, "EXECUTION COMPLETE");
-
-  } catch (err) {
-    logTerm(">> FATAL ERROR: " + err.message);
-  }
+  } catch (err) { logTerm(">> FATAL ERROR: " + err.message); }
 };
-
-async function runOCR(file) {
-  const res = await Tesseract.recognize(file, "eng");
-  return res.data.text.replace(/\r/g, "\n").replace(/[|]/g, " ").replace(/[^ \S\n]+/g, " ").trim();
-}
 
 function truncateDeadZones(text) {
    let chunks = text.split(/\b(20\d{2})\b/);
    if (chunks.length === 1) return text; 
-   
-   let validText = chunks[0];
-   for(let i=1; i<chunks.length; i+=2) {
-       let year = parseInt(chunks[i]);
-       if (year >= 2023) {
-           validText += " " + chunks[i+1];
-       }
-   }
-   return validText;
+   let valid = chunks[0];
+   for(let i=1; i<chunks.length; i+=2) { if (parseInt(chunks[i]) >= 2023) valid += " " + chunks[i+1]; }
+   return valid;
 }
 
 function autoSortDatasets(texts) {
-  let freqs = texts.map(t => getFreqs(t));
-  
-  let totalFreqs = {};
-  freqs.forEach(f => {
-    for(let k in f) totalFreqs[k] = (totalFreqs[k] || 0) + f[k];
+  let freqs = texts.map(t => {
+    let clean = t.replace(/(Summary|Odds|H2H|Standings|Lineups|Advertisement|Stats|Video|Awarded)/gi, "");
+    clean = clean.replace(/[^a-zA-Z\s]/g, " "); // Fixed: preserves letters
+    const counts = {};
+    clean.split(/\s+/).forEach(word => {
+      let w = word.toUpperCase();
+      if (w.length > 3) counts[w] = (counts[w] || 0) + 1;
+    });
+    return counts;
   });
-  
+  let totalFreqs = {};
+  freqs.forEach(f => { for(let k in f) totalFreqs[k] = (totalFreqs[k] || 0) + f[k]; });
   let sortedTeams = Object.keys(totalFreqs).sort((a,b) => totalFreqs[b] - totalFreqs[a]);
-  let tA = sortedTeams[0] || "TEAM_A";
-  let tB = sortedTeams[1] || "TEAM_B";
-
-  let diffs = freqs.map(f => Math.abs((f[tA]||0) - (f[tB]||0)));
-  let h2hIdx = diffs.indexOf(Math.min(...diffs));
-  
-  let h2hText = texts[h2hIdx];
-  let remaining = texts.map((t, i) => ({text: t, idx: i})).filter(x => x.idx !== h2hIdx);
-  
-  let f0 = freqs[remaining[0].idx];
-  let form1Text = remaining[0].text;
-  let form2Text = remaining[1].text;
-  
-  let form1Team = (f0[tA]||0) > (f0[tB]||0) ? tA : tB;
-  let tAText = form1Team === tA ? form1Text : form2Text;
-  let tBText = form1Team === tB ? form1Text : form2Text;
-
-  let homeName, awayName, homeText, awayText;
-  let firstA = h2hText.toUpperCase().indexOf(tA);
-  let firstB = h2hText.toUpperCase().indexOf(tB);
-  
-  if (firstA !== -1 && firstB !== -1 && firstA < firstB) {
-      homeName = tA; awayName = tB;
-      homeText = tAText; awayText = tBText;
-  } else {
-      homeName = tB; awayName = tA;
-      homeText = tBText; awayText = tAText;
-  }
-
-  return { h2hText, homeText, awayText, homeName, awayName };
+  let tA = sortedTeams[0], tB = sortedTeams[1];
+  let h2hIdx = freqs.map(f => Math.abs((f[tA]||0) - (f[tB]||0))).indexOf(Math.min(...freqs.map(f => Math.abs((f[tA]||0) - (f[tB]||0)))));
+  let h2hText = texts[h2hIdx], remaining = texts.filter((_,i)=>i!==h2hIdx);
+  let fRem = getFreqs(remaining[0]);
+  let isTeamA = (fRem[tA]||0) > (fRem[tB]||0);
+  let tAText = isTeamA ? remaining[0] : remaining[1], tBText = isTeamA ? remaining[1] : remaining[0];
+  let firstA = h2hText.toUpperCase().indexOf(tA), firstB = h2hText.toUpperCase().indexOf(tB);
+  return (firstA < firstB) ? {h2hText, homeText:tAText, awayText:tBText, homeName:tA, awayName:tB} : {h2hText, homeText:tBText, awayText:tAText, homeName:tB, awayName:tA};
 }
 
 function getFreqs(text) {
-  let clean = text.replace(/(Summary|Odds|H2H|Standings|Lineups|Advertisement|Stats|Video|Awarded)/gi, "");
-  clean = clean.replace(/[^a-zA-Z\s]/g, " "); 
-  clean = clean.replace(/\b[WDL]\b/g, " "); 
-  
+  let clean = text.replace(/[^a-zA-Z\s]/g, " ");
   const counts = {};
-  clean.split('\n').forEach(line => {
-    let t = line.trim().toUpperCase();
-    if (t.length > 3) counts[t] = (counts[t] || 0) + 1;
-  });
+  clean.split(/\s+/).forEach(w => { if(w.length > 3) counts[w.toUpperCase()] = (counts[w.toUpperCase()]||0)+1; });
   return counts;
 }
 
 function extractScoresRobust(text, limit) {
   let rows = [];
-  let cleanText = text.replace(/\b\d{1,2}\.\d{1,2}\.?\b/g, " ").replace(/\b(19|20)\d{2}\b/g, " ");
-  const lines = cleanText.split("\n").map(x => x.trim()).filter(Boolean);
-  
+  let clean = text.replace(/\b\d{1,2}\.\d{1,2}\.?\b/g, " ").replace(/\b(19|20)\d{2}\b/g, " ");
+  const lines = clean.split("\n").map(x => x.trim()).filter(Boolean);
   lines.forEach(line => {
-    let m = line.match(/(\d{1,2})\s*[-:]\s*(\d{1,2})/);
-    if (m) {
-       let a = parseInt(m[1]), b = parseInt(m[2]);
-       if (a <= 7 && b <= 7) rows.push({ h: a, a: b, t: a+b });
-    }
+    let m = line.match(/(\d{1,2})\s*[-: ]\s*(\d{1,2})/);
+    if (m) { let a = parseInt(m[1]), b = parseInt(m[2]); if (a <= 7 && b <= 7) rows.push({ h: a, a: b, t: a+b }); }
   });
-
   if (rows.length === 0) {
-      let eolNums = [];
-      lines.forEach(line => {
-          let mEdge = line.match(/\s+(\d{1,2})$|^(\d{1,2})$/);
-          if (mEdge) eolNums.push(parseInt(mEdge[1] || mEdge[2]));
-      });
-      for(let i=0; i<eolNums.length-1; i+=2) {
-          let a = eolNums[i], b = eolNums[i+1];
-          if(a <= 7 && b <= 7) rows.push({h:a, a:b, t:a+b});
-      }
+      let nums = []; lines.forEach(l => { let m = l.match(/\s+(\d{1,2})$|^(\d{1,2})$/); if(m) nums.push(parseInt(m[1]||m[2])); });
+      for(let i=0; i<nums.length-1; i+=2) { if(nums[i]<=7 && nums[i+1]<=7) rows.push({h:nums[i], a:nums[i+1], t:nums[i]+nums[i+1]}); }
   }
-
-  let unique = []; let seen = new Set();
-  rows.forEach(r => {
-    let key = `${r.h}-${r.a}`;
-    if(!seen.has(key)) { seen.add(key); unique.push(r); }
-  });
-  return unique.slice(0, limit);
+  return rows.slice(0, limit);
 }
 
-/* --- V1.4: PRAXOS APEX ENGINE (FRICTION VETO) --- */
 function executePraxosLogic(homeName, awayName, h2h, home, away) {
-  if(home.length < 2 || away.length < 2) {
-      return `>> ERROR: INSUFFICIENT MACRO DATA.\nSystem failed to map the UI lattice. Check screenshot crop.`;
-  }
-
-  let voidH2H = h2h.length === 0;
-  let sysNote = "";
+  if(home.length < 2 || away.length < 2) return ">> ERROR: INSUFFICIENT MACRO DATA.";
+  let voidH2H = h2h.length === 0, sysNote = "";
+  if (voidH2H) sysNote = "*(System Note: 🚨 TEMPORAL ENGINE TRIGGERED 🚨. Dead data voided).*";
   
-  if (voidH2H) {
-      sysNote = `*(System Note: 🚨 TEMPORAL ENGINE TRIGGERED 🚨. Historic H2H data was flagged as mathematically dead (< 2023) and voided).*`;
-  }
-
-  // Analytics Base
   let h2hHomeWins = voidH2H ? 0 : h2h.filter(r => r.h > r.a).length / h2h.length;
   let draws = voidH2H ? 0 : h2h.filter(r => r.h === r.a).length / h2h.length;
   let recentHomeWins = voidH2H ? 0 : h2h.slice(0, 5).filter(r => r.h > r.a).length / Math.min(h2h.length, 5);
-  
-  // Isolated Goal Analytics (For Friction Check)
-  let h2hAvgGoals = voidH2H ? 0 : (h2h.reduce((s,r)=>s+r.t,0)/h2h.length);
-  let macroAvgGoals = (home.reduce((s,r)=>s+r.t,0)/home.length * 0.5) + (away.reduce((s,r)=>s+r.t,0)/away.length * 0.5);
+  let h2hAvg = voidH2H ? 0 : (h2h.reduce((s,r)=>s+r.t,0)/h2h.length);
+  let macroAvg = (home.reduce((s,r)=>s+r.t,0)/home.length * 0.5) + (away.reduce((s,r)=>s+r.t,0)/away.length * 0.5);
+  let avgG = voidH2H ? macroAvg : (h2hAvg * 0.45) + (macroAvg * 0.55);
+  let btts = voidH2H ? 0.5 : (h2h.filter(r=>r.h>0 && r.a>0).length/h2h.length * 0.4) + 0.3;
 
-  // Blended Goal Analytics (Standard Math)
-  let avgGoals = voidH2H 
-        ? macroAvgGoals
-        : (h2hAvgGoals * 0.4) + (home.reduce((s,r)=>s+r.t,0)/home.length * 0.3) + (away.reduce((s,r)=>s+r.t,0)/away.length * 0.3);
-
-  let bttsRate = voidH2H
-        ? (home.filter(r=>r.h>0 && r.a>0).length/home.length * 0.5) + (away.filter(r=>r.h>0 && r.a>0).length/away.length * 0.5)
-        : (h2h.filter(r=>r.h>0 && r.a>0).length/h2h.length * 0.4) + (home.filter(r=>r.h>0 && r.a>0).length/home.length * 0.3) + (away.filter(r=>r.h>0 && r.a>0).length/away.length * 0.3);
-
-  let macroDraws = (home.filter(r => r.h === r.a).length + away.filter(r => r.h === r.a).length) / (home.length + away.length);
-
-  // 1. PRIMARY VECTOR LOGIC
-  let primaryLabel = ""; let primaryConf = 0;
-
+  let primaryLabel = "1X (Home) or X2 (Away) - Standard Variance", primaryConf = 75;
   if (!voidH2H && (recentHomeWins >= 0.8 || h2hHomeWins >= 0.65)) {
-    let baseWin = Math.max(recentHomeWins, h2hHomeWins);
-    primaryLabel = baseWin >= 0.8 ? `${homeName} Moneyline (1)` : `1X (Home Protection) / ${homeName} Moneyline (1)`;
-    primaryConf = Math.floor(82 + (baseWin * 10)); 
-    if (sysNote !== "") sysNote += "\n";
-    sysNote += `*(System Note: Extreme Head-to-Head Boogeyman dominance by ${homeName} detected).*`;
-  } 
-  else if (draws >= 0.4 || macroDraws >= 0.35) {
+    primaryLabel = Math.max(recentHomeWins, h2hHomeWins) >= 0.8 ? `${homeName} Moneyline (1)` : `1X / ${homeName} Moneyline (1)`;
+    primaryConf = Math.floor(82 + (Math.max(recentHomeWins, h2hHomeWins) * 10));
+    sysNote += (sysNote ? "\n" : "") + `*(System Note: 🚨 BOOGEYMAN DETECTED 🚨. Structural dominance by ${homeName}).*`;
+  } else if (draws >= 0.4) {
     primaryLabel = "Draw (X) Detected / X2 (Away Protection)";
-    primaryConf = Math.floor(78 + (Math.max(draws, macroDraws) * 15));
-    if (sysNote !== "") sysNote += "\n";
-    sysNote += `*(System Note: High Draw Gravity / Mutual Inefficiency detected).*`;
-  } 
-  else {
-    primaryLabel = "1X (Home) or X2 (Away) - Standard Variance";
-    primaryConf = 75;
-    if (sysNote === "") sysNote = `*(System Note: No extreme structural anomaly detected).*`;
+    primaryConf = Math.floor(78 + (draws * 15));
+    sysNote += (sysNote ? "\n" : "") + "*(System Note: 🚨 DRAW GRAVITY 🚨).*";
   }
 
-  // 2. SECONDARY CONSTRAINT (WITH FRICTION VETO)
-  let secLabel = ""; let secConf = 0;
-  
-  // The V1.4 Friction Check: Are they high-scoring against others, but grinding against each other?
-  let frictionVetoActive = (!voidH2H && h2hAvgGoals <= 2.2 && macroAvgGoals >= 2.8);
-
-  if (frictionVetoActive) {
-    secLabel = "Under 3.5 Goals (Friction/Derby Protocol)";
-    secConf = 85;
-    if (sysNote !== "") sysNote += "\n";
-    sysNote += `*(System Note: 🚨 FRICTION VETO 🚨. High Macro-Volatility overridden by extreme H2H grinding. Derby/Rivalry conditions detected).*`;
-  } 
-  else if (avgGoals > 2.6 || (avgGoals > 2.2 && bttsRate > 0.6)) {
-    secLabel = bttsRate > 0.6 ? "Over 2.5 Goals / BTTS YES" : "Over 2.5 Goals";
-    secConf = Math.floor(75 + (avgGoals * 4));
-    if (secConf > 92) secConf = 90;
-  } 
-  else {
-    secLabel = bttsRate < 0.45 ? "Under 3.5 Goals / BTTS NO" : "Under 3.5 Goals";
-    secConf = Math.floor(88 - (avgGoals * 2));
+  let secLabel = "", secConf = 0;
+  // V1.5 Friction Check (Strict Score Probability)
+  let frictionVeto = (!voidH2H && h2hAvg <= 2.2 && macroAvg >= 2.8);
+  if (frictionVeto) {
+    secLabel = "Under 3.5 Goals (Friction/Derby Protocol)"; secConf = 85;
+    sysNote += (sysNote ? "\n" : "") + "*(System Note: 🚨 FRICTION VETO 🚨. Derby/Rivalry grinding overrides macro shootout form).*";
+  } else if (avgG > 2.6) {
+    secLabel = btts > 0.6 ? "Over 2.5 Goals / BTTS YES" : "Over 2.5 Goals"; secConf = Math.floor(75 + (avgG * 4));
+  } else {
+    secLabel = "Under 3.5 Goals / BTTS NO"; secConf = 85;
   }
 
+  if (sysNote === "") sysNote = "*(System Note: No extreme structural anomaly detected).*";
   return `**NODE: ${homeName} VS ${awayName}**\n\nPRIMARY VECTOR:\nTarget: ${primaryLabel}\nConfidence: ${primaryConf}%\n\nSECONDARY CONSTRAINT:\nTarget: ${secLabel}\nConfidence: ${secConf}%\n\n${sysNote}`;
 }
 </script>
