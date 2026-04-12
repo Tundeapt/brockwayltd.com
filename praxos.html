@@ -1,102 +1,105 @@
-<!DOCTYPE html>  <html lang="en">  
-<head>  
-  <meta charset="UTF-8" />  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />  
-  <title>Praxos Scanner</title>  
-  <script src="https://cdn.tailwindcss.com"></script>  
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>  
-  <style>  
-    body { background:#07111a; color:#e6edf5; }  
-    .panel { background:rgba(12,20,30,.95); border:1px solid rgba(255,255,255,.08); }  
-    .soft { color:#8ea1b5; }  
-    .good { color:#39d98a; }  
-    .warn { color:#ffbf5f; }  
-    .bad { color:#ff667a; }  
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }  
-  </style>  
-</head>  
-<body class="min-h-screen p-4 md:p-6">  
-  <div class="max-w-7xl mx-auto">  
-    <div class="mb-6">  
-      <h1 class="text-3xl md:text-4xl font-black tracking-tight">PRAXOS SCANNER</h1>  
-      <p class="soft mt-2">Upload 3 screenshots in one go: H2H, home recent form, away recent form.</p>  
-    </div>  <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">  
-  <div class="xl:col-span-4 space-y-6">  
-    <div class="panel rounded-2xl p-4">  
-      <h2 class="text-xl font-bold mb-4">Upload</h2>  
-      <input id="files" type="file" accept="image/*" multiple class="block w-full text-sm mb-4" />  
-      <div class="flex gap-3">  
-        <button id="runBtn" class="flex-1 px-4 py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 font-bold">Run Praxos</button>  
-        <button id="clearBtn" class="px-4 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 font-semibold">Clear</button>  
-      </div>  
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Praxos Scanner</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <style>
+    body { background:#07111a; color:#e6edf5; }
+    .panel { background:rgba(12,20,30,.95); border:1px solid rgba(255,255,255,.08); }
+    .soft { color:#8ea1b5; }
+    .good { color:#39d98a; }
+    .warn { color:#ffbf5f; }
+    .bad { color:#ff667a; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  </style>
+</head>
+<body class="min-h-screen p-4 md:p-6">
+  <div class="max-w-7xl mx-auto">
+    <div class="mb-6">
+      <h1 class="text-3xl md:text-4xl font-black tracking-tight">PRAXOS SCANNER</h1>
+      <p class="soft mt-2">Upload 3 screenshots in one go: H2H, home recent form, away recent form.</p>
+    </div>
 
-      <div class="mt-4">  
-        <div class="flex justify-between text-sm">  
-          <span class="soft">Progress</span>  
-          <span id="progressText" class="mono">0%</span>  
-        </div>  
-        <div class="mt-2 h-2 bg-slate-800 rounded-full overflow-hidden">  
-          <div id="progressBar" class="h-full w-0 bg-emerald-500"></div>  
-        </div>  
-      </div>  
-    </div>  
+    <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+      <div class="xl:col-span-4 space-y-6">
+        <div class="panel rounded-2xl p-4">
+          <h2 class="text-xl font-bold mb-4">Upload</h2>
+          <input id="files" type="file" accept="image/*" multiple class="block w-full text-sm mb-4" />
+          <div class="flex gap-3">
+            <button id="runBtn" class="flex-1 px-4 py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 font-bold">Run Praxos</button>
+            <button id="clearBtn" class="px-4 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 font-semibold">Clear</button>
+          </div>
 
-    <div class="panel rounded-2xl p-4">  
-      <h2 class="text-xl font-bold mb-4">OCR / Engine Log</h2>  
-      <textarea id="log" class="w-full min-h-[320px] rounded-xl bg-black/20 p-3 mono text-sm"></textarea>  
-    </div>  
-  </div>  
+          <div class="mt-4">
+            <div class="flex justify-between text-sm">
+              <span class="soft">Progress</span>
+              <span id="progressText" class="mono">0%</span>
+            </div>
+            <div class="mt-2 h-2 bg-slate-800 rounded-full overflow-hidden">
+              <div id="progressBar" class="h-full w-0 bg-emerald-500 transition-all duration-200"></div>
+            </div>
+          </div>
+        </div>
 
-  <div class="xl:col-span-8 space-y-6">  
-    <div class="panel rounded-2xl p-4">  
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">  
-        <div class="rounded-xl bg-slate-900/70 p-4">  
-          <div class="soft text-sm">Home Team</div>  
-          <div id="homeTeam" class="text-xl font-bold mt-1">-</div>  
-        </div>  
-        <div class="rounded-xl bg-slate-900/70 p-4">  
-          <div class="soft text-sm">Away Team</div>  
-          <div id="awayTeam" class="text-xl font-bold mt-1">-</div>  
-        </div>  
-        <div class="rounded-xl bg-slate-900/70 p-4">  
-          <div class="soft text-sm">Mode / Stake</div>  
-          <div id="modeStake" class="text-xl font-bold mt-1">-</div>  
-        </div>  
-      </div>  
-    </div>  
+        <div class="panel rounded-2xl p-4">
+          <h2 class="text-xl font-bold mb-4">OCR / Engine Log</h2>
+          <textarea id="log" class="w-full min-h-[320px] rounded-xl bg-black/20 p-3 mono text-sm"></textarea>
+        </div>
+      </div>
 
-    <div class="panel rounded-2xl p-4">  
-      <h2 class="text-xl font-bold mb-4">Qualified Picks (70%+)</h2>  
-      <div id="qualified" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3"></div>  
-    </div>  
+      <div class="xl:col-span-8 space-y-6">
+        <div class="panel rounded-2xl p-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="rounded-xl bg-slate-900/70 p-4">
+              <div class="soft text-sm">Home Team</div>
+              <div id="homeTeam" class="text-xl font-bold mt-1">-</div>
+            </div>
+            <div class="rounded-xl bg-slate-900/70 p-4">
+              <div class="soft text-sm">Away Team</div>
+              <div id="awayTeam" class="text-xl font-bold mt-1">-</div>
+            </div>
+            <div class="rounded-xl bg-slate-900/70 p-4">
+              <div class="soft text-sm">Mode / Stake</div>
+              <div id="modeStake" class="text-xl font-bold mt-1">-</div>
+            </div>
+          </div>
+        </div>
 
-    <div class="panel rounded-2xl p-4">  
-      <h2 class="text-xl font-bold mb-4">Primary</h2>  
-      <div id="primary" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>  
-    </div>  
+        <div class="panel rounded-2xl p-4">
+          <h2 class="text-xl font-bold mb-4">Qualified Picks (70%+)</h2>
+          <div id="qualified" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3"></div>
+        </div>
 
-    <div class="panel rounded-2xl p-4">  
-      <h2 class="text-xl font-bold mb-4">Secondary</h2>  
-      <div id="secondary" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>  
-    </div>  
+        <div class="panel rounded-2xl p-4">
+          <h2 class="text-xl font-bold mb-4">Primary</h2>
+          <div id="primary" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+        </div>
 
-    <div class="panel rounded-2xl p-4">  
-      <h2 class="text-xl font-bold mb-4">Possible Scores</h2>  
-      <div id="scores" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>  
-    </div>  
+        <div class="panel rounded-2xl p-4">
+          <h2 class="text-xl font-bold mb-4">Secondary</h2>
+          <div id="secondary" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+        </div>
 
-    <div class="panel rounded-2xl p-4">  
-      <h2 class="text-xl font-bold mb-4">Parsed Datasets</h2>  
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">  
-        <pre id="h2hData" class="bg-black/20 p-3 rounded-xl text-xs mono whitespace-pre-wrap"></pre>  
-        <pre id="homeData" class="bg-black/20 p-3 rounded-xl text-xs mono whitespace-pre-wrap"></pre>  
-        <pre id="awayData" class="bg-black/20 p-3 rounded-xl text-xs mono whitespace-pre-wrap"></pre>  
-      </div>  
-    </div>  
-  </div>  
-</div>
+        <div class="panel rounded-2xl p-4">
+          <h2 class="text-xl font-bold mb-4">Possible Scores</h2>
+          <div id="scores" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
+        </div>
 
-  </div> 
+        <div class="panel rounded-2xl p-4">
+          <h2 class="text-xl font-bold mb-4">Parsed Datasets</h2>
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <pre id="h2hData" class="bg-black/20 p-3 rounded-xl text-xs mono whitespace-pre-wrap"></pre>
+            <pre id="homeData" class="bg-black/20 p-3 rounded-xl text-xs mono whitespace-pre-wrap"></pre>
+            <pre id="awayData" class="bg-black/20 p-3 rounded-xl text-xs mono whitespace-pre-wrap"></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 <script>
 const els = {
   files: document.getElementById("files"),
@@ -160,69 +163,82 @@ function clearOutputsOnly() {
 els.clearBtn.onclick = clearUI;
 
 els.runBtn.onclick = async () => {
-  const files = [...els.files.files].filter(f => f.type.startsWith("image/"));
-  if (files.length !== 3) {
-    alert("Please upload exactly 3 images.");
-    return;
+  try {
+    const files = [...els.files.files].filter(f => f.type.startsWith("image/"));
+
+    if (files.length !== 3) {
+      alert("Please upload exactly 3 images.");
+      return;
+    }
+
+    if (!window.Tesseract) {
+      alert("Tesseract failed to load. Refresh the page and try again.");
+      return;
+    }
+
+    clearOutputsOnly();
+    els.log.value = "";
+    log("Starting Praxos scan...");
+
+    const scanned = [];
+    for (let i = 0; i < files.length; i++) {
+      const text = await runOCR(files[i], i, files.length);
+      scanned.push({ file: files[i], text });
+    }
+
+    const matchup = detectMatchupFromHeaders(scanned);
+    if (!matchup.home || !matchup.away) {
+      log("Could not reliably detect fixture header.");
+      alert("Praxos could not reliably detect the match teams from the screenshot headers.");
+      return;
+    }
+
+    els.homeTeam.textContent = matchup.home;
+    els.awayTeam.textContent = matchup.away;
+    log(`Detected matchup: ${matchup.home} vs ${matchup.away}`);
+
+    const assigned = assignImagesStrict(scanned, matchup);
+    if (!assigned.h2h || !assigned.home || !assigned.away) {
+      log("Could not assign H2H / HOME / AWAY images.");
+      alert("Praxos could not confidently classify the 3 screenshots.");
+      return;
+    }
+
+    log(`Assigned H2H: ${assigned.h2h.file.name}`);
+    log(`Assigned HOME: ${assigned.home.file.name}`);
+    log(`Assigned AWAY: ${assigned.away.file.name}`);
+
+    const h2hRows = parseScreenshotStrict(assigned.h2h.text, matchup.home, matchup.away, "h2h");
+    const homeRows = parseScreenshotStrict(assigned.home.text, matchup.home, matchup.away, "home");
+    const awayRows = parseScreenshotStrict(assigned.away.text, matchup.home, matchup.away, "away");
+
+    els.h2hData.textContent = JSON.stringify(h2hRows, null, 2);
+    els.homeData.textContent = JSON.stringify(homeRows, null, 2);
+    els.awayData.textContent = JSON.stringify(awayRows, null, 2);
+
+    if (h2hRows.length < 1 || homeRows.length < 3 || awayRows.length < 3) {
+      log("Not enough valid parsed rows.");
+      alert("Not enough valid rows were parsed. Use clearer screenshots.");
+      return;
+    }
+
+    const result = analyzePraxos({
+      homeTeam: matchup.home,
+      awayTeam: matchup.away,
+      h2hRows,
+      homeRows,
+      awayRows,
+      threshold: 70
+    });
+
+    renderResult(result);
+    setProgress(100);
+    log("Analysis complete.");
+  } catch (err) {
+    console.error(err);
+    log("ERROR: " + err.message);
+    alert("Praxos crashed. Open browser console to inspect.");
   }
-
-  clearOutputsOnly();
-  log("Starting Praxos scan...");
-
-  const scanned = [];
-  for (let i = 0; i < files.length; i++) {
-    const text = await runOCR(files[i], i, files.length);
-    scanned.push({ file: files[i], text });
-  }
-
-  const matchup = detectMatchupFromHeaders(scanned);
-  if (!matchup.home || !matchup.away) {
-    log("Could not reliably detect fixture header.");
-    alert("Praxos could not reliably detect the match teams from the screenshot headers.");
-    return;
-  }
-
-  els.homeTeam.textContent = matchup.home;
-  els.awayTeam.textContent = matchup.away;
-  log(`Detected matchup: ${matchup.home} vs ${matchup.away}`);
-
-  const assigned = assignImagesStrict(scanned, matchup);
-  if (!assigned.h2h || !assigned.home || !assigned.away) {
-    log("Could not assign H2H / HOME / AWAY images.");
-    alert("Praxos could not confidently classify the 3 screenshots.");
-    return;
-  }
-
-  log(`Assigned H2H: ${assigned.h2h.file.name}`);
-  log(`Assigned HOME: ${assigned.home.file.name}`);
-  log(`Assigned AWAY: ${assigned.away.file.name}`);
-
-  const h2hRows = parseScreenshotStrict(assigned.h2h.text, matchup.home, matchup.away, "h2h");
-  const homeRows = parseScreenshotStrict(assigned.home.text, matchup.home, matchup.away, "home");
-  const awayRows = parseScreenshotStrict(assigned.away.text, matchup.home, matchup.away, "away");
-
-  els.h2hData.textContent = JSON.stringify(h2hRows, null, 2);
-  els.homeData.textContent = JSON.stringify(homeRows, null, 2);
-  els.awayData.textContent = JSON.stringify(awayRows, null, 2);
-
-  if (h2hRows.length < 1 || homeRows.length < 3 || awayRows.length < 3) {
-    log("Not enough valid parsed rows.");
-    alert("Not enough valid rows were parsed. Use clearer screenshots.");
-    return;
-  }
-
-  const result = analyzePraxos({
-    homeTeam: matchup.home,
-    awayTeam: matchup.away,
-    h2hRows,
-    homeRows,
-    awayRows,
-    threshold: 70
-  });
-
-  renderResult(result);
-  setProgress(100);
-  log("Analysis complete.");
 };
 
 async function runOCR(file, index, total) {
@@ -235,7 +251,7 @@ async function runOCR(file, index, total) {
       }
     }
   });
-  return normalizeText(res.data.text);
+  return normalizeText(res.data.text || "");
 }
 
 function normalizeText(text) {
@@ -308,15 +324,19 @@ function detectMatchupFromHeaders(scanned) {
     const candidates = extractFixtureCandidates(item.text).slice(0, 8);
     for (const [a, b] of candidates) {
       const key = `${normalizeName(a)}|||${normalizeName(b)}`;
-      pairScore.set(key, (pairScore.get(key) || 0) + 1);
+      const prev = pairScore.get(key) || { score: 0, home: a, away: b };
+      prev.score += 1;
+      pairScore.set(key, prev);
     }
   }
 
-  const ranked = [...pairScore.entries()].sort((a, b) => b[1] - a[1]);
+  const ranked = [...pairScore.values()].sort((a, b) => b.score - a.score);
   if (!ranked.length) return { home: "", away: "" };
 
-  const best = ranked[0][0].split("|||");
-  return { home: best[0], away: best[1] };
+  return {
+    home: ranked[0].home,
+    away: ranked[0].away
+  };
 }
 
 function assignImagesStrict(scanned, matchup) {
@@ -331,11 +351,9 @@ function assignImagesStrict(scanned, matchup) {
     const hasAway = t.includes(awayKey);
 
     const fixturePairs = extractFixtureCandidates(item.text);
-    const hasExactPair = fixturePairs.some(([a, b]) =>
-      sameTeam(a, matchup.home) && sameTeam(b, matchup.away)
-    ) || fixturePairs.some(([a, b]) =>
-      sameTeam(a, matchup.away) && sameTeam(b, matchup.home)
-    );
+    const hasExactPair =
+      fixturePairs.some(([a, b]) => sameTeam(a, matchup.home) && sameTeam(b, matchup.away)) ||
+      fixturePairs.some(([a, b]) => sameTeam(a, matchup.away) && sameTeam(b, matchup.home));
 
     const h2hScore =
       (hasH2HHeader ? 60 : 0) +
@@ -376,13 +394,10 @@ function parseScreenshotStrict(text, homeTeam, awayTeam, type) {
     if (!looksLikeTeam(a) || !looksLikeTeam(b) || sameTeam(a, b)) continue;
 
     let foundScore = null;
-    let scoreOffset = -1;
-
     for (let j = 2; j <= 5; j++) {
       const s = parseScore(lines[i + j] || "");
       if (s) {
         foundScore = s;
-        scoreOffset = j;
         break;
       }
     }
@@ -625,4 +640,3 @@ function renderCard(m) {
 </script>
 </body>
 </html>
-
