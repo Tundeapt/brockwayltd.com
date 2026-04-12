@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Praxos Apex | Autonomous Terminal v1.3</title>
+  <title>Praxos Apex | Autonomous Terminal v1.4</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <style>
@@ -22,7 +22,7 @@
     <div class="lg:col-span-4 space-y-6">
       <header class="mb-8 border-b border-emerald-500/20 pb-4">
         <h1 class="text-3xl font-black tracking-tighter text-white">PRAXOS <span class="text-emerald-500">APEX</span></h1>
-        <p class="text-[10px] text-emerald-500/70 uppercase tracking-[0.2em] mt-1">Temporal Engine Active (v1.3)</p>
+        <p class="text-[10px] text-emerald-500/70 uppercase tracking-[0.2em] mt-1">Friction Veto Active (v1.4)</p>
       </header>
 
       <div class="glass rounded-xl p-5">
@@ -53,8 +53,8 @@
           <button id="copyBtn" class="text-[10px] bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-3 py-1.5 rounded uppercase font-bold transition-all">Copy Report</button>
         </div>
         
-        <textarea id="terminal" readonly class="flex-grow w-full min-h-[500px] bg-transparent text-[13px] text-emerald-400 font-medium leading-relaxed resize-none" placeholder="INITIALIZING PRAXOS CORE v1.3...
-TEMPORAL ENGINE ACTIVE. DEAD DATA WILL BE VOIDED."></textarea>
+        <textarea id="terminal" readonly class="flex-grow w-full min-h-[500px] bg-transparent text-[13px] text-emerald-400 font-medium leading-relaxed resize-none" placeholder="INITIALIZING PRAXOS CORE v1.4...
+TEMPORAL ENGINE & FRICTION VETO ACTIVE."></textarea>
       </div>
     </div>
 
@@ -107,6 +107,7 @@ els.runBtn.onclick = async () => {
     // v1.3: TEMPORAL TRUNCATION
     let modernH2HText = truncateDeadZones(sorted.h2hText);
 
+    // v1.2: WATERFALL EXTRACTION
     const h2hRows = extractScoresRobust(modernH2HText, 10);
     const homeRows = extractScoresRobust(sorted.homeText, 10);
     const awayRows = extractScoresRobust(sorted.awayText, 10);
@@ -125,7 +126,6 @@ async function runOCR(file) {
   return res.data.text.replace(/\r/g, "\n").replace(/[|]/g, " ").replace(/[^ \S\n]+/g, " ").trim();
 }
 
-/* --- V1.3: THE TEMPORAL ENGINE (DEAD ZONE ERADICATION) --- */
 function truncateDeadZones(text) {
    let chunks = text.split(/\b(20\d{2})\b/);
    if (chunks.length === 1) return text; 
@@ -133,7 +133,6 @@ function truncateDeadZones(text) {
    let validText = chunks[0];
    for(let i=1; i<chunks.length; i+=2) {
        let year = parseInt(chunks[i]);
-       // Mathematically dead zone: Any data older than 2023 is destroyed
        if (year >= 2023) {
            validText += " " + chunks[i+1];
        }
@@ -141,7 +140,6 @@ function truncateDeadZones(text) {
    return validText;
 }
 
-/* --- V1.3: ABSOLUTE ROLE DETECTION (FIXED IDENTITY SWAP) --- */
 function autoSortDatasets(texts) {
   let freqs = texts.map(t => getFreqs(t));
   
@@ -168,7 +166,6 @@ function autoSortDatasets(texts) {
   let tAText = form1Team === tA ? form1Text : form2Text;
   let tBText = form1Team === tB ? form1Text : form2Text;
 
-  // ABSOLUTE DOM INDEX MAPPING
   let homeName, awayName, homeText, awayText;
   let firstA = h2hText.toUpperCase().indexOf(tA);
   let firstB = h2hText.toUpperCase().indexOf(tB);
@@ -197,7 +194,6 @@ function getFreqs(text) {
   return counts;
 }
 
-/* --- V1.3: VERTICAL SCORE EXTRACTION --- */
 function extractScoresRobust(text, limit) {
   let rows = [];
   let cleanText = text.replace(/\b\d{1,2}\.\d{1,2}\.?\b/g, " ").replace(/\b(19|20)\d{2}\b/g, " ");
@@ -231,48 +227,54 @@ function extractScoresRobust(text, limit) {
   return unique.slice(0, limit);
 }
 
-/* --- V1.3: PRAXOS APEX ENGINE (MUTUAL INEFFICIENCY FALLBACK) --- */
+/* --- V1.4: PRAXOS APEX ENGINE (FRICTION VETO) --- */
 function executePraxosLogic(homeName, awayName, h2h, home, away) {
   if(home.length < 2 || away.length < 2) {
       return `>> ERROR: INSUFFICIENT MACRO DATA.\nSystem failed to map the UI lattice. Check screenshot crop.`;
   }
 
-  // Graceful handling of Voided H2H
   let voidH2H = h2h.length === 0;
   let sysNote = "";
   
   if (voidH2H) {
-      sysNote = `*(System Note: 🚨 TEMPORAL ENGINE TRIGGERED 🚨. Historic H2H data was flagged as mathematically dead (< 2023) and completely voided. System relying entirely on current Macro-Velocity).*`;
+      sysNote = `*(System Note: 🚨 TEMPORAL ENGINE TRIGGERED 🚨. Historic H2H data was flagged as mathematically dead (< 2023) and voided).*`;
   }
 
-  // Analytics
+  // Analytics Base
   let h2hHomeWins = voidH2H ? 0 : h2h.filter(r => r.h > r.a).length / h2h.length;
   let draws = voidH2H ? 0 : h2h.filter(r => r.h === r.a).length / h2h.length;
   let recentHomeWins = voidH2H ? 0 : h2h.slice(0, 5).filter(r => r.h > r.a).length / Math.min(h2h.length, 5);
   
+  // Isolated Goal Analytics (For Friction Check)
+  let h2hAvgGoals = voidH2H ? 0 : (h2h.reduce((s,r)=>s+r.t,0)/h2h.length);
+  let macroAvgGoals = (home.reduce((s,r)=>s+r.t,0)/home.length * 0.5) + (away.reduce((s,r)=>s+r.t,0)/away.length * 0.5);
+
+  // Blended Goal Analytics (Standard Math)
   let avgGoals = voidH2H 
-        ? (home.reduce((s,r)=>s+r.t,0)/home.length * 0.5) + (away.reduce((s,r)=>s+r.t,0)/away.length * 0.5)
-        : (h2h.reduce((s,r)=>s+r.t,0)/h2h.length * 0.4) + (home.reduce((s,r)=>s+r.t,0)/home.length * 0.3) + (away.reduce((s,r)=>s+r.t,0)/away.length * 0.3);
+        ? macroAvgGoals
+        : (h2hAvgGoals * 0.4) + (home.reduce((s,r)=>s+r.t,0)/home.length * 0.3) + (away.reduce((s,r)=>s+r.t,0)/away.length * 0.3);
 
   let bttsRate = voidH2H
         ? (home.filter(r=>r.h>0 && r.a>0).length/home.length * 0.5) + (away.filter(r=>r.h>0 && r.a>0).length/away.length * 0.5)
         : (h2h.filter(r=>r.h>0 && r.a>0).length/h2h.length * 0.4) + (home.filter(r=>r.h>0 && r.a>0).length/home.length * 0.3) + (away.filter(r=>r.h>0 && r.a>0).length/away.length * 0.3);
 
-  // Macro Mutual Inefficiency check (Draws in overall form)
   let macroDraws = (home.filter(r => r.h === r.a).length + away.filter(r => r.h === r.a).length) / (home.length + away.length);
 
+  // 1. PRIMARY VECTOR LOGIC
   let primaryLabel = ""; let primaryConf = 0;
 
   if (!voidH2H && (recentHomeWins >= 0.8 || h2hHomeWins >= 0.65)) {
     let baseWin = Math.max(recentHomeWins, h2hHomeWins);
     primaryLabel = baseWin >= 0.8 ? `${homeName} Moneyline (1)` : `1X (Home Protection) / ${homeName} Moneyline (1)`;
     primaryConf = Math.floor(82 + (baseWin * 10)); 
-    sysNote = `*(System Note: Extreme Head-to-Head Boogeyman dominance by ${homeName} detected. Structural history overrides localized form).*`;
+    if (sysNote !== "") sysNote += "\n";
+    sysNote += `*(System Note: Extreme Head-to-Head Boogeyman dominance by ${homeName} detected).*`;
   } 
   else if (draws >= 0.4 || macroDraws >= 0.35) {
     primaryLabel = "Draw (X) Detected / X2 (Away Protection)";
     primaryConf = Math.floor(78 + (Math.max(draws, macroDraws) * 15));
-    if (sysNote === "") sysNote = `*(System Note: High Draw Gravity / Mutual Inefficiency detected).*`;
+    if (sysNote !== "") sysNote += "\n";
+    sysNote += `*(System Note: High Draw Gravity / Mutual Inefficiency detected).*`;
   } 
   else {
     primaryLabel = "1X (Home) or X2 (Away) - Standard Variance";
@@ -280,12 +282,24 @@ function executePraxosLogic(homeName, awayName, h2h, home, away) {
     if (sysNote === "") sysNote = `*(System Note: No extreme structural anomaly detected).*`;
   }
 
+  // 2. SECONDARY CONSTRAINT (WITH FRICTION VETO)
   let secLabel = ""; let secConf = 0;
-  if (avgGoals > 2.6 || (avgGoals > 2.2 && bttsRate > 0.6)) {
+  
+  // The V1.4 Friction Check: Are they high-scoring against others, but grinding against each other?
+  let frictionVetoActive = (!voidH2H && h2hAvgGoals <= 2.2 && macroAvgGoals >= 2.8);
+
+  if (frictionVetoActive) {
+    secLabel = "Under 3.5 Goals (Friction/Derby Protocol)";
+    secConf = 85;
+    if (sysNote !== "") sysNote += "\n";
+    sysNote += `*(System Note: 🚨 FRICTION VETO 🚨. High Macro-Volatility overridden by extreme H2H grinding. Derby/Rivalry conditions detected).*`;
+  } 
+  else if (avgGoals > 2.6 || (avgGoals > 2.2 && bttsRate > 0.6)) {
     secLabel = bttsRate > 0.6 ? "Over 2.5 Goals / BTTS YES" : "Over 2.5 Goals";
     secConf = Math.floor(75 + (avgGoals * 4));
     if (secConf > 92) secConf = 90;
-  } else {
+  } 
+  else {
     secLabel = bttsRate < 0.45 ? "Under 3.5 Goals / BTTS NO" : "Under 3.5 Goals";
     secConf = Math.floor(88 - (avgGoals * 2));
   }
