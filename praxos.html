@@ -3,14 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Praxos V5</title>
+<title>Praxos V5.2</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
 
 <style>
-body { background:#0a0a0b; color:#e4e4e7; font-family: monospace; }
-.glass { background:rgba(23,23,27,0.8); border:1px solid rgba(255,255,255,0.1); }
+body {
+    background:#0a0a0b;
+    color:#e4e4e7;
+    font-family: monospace;
+}
+.glass {
+    background:rgba(23,23,27,0.85);
+    border:1px solid rgba(255,255,255,0.1);
+}
 </style>
 </head>
 
@@ -18,16 +25,22 @@ body { background:#0a0a0b; color:#e4e4e7; font-family: monospace; }
 
 <div class="max-w-4xl mx-auto space-y-6">
 
-<h1 class="text-2xl font-bold">PRAXOS V5 — MULTI OUTCOME ENGINE</h1>
+<h1 class="text-2xl font-bold">PRAXOS V5.2 — SMART SCANNER</h1>
 
 <div class="glass p-6 rounded space-y-4">
-<input type="file" id="fileInput" accept="image/*"
+
+<input type="file" id="files" multiple accept="image/*"
 class="w-full p-2 bg-black border border-gray-700 rounded">
 
-<button onclick="scanImage()"
+<p class="text-xs text-gray-400">
+Upload ANY 3 images (H2H + both teams — order doesn’t matter)
+</p>
+
+<button onclick="scanAll()"
 class="w-full bg-emerald-600 p-3 rounded font-bold">
 Run Scan
 </button>
+
 </div>
 
 <div id="output" class="glass p-6 rounded text-center">
@@ -38,73 +51,113 @@ Awaiting Scan...
 
 <script>
 
-async function scanImage() {
-    const file = document.getElementById("fileInput").files[0];
-    if (!file) return alert("Upload image");
-
-    document.getElementById("output").innerHTML = "Reading...";
-
+// OCR
+async function readImage(file) {
     const result = await Tesseract.recognize(file, 'eng');
-    const text = result.data.text.toLowerCase();
-
-    runEngine(text);
+    return result.data.text.toLowerCase();
 }
 
-function runEngine(text) {
+// Extract main teams
+function extractTeams(texts) {
+    let words = {};
+
+    texts.forEach(text => {
+        let tokens = text.split(/\s+/);
+        tokens.forEach(w => {
+            if (w.length > 3) {
+                words[w] = (words[w] || 0) + 1;
+            }
+        });
+    });
+
+    let sorted = Object.entries(words)
+        .sort((a,b) => b[1]-a[1])
+        .map(x => x[0]);
+
+    return sorted.slice(0, 2);
+}
+
+// Classify images automatically
+function classifyImages(texts, teamA, teamB) {
+    let h2h, home, away;
+
+    texts.forEach(text => {
+        let hasA = text.includes(teamA);
+        let hasB = text.includes(teamB);
+
+        if (hasA && hasB) {
+            h2h = text;
+        } else if (hasA) {
+            home = text;
+        } else if (hasB) {
+            away = text;
+        }
+    });
+
+    return {h2h, home, away};
+}
+
+// Count helper
+function count(pattern, text) {
+    return (text.match(pattern) || []).length;
+}
+
+// Main scan
+async function scanAll() {
+    const files = document.getElementById("files").files;
+
+    if (files.length !== 3) {
+        alert("Upload exactly 3 images");
+        return;
+    }
+
+    document.getElementById("output").innerHTML = "Reading images...";
+
+    let texts = [];
+
+    for (let f of files) {
+        texts.push(await readImage(f));
+    }
+
+    const [teamA, teamB] = extractTeams(texts);
+
+    const {h2h, home, away} = classifyImages(texts, teamA, teamB);
+
+    runEngine(h2h, home, away, teamA, teamB);
+}
+
+// Engine
+function runEngine(h2h, home, away, teamA, teamB) {
 
     let score = 50;
     let notes = [];
 
-    // SIGNALS
-    let wins = (text.match(/0-1|0-2|1-2/g) || []).length;
-    let draws = (text.match(/1-1|0-0/g) || []).length;
-    let highGoals = (text.match(/3-|4-|5-|6-|7-/g) || []).length;
+    let wins = count(/0-1|0-2|1-2/g, h2h || "");
+    let draws = count(/1-1|0-0/g, (home||"") + (away||""));
+    let highGoals = count(/3-|4-|5-|6-/g, (home||"") + (away||""));
 
-    // 🧬 BOOGEYMAN
-    let boogey = false;
-    if (wins >= 2) {
-        score += 15;
-        boogey = true;
-        notes.push("Boogeyman");
-    }
+    let boogey = wins >= 2;
+    let drawEngine = draws >= 4;
+    let chaos = highGoals >= 4;
 
-    // ⚙️ DRAW ENGINE
-    let drawEngine = false;
-    if (draws >= 3) {
-        score += 10;
-        drawEngine = true;
-        notes.push("Draw Engine");
-    }
+    if (boogey) { score += 15; notes.push("Boogeyman"); }
+    if (drawEngine) { score += 10; notes.push("Draw Engine"); }
+    if (chaos) { score += 12; notes.push("Chaos"); }
 
-    // 🔴 CHAOS
-    let chaos = false;
-    if (highGoals >= 3) {
-        score += 12;
-        chaos = true;
-        notes.push("High Goal Chaos");
-    }
-
-    // ⚔️ CONFLICT
-    let conflict = (drawEngine && chaos);
+    let conflict = drawEngine && chaos;
     if (conflict) {
         score -= 15;
         notes.push("Conflict");
     }
 
-    // MODE DETECTION
     let mode = "CONTROL";
-
     if (drawEngine && !boogey) mode = "DRAW ENGINE";
-    if (boogey && chaos) mode = "CHAOS DOMINANCE";
-    if (boogey && !chaos) mode = "CONTROL";
+    if (chaos && boogey) mode = "CHAOS DOMINANCE";
+    if (chaos && !boogey) mode = "PURE CHAOS";
 
-    // CONFIDENCE
     score = Math.max(60, Math.min(92, score));
-
-    // STRICT FILTER
     let verdict = score >= 75 && !conflict ? "BET" : "NO BET";
 
-    // OUTCOMES
     let outcomes = [];
 
     if (mode === "DRAW ENGINE") {
@@ -115,25 +168,27 @@ function runEngine(text) {
     if (mode === "CONTROL") {
         outcomes.push({name:"X2", conf: score});
         outcomes.push({name:"Under 3.5", conf: score-6});
-        outcomes.push({name:"Draw", conf: score-10});
     }
 
     if (mode === "CHAOS DOMINANCE") {
-        outcomes.push({name:"Home Win", conf: score});
+        outcomes.push({name:`${teamA} Win`, conf: score});
         outcomes.push({name:"Over 2.5", conf: score-5});
-        outcomes.push({name:"BTTS", conf: score-8});
     }
 
-    // DISPLAY
+    if (mode === "PURE CHAOS") {
+        outcomes.push({name:"Over 2.5", conf: score});
+        outcomes.push({name:"BTTS", conf: score-5});
+        outcomes.push({name:"Over 3.5", conf: score-8});
+    }
+
     document.getElementById("output").innerHTML = `
-        <h2 class="text-xl font-bold mb-2">SCAN RESULT</h2>
+        <h2 class="text-xl font-bold">${teamA} vs ${teamB}</h2>
 
         <div class="text-4xl text-emerald-400 font-black">${score}%</div>
         <p>${verdict}</p>
         <p class="text-sm text-gray-400">Mode: ${mode}</p>
 
-        <div class="mt-4 text-left">
-            <p class="font-bold mb-2">Signals:</p>
+        <div class="mt-3 text-left">
             ${notes.map(n => `<div>• ${n}</div>`).join("")}
         </div>
 
