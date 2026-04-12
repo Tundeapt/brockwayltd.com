@@ -1,194 +1,524 @@
-// ===============================
-// PRAXOS ENGINE v1.0
-// Dual Pattern + Score System
-// ===============================
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Praxos Deploy</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <style>
+    body { background: #071018; color: #e5eef8; }
+    .card { background: rgba(11, 23, 34, 0.92); border: 1px solid rgba(255,255,255,0.08); }
+    .pill { border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.04); }
+    .good { color: #34d399; }
+    .warn { color: #fbbf24; }
+    .bad { color: #f87171; }
+    textarea { scrollbar-width: thin; }
+  </style>
+</head>
+<body class="min-h-screen">
+  <div class="max-w-7xl mx-auto px-4 py-6 md:px-6 md:py-8">
+    <div class="flex items-center justify-between gap-4 mb-6">
+      <div>
+        <h1 class="text-3xl md:text-4xl font-black tracking-tight">PRAXOS</h1>
+        <p class="text-sm text-slate-400 mt-1">3-image scanner for H2H, home form, and away form</p>
+      </div>
+      <div class="text-right text-xs text-slate-400">
+        <div>Single-file deploy</div>
+        <div>OCR + weighted logic</div>
+      </div>
+    </div>
 
-// ===== MAIN ENTRY =====
-function analyzeMatch(match) {
-  const primary = getPrimaryPatterns(match);
-  const secondary = getSecondaryPatterns(match);
+    <div class="grid lg:grid-cols-3 gap-4 mb-6">
+      <div class="card rounded-2xl p-4 lg:col-span-2">
+        <div class="flex flex-wrap items-center gap-3 mb-4">
+          <label class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-black font-semibold cursor-pointer">
+            <input id="fileInput" type="file" accept="image/*" multiple class="hidden" />
+            Upload 3 screenshots
+          </label>
+          <button id="demoBtn" class="px-4 py-2 rounded-xl pill hover:bg-white/10">Load Demo Layout</button>
+          <button id="analyzeBtn" class="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 disabled:opacity-40 disabled:cursor-not-allowed" disabled>Analyze</button>
+          <button id="clearBtn" class="px-4 py-2 rounded-xl pill hover:bg-white/10">Clear</button>
+        </div>
 
-  const primaryTop = getTopConfidence(primary);
+        <div class="text-sm text-slate-400 mb-3">
+          Upload the three screenshots, then confirm each slot:
+          <span class="font-semibold text-slate-200">H2H</span>,
+          <span class="font-semibold text-slate-200">Home Form</span>,
+          <span class="font-semibold text-slate-200">Away Form</span>.
+        </div>
 
-  const mode = assignMode(primaryTop);
-  const stake = assignStake(primaryTop);
+        <div id="slots" class="grid md:grid-cols-3 gap-4"></div>
 
-  const chaos = isChaos(match, primaryTop, secondary);
+        <div id="progressWrap" class="mt-4 hidden">
+          <div class="flex items-center justify-between text-sm mb-1">
+            <span id="progressText" class="text-slate-300">Starting OCR...</span>
+            <span id="progressPct" class="text-slate-400">0%</span>
+          </div>
+          <div class="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
+            <div id="progressBar" class="h-full bg-emerald-500 w-0 transition-all duration-200"></div>
+          </div>
+        </div>
+      </div>
 
-  const scores = generateScores(primary, secondary);
+      <div class="card rounded-2xl p-4">
+        <h2 class="font-bold text-lg mb-3">Engine rules</h2>
+        <ul class="text-sm text-slate-300 space-y-2">
+          <li>• Recent matches carry more weight than old ones</li>
+          <li>• H2H draw clusters trigger draw-trap penalties</li>
+          <li>• Home and away screenshots are scored separately</li>
+          <li>• Picks show only if confidence is at least 70%</li>
+          <li>• Combo picks are built from strongest aligned markets</li>
+        </ul>
+      </div>
+    </div>
 
-  return formatOutput({
-    confidence: primaryTop,
-    mode,
-    primary,
-    secondary,
-    scores,
-    stake,
-    chaos
-  });
-}
+    <div class="grid xl:grid-cols-5 gap-4">
+      <div class="card rounded-2xl p-4 xl:col-span-3">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="font-bold text-xl">Analysis</h2>
+          <div id="modeBadge" class="px-3 py-1 rounded-full pill text-sm">Waiting</div>
+        </div>
+        <div id="summary" class="grid md:grid-cols-2 gap-4"></div>
+      </div>
 
-// ===============================
-// PRIMARY PATTERNS (DIRECTION)
-// ===============================
-function getPrimaryPatterns(match) {
-  const homeStrength = match.homeForm;
-  const awayWeakness = match.awayForm;
-  const h2h = match.h2h;
+      <div class="card rounded-2xl p-4 xl:col-span-2">
+        <h2 class="font-bold text-xl mb-3">Raw OCR</h2>
+        <div class="grid gap-3">
+          <div>
+            <div class="text-xs uppercase tracking-wide text-slate-400 mb-1">H2H</div>
+            <textarea id="ocr_h2h" class="w-full h-32 bg-slate-950 rounded-xl p-3 text-xs text-slate-300"></textarea>
+          </div>
+          <div>
+            <div class="text-xs uppercase tracking-wide text-slate-400 mb-1">Home</div>
+            <textarea id="ocr_home" class="w-full h-32 bg-slate-950 rounded-xl p-3 text-xs text-slate-300"></textarea>
+          </div>
+          <div>
+            <div class="text-xs uppercase tracking-wide text-slate-400 mb-1">Away</div>
+            <textarea id="ocr_away" class="w-full h-32 bg-slate-950 rounded-xl p-3 text-xs text-slate-300"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  let p1, p2;
+  <script>
+    const TYPE_OPTIONS = ["H2H", "Home Form", "Away Form"];
+    const REQUIRED_TYPES = ["H2H", "Home Form", "Away Form"];
+    let filesState = [];
 
-  if (homeStrength > awayWeakness) {
-    p1 = { label: "1X", confidence: 60 + homeStrength - awayWeakness };
-    p2 = { label: "1", confidence: 55 + (homeStrength * 0.6) };
-  } else {
-    p1 = { label: "X2", confidence: 60 + awayWeakness - homeStrength };
-    p2 = { label: "2", confidence: 55 + (awayWeakness * 0.6) };
-  }
+    const fileInput = document.getElementById("fileInput");
+    const analyzeBtn = document.getElementById("analyzeBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const demoBtn = document.getElementById("demoBtn");
+    const slots = document.getElementById("slots");
+    const summary = document.getElementById("summary");
+    const modeBadge = document.getElementById("modeBadge");
+    const progressWrap = document.getElementById("progressWrap");
+    const progressBar = document.getElementById("progressBar");
+    const progressPct = document.getElementById("progressPct");
+    const progressText = document.getElementById("progressText");
 
-  return [normalize(p1), normalize(p2)];
-}
+    fileInput.addEventListener("change", handleFiles);
+    analyzeBtn.addEventListener("click", analyzeAll);
+    clearBtn.addEventListener("click", resetAll);
+    demoBtn.addEventListener("click", loadDemo);
 
-// ===============================
-// SECONDARY PATTERNS (BEHAVIOR)
-// ===============================
-function getSecondaryPatterns(match) {
-  const goals = match.avgGoals;
-  const bttsRate = match.bttsRate;
+    function resetAll() {
+      filesState = [];
+      fileInput.value = "";
+      renderSlots();
+      summary.innerHTML = "";
+      modeBadge.textContent = "Waiting";
+      setModeBadge("Waiting", "pill");
+      setOCR("h2h", "");
+      setOCR("home", "");
+      setOCR("away", "");
+      analyzeBtn.disabled = true;
+      progressWrap.classList.add("hidden");
+    }
 
-  let s1, s2;
+    function loadDemo() {
+      filesState = [
+        { name: "image-1", type: "H2H", preview: "", file: null, ocr: "", parsed: null },
+        { name: "image-2", type: "Home Form", preview: "", file: null, ocr: "", parsed: null },
+        { name: "image-3", type: "Away Form", preview: "", file: null, ocr: "", parsed: null },
+      ];
+      renderSlots();
+      validateReady();
+    }
 
-  if (goals < 2.5) {
-    s1 = { label: "Under 3.5", confidence: 58 };
-  } else {
-    s1 = { label: "Over 2.5", confidence: 60 };
-  }
+    function handleFiles(e) {
+      const files = Array.from(e.target.files || []).slice(0, 3);
+      filesState = [];
+      for (let i = 0; i < files.length; i++) {
+        const defaultType = TYPE_OPTIONS[i] || "H2H";
+        const fr = new FileReader();
+        fr.onload = (ev) => {
+          filesState.push({
+            name: files[i].name,
+            type: defaultType,
+            preview: ev.target.result,
+            file: files[i],
+            ocr: "",
+            parsed: null
+          });
+          if (filesState.length === files.length) {
+            filesState.sort((a, b) => TYPE_OPTIONS.indexOf(a.type) - TYPE_OPTIONS.indexOf(b.type));
+            renderSlots();
+            validateReady();
+          }
+        };
+        fr.readAsDataURL(files[i]);
+      }
+    }
 
-  if (bttsRate > 0.5) {
-    s2 = { label: "BTTS", confidence: 55 };
-  } else {
-    s2 = { label: "No BTTS", confidence: 53 };
-  }
+    function renderSlots() {
+      slots.innerHTML = "";
+      filesState.forEach((item, idx) => {
+        const div = document.createElement("div");
+        div.className = "card rounded-2xl p-3";
+        div.innerHTML = `
+          <div class="flex items-center justify-between gap-2 mb-2">
+            <div class="font-semibold text-sm truncate">${escapeHtml(item.name || "Empty slot")}</div>
+            <select data-index="${idx}" class="slotType bg-slate-950 rounded-lg px-2 py-1 text-sm border border-white/10">
+              ${TYPE_OPTIONS.map(t => `<option ${item.type === t ? "selected" : ""}>${t}</option>`).join("")}
+            </select>
+          </div>
+          <div class="aspect-[9/16] bg-slate-950 rounded-xl overflow-hidden flex items-center justify-center">
+            ${item.preview ? `<img src="${item.preview}" class="w-full h-full object-contain" />` : `<div class="text-slate-500 text-sm">No preview</div>`}
+          </div>
+        `;
+        slots.appendChild(div);
+      });
 
-  return [s1, s2];
-}
+      document.querySelectorAll(".slotType").forEach(el => {
+        el.addEventListener("change", (e) => {
+          const idx = Number(e.target.dataset.index);
+          filesState[idx].type = e.target.value;
+          validateReady();
+        });
+      });
+    }
 
-// ===============================
-// MODE LOGIC
-// ===============================
-function assignMode(conf) {
-  if (conf >= 70) return "ATTACK";
-  if (conf >= 60) return "CONTROL";
-  if (conf >= 55) return "LOW CONTROL";
-  return "CHAOS";
-}
+    function validateReady() {
+      const picked = filesState.map(x => x.type);
+      const ok = REQUIRED_TYPES.every(t => picked.includes(t)) && filesState.length === 3;
+      analyzeBtn.disabled = !ok;
+    }
 
-function assignStake(conf) {
-  if (conf >= 70) return "MEDIUM";
-  if (conf >= 60) return "SMALL";
-  if (conf >= 55) return "VERY SMALL";
-  return "NO STAKE";
-}
+    function setOCR(kind, text) {
+      document.getElementById(`ocr_${kind}`).value = text || "";
+    }
 
-// ===============================
-// CHAOS DETECTION
-// ===============================
-function isChaos(match, primaryTop, secondary) {
-  return (
-    primaryTop < 55 &&
-    secondary.every(s => s.confidence < 55)
-  );
-}
+    function setModeBadge(text, klass) {
+      modeBadge.className = `px-3 py-1 rounded-full text-sm ${klass}`;
+      modeBadge.textContent = text;
+    }
 
-// ===============================
-// SCORE GENERATOR
-// ===============================
-function generateScores(primary, secondary) {
-  const primaryMain = primary[0].label;
-  const secondaryMain = secondary[0].label;
+    async function analyzeAll() {
+      const h2h = filesState.find(x => x.type === "H2H");
+      const home = filesState.find(x => x.type === "Home Form");
+      const away = filesState.find(x => x.type === "Away Form");
+      if (!h2h || !home || !away) return;
 
-  let scores = [];
+      progressWrap.classList.remove("hidden");
+      progressBar.style.width = "0%";
+      progressPct.textContent = "0%";
+      progressText.textContent = "Running OCR...";
 
-  // Base from PRIMARY
-  if (primaryMain.includes("1")) {
-    scores = ["2-0", "2-1", "3-0", "3-1"];
-  } else if (primaryMain.includes("2")) {
-    scores = ["0-1", "1-2", "0-2", "1-3"];
-  } else {
-    scores = ["1-1", "0-0", "2-2", "1-2"];
-  }
+      const ordered = [h2h, home, away];
+      for (let i = 0; i < ordered.length; i++) {
+        const item = ordered[i];
+        if (!item.file) continue;
+        progressText.textContent = `OCR: ${item.type}`;
+        item.ocr = await runOCR(item.file, i, ordered.length);
+        item.parsed = parseMatches(item.ocr);
+      }
 
-  // Adjust with SECONDARY
-  if (secondaryMain.includes("Under")) {
-    scores = scores.filter(s => totalGoals(s) <= 3);
-  }
+      setOCR("h2h", h2h.ocr);
+      setOCR("home", home.ocr);
+      setOCR("away", away.ocr);
 
-  if (secondaryMain.includes("BTTS")) {
-    scores = scores.filter(s => bothTeamsScore(s));
-  }
+      progressText.textContent = "Building verdict...";
+      const verdict = runPraxos({
+        h2h: h2h.parsed,
+        home: home.parsed,
+        away: away.parsed,
+        raw: { h2h: h2h.ocr, home: home.ocr, away: away.ocr }
+      });
+      renderVerdict(verdict);
+      progressBar.style.width = "100%";
+      progressPct.textContent = "100%";
+      progressText.textContent = "Done";
+    }
 
-  // Ensure at least 4
-  while (scores.length < 4) {
-    scores.push("1-1");
-  }
+    async function runOCR(file, index, total) {
+      const result = await Tesseract.recognize(file, "eng", {
+        logger: (m) => {
+          if (m.status === "recognizing text") {
+            const base = (index / total) * 100;
+            const width = base + (m.progress * (100 / total));
+            progressBar.style.width = `${width}%`;
+            progressPct.textContent = `${Math.floor(width)}%`;
+          }
+        }
+      });
+      return result.data.text || "";
+    }
 
-  scores = scores.slice(0, 4);
+    function parseMatches(text) {
+      // robust extraction for screenshots with clutter
+      const lines = (text || "")
+        .split(/\n+/)
+        .map(x => x.trim())
+        .filter(Boolean);
 
-  return distributeScoreConfidence(scores, secondary[0].confidence);
-}
+      const scoreMatches = [];
+      const direct = [...text.matchAll(/(?<!\d)(\d)\s*[-:]\s*(\d)(?!\d)/g)];
+      direct.forEach(m => scoreMatches.push({ home: Number(m[1]), away: Number(m[2]), src: m[0] }));
 
-// ===============================
-// HELPERS
-// ===============================
-function totalGoals(score) {
-  const [a, b] = score.split("-").map(Number);
-  return a + b;
-}
+      // also catch vertical OCR reads where score digits appear as isolated right-column values
+      if (scoreMatches.length < 4) {
+        const nums = lines
+          .filter(x => /^\d+$/.test(x))
+          .map(x => Number(x))
+          .filter(n => n >= 0 && n <= 9);
+        for (let i = 0; i + 1 < nums.length; i += 2) {
+          scoreMatches.push({ home: nums[i], away: nums[i+1], src: `${nums[i]}-${nums[i+1]}` });
+        }
+      }
 
-function bothTeamsScore(score) {
-  const [a, b] = score.split("-").map(Number);
-  return a > 0 && b > 0;
-}
+      // dedupe near-identical scores, keep order
+      const deduped = [];
+      const seen = new Set();
+      for (const m of scoreMatches) {
+        const key = `${m.home}-${m.away}-${deduped.length > 0 ? deduped[deduped.length-1].home + ":" + deduped[deduped.length-1].away : "start"}`;
+        if (!seen.has(`${m.home}-${m.away}-${deduped.length}`)) {
+          deduped.push({ home: m.home, away: m.away });
+        }
+      }
 
-function distributeScoreConfidence(scores, base) {
-  const weights = [0.30, 0.27, 0.23, 0.20];
+      return deduped.slice(0, 12);
+    }
 
-  return scores.map((s, i) => ({
-    score: s,
-    confidence: Math.round(base * weights[i])
-  }));
-}
+    function weightedStats(arr) {
+      if (!arr || !arr.length) {
+        return {
+          avgGoals: 0, drawRate: 0, bttsRate: 0, homeWinRate: 0, awayWinRate: 0,
+          under35Rate: 0, over15Rate: 0, cleanHomeRate: 0, cleanAwayRate: 0
+        };
+      }
+      const n = arr.length;
+      const weights = arr.map((_, i) => n - i); // most recent first
+      const wsum = weights.reduce((a,b) => a+b, 0);
 
-function getTopConfidence(arr) {
-  return Math.max(...arr.map(a => a.confidence));
-}
+      let goals = 0, draw = 0, btts = 0, hw = 0, aw = 0, u35 = 0, o15 = 0, ch = 0, ca = 0;
+      arr.forEach((m, i) => {
+        const w = weights[i];
+        const total = m.home + m.away;
+        goals += total * w;
+        if (m.home === m.away) draw += w;
+        if (m.home > 0 && m.away > 0) btts += w;
+        if (m.home > m.away) hw += w;
+        if (m.away > m.home) aw += w;
+        if (total <= 3) u35 += w;
+        if (total >= 2) o15 += w;
+        if (m.away === 0) ch += w;
+        if (m.home === 0) ca += w;
+      });
 
-function normalize(obj) {
-  obj.confidence = Math.min(75, Math.max(50, Math.round(obj.confidence)));
-  return obj;
-}
+      return {
+        avgGoals: goals / wsum,
+        drawRate: draw / wsum,
+        bttsRate: btts / wsum,
+        homeWinRate: hw / wsum,
+        awayWinRate: aw / wsum,
+        under35Rate: u35 / wsum,
+        over15Rate: o15 / wsum,
+        cleanHomeRate: ch / wsum,
+        cleanAwayRate: ca / wsum
+      };
+    }
 
-// ===============================
-// FINAL OUTPUT FORMAT
-// ===============================
-function formatOutput(data) {
-  if (data.chaos) {
-    return {
-      Confidence: data.confidence + "%",
-      Mode: "CHAOS",
-      Primary: data.primary,
-      Secondary: data.secondary,
-      Scores: data.scores,
-      Stake: "NO STAKE"
-    };
-  }
+    function clamp(x, a, b) { return Math.max(a, Math.min(b, x)); }
+    function pct(v) { return Math.round(v); }
 
-  return {
-    Confidence: data.confidence + "%",
-    Mode: data.mode,
-    Primary: data.primary,
-    Secondary: data.secondary,
-    ScorePatterns: data.scores,
-    Stake: data.stake
-  };
-}
+    function runPraxos({ h2h, home, away }) {
+      const H = weightedStats(h2h);
+      const Ho = weightedStats(home);
+      const Aw = weightedStats(away);
+
+      // core signals
+      const drawTrap = (H.drawRate * 0.45) + (Ho.drawRate * 0.25) + (Aw.drawRate * 0.25) + (h2h.length <= 2 ? 0.08 : 0);
+      const awayEdge = (Aw.awayWinRate * 0.42) + ((1 - Ho.homeWinRate) * 0.28) + (H.awayWinRate * 0.18) + (Aw.cleanAwayRate * 0.07);
+      const homeEdge = (Ho.homeWinRate * 0.42) + ((1 - Aw.awayWinRate) * 0.28) + (H.homeWinRate * 0.18) + (Ho.cleanHomeRate * 0.07);
+      const under35 = (H.under35Rate * 0.34) + (Ho.under35Rate * 0.33) + (Aw.under35Rate * 0.33);
+      const over15 = (H.over15Rate * 0.22) + (Ho.over15Rate * 0.39) + (Aw.over15Rate * 0.39);
+      const bttsYes = (H.bttsRate * 0.35) + (Ho.bttsRate * 0.325) + (Aw.bttsRate * 0.325);
+      const bttsNo = 1 - bttsYes;
+      const avgGoals = (H.avgGoals * 0.22) + (Ho.avgGoals * 0.39) + (Aw.avgGoals * 0.39);
+
+      // mode
+      let mode = "CONTROL";
+      if (drawTrap >= 0.46) mode = "CHAOS";
+      if (avgGoals >= 3.15 && drawTrap < 0.43) mode = "ATTACK";
+
+      // markets
+      const markets = [];
+
+      // straight win
+      markets.push({ label: "Home Win", conf: pct(45 + homeEdge * 45 - awayEdge * 16 - drawTrap * 10), family: "main" });
+      markets.push({ label: "Away Win", conf: pct(45 + awayEdge * 45 - homeEdge * 16 - drawTrap * 10), family: "main" });
+
+      // double chance
+      markets.push({ label: "1X", conf: pct(50 + homeEdge * 26 + drawTrap * 10 - awayEdge * 9), family: "main" });
+      markets.push({ label: "X2", conf: pct(50 + awayEdge * 26 + drawTrap * 10 - homeEdge * 9), family: "main" });
+
+      // draw
+      markets.push({ label: "Draw", conf: pct(42 + drawTrap * 44 - Math.abs(homeEdge - awayEdge) * 14), family: "main" });
+
+      // goals
+      markets.push({ label: "Under 3.5", conf: pct(45 + under35 * 44 - Math.max(0, avgGoals - 2.8) * 8), family: "goals" });
+      markets.push({ label: "Over 1.5", conf: pct(44 + over15 * 42 + Math.max(0, avgGoals - 1.6) * 7), family: "goals" });
+      markets.push({ label: "Over 2.5", conf: pct(40 + clamp((avgGoals - 2.1) / 1.3, 0, 1) * 38 + bttsYes * 8), family: "goals" });
+      markets.push({ label: "Under 2.5", conf: pct(40 + clamp((2.65 - avgGoals) / 1.15, 0, 1) * 38 + bttsNo * 8), family: "goals" });
+
+      // btts
+      markets.push({ label: "BTTS", conf: pct(42 + bttsYes * 42 + Math.max(0, avgGoals - 2.2) * 6), family: "btts" });
+      markets.push({ label: "BTTS No", conf: pct(42 + bttsNo * 42 + Math.max(0, 2.6 - avgGoals) * 6), family: "btts" });
+
+      // handicap
+      markets.push({ label: "Home +0.5", conf: pct(49 + homeEdge * 22 + drawTrap * 9 - awayEdge * 8), family: "hcp" });
+      markets.push({ label: "Away +0.5", conf: pct(49 + awayEdge * 22 + drawTrap * 9 - homeEdge * 8), family: "hcp" });
+      markets.push({ label: "Away 0.0 (DNB)", conf: pct(46 + awayEdge * 29 - homeEdge * 8 + drawTrap * 4), family: "hcp" });
+      markets.push({ label: "Home 0.0 (DNB)", conf: pct(46 + homeEdge * 29 - awayEdge * 8 + drawTrap * 4), family: "hcp" });
+
+      // combo
+      const x2 = findConf(markets, "X2");
+      const oneX = findConf(markets, "1X");
+      const u35 = findConf(markets, "Under 3.5");
+      const o15c = findConf(markets, "Over 1.5");
+      const awayDNB = findConf(markets, "Away 0.0 (DNB)");
+      const homeDNB = findConf(markets, "Home 0.0 (DNB)");
+      const bttsNoC = findConf(markets, "BTTS No");
+
+      markets.push({ label: "X2 + Under 3.5", conf: comboConf(x2, u35), family: "combo" });
+      markets.push({ label: "1X + Under 3.5", conf: comboConf(oneX, u35), family: "combo" });
+      markets.push({ label: "Away DNB + Over 1.5", conf: comboConf(awayDNB, o15c), family: "combo" });
+      markets.push({ label: "Home DNB + Over 1.5", conf: comboConf(homeDNB, o15c), family: "combo" });
+      markets.push({ label: "X2 + BTTS No", conf: comboConf(x2, bttsNoC), family: "combo" });
+
+      // stricter rejection and ranking
+      const filtered = markets
+        .map(m => ({ ...m, conf: clamp(m.conf, 1, 95) }))
+        .filter(m => m.conf >= 70)
+        .sort((a, b) => b.conf - a.conf);
+
+      const primary = filtered.slice(0, 2);
+      const secondary = filtered.slice(2, 8);
+
+      const scores = buildScores({ mode, homeEdge, awayEdge, drawTrap, avgGoals, under35, bttsYes });
+
+      return {
+        mode,
+        confidence: primary[0]?.conf || 0,
+        primary,
+        secondary,
+        scores,
+        stats: { H, Ho, Aw, drawTrap, awayEdge, homeEdge, avgGoals, under35, over15, bttsYes }
+      };
+    }
+
+    function comboConf(a, b) {
+      if (!a || !b) return 0;
+      return Math.round(((a + b) / 2) - 2);
+    }
+
+    function findConf(markets, label) {
+      return markets.find(m => m.label === label)?.conf || 0;
+    }
+
+    function buildScores({ mode, homeEdge, awayEdge, drawTrap, avgGoals, under35, bttsYes }) {
+      const scores = [];
+      const balanced = Math.abs(homeEdge - awayEdge) < 0.1;
+      if (drawTrap > 0.46) scores.push("0-0", "1-1");
+      if (awayEdge > homeEdge + 0.08) scores.push("0-1", "1-2", "0-2");
+      if (homeEdge > awayEdge + 0.08) scores.push("1-0", "2-1", "2-0");
+      if (balanced && avgGoals >= 2.2) scores.push("1-1", "2-2");
+      if (under35 > 0.62 && !scores.includes("0-1")) scores.push("0-1");
+      if (avgGoals > 2.9 && bttsYes > 0.5) scores.push("2-1", "1-2");
+      return [...new Set(scores)].slice(0, 6);
+    }
+
+    function renderVerdict(v) {
+      setModeBadge(v.mode, v.mode === "ATTACK" ? "px-3 py-1 rounded-full text-sm bg-emerald-600/20 text-emerald-300" :
+                               v.mode === "CHAOS" ? "px-3 py-1 rounded-full text-sm bg-amber-600/20 text-amber-300" :
+                               "px-3 py-1 rounded-full text-sm bg-sky-600/20 text-sky-300");
+
+      const primaryHtml = `
+        <div class="card rounded-2xl p-4">
+          <div class="text-sm text-slate-400 mb-2">Primary</div>
+          ${v.primary.length ? v.primary.map(p => rowHtml(p.label, p.conf, true)).join("") : `<div class="text-slate-500">No market above 70%</div>`}
+        </div>
+      `;
+
+      const secondaryHtml = `
+        <div class="card rounded-2xl p-4">
+          <div class="text-sm text-slate-400 mb-2">Secondary</div>
+          ${v.secondary.length ? v.secondary.map(p => rowHtml(p.label, p.conf)).join("") : `<div class="text-slate-500">No secondary markets</div>`}
+        </div>
+      `;
+
+      const scoresHtml = `
+        <div class="card rounded-2xl p-4 md:col-span-2">
+          <div class="text-sm text-slate-400 mb-2">Possible scores</div>
+          <div class="flex flex-wrap gap-2">
+            ${v.scores.map(s => `<span class="px-3 py-2 rounded-xl pill">${s}</span>`).join("") || '<span class="text-slate-500">No score line</span>'}
+          </div>
+        </div>
+      `;
+
+      const signalsHtml = `
+        <div class="card rounded-2xl p-4 md:col-span-2">
+          <div class="text-sm text-slate-400 mb-2">Signals</div>
+          <div class="grid md:grid-cols-3 gap-3 text-sm">
+            ${sig("H2H draw trap", Math.round(v.stats.drawTrap * 100))}
+            ${sig("Home edge", Math.round(v.stats.homeEdge * 100))}
+            ${sig("Away edge", Math.round(v.stats.awayEdge * 100))}
+            ${sig("Average goals", v.stats.avgGoals.toFixed(2))}
+            ${sig("Under 3.5 bias", Math.round(v.stats.under35 * 100))}
+            ${sig("BTTS yes bias", Math.round(v.stats.bttsYes * 100))}
+          </div>
+        </div>
+      `;
+
+      summary.innerHTML = primaryHtml + secondaryHtml + scoresHtml + signalsHtml;
+    }
+
+    function sig(label, value) {
+      return `<div class="pill rounded-xl p-3"><div class="text-slate-400 text-xs mb-1">${label}</div><div class="font-semibold">${value}</div></div>`;
+    }
+
+    function rowHtml(label, conf, strong = false) {
+      return `
+        <div class="flex items-center justify-between py-2 ${strong ? "text-emerald-300" : "text-slate-200"} border-b border-white/5 last:border-b-0">
+          <span>${escapeHtml(label)}</span>
+          <span class="font-bold">${conf}%</span>
+        </div>
+      `;
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    resetAll();
+  </script>
+</body>
+</html>
