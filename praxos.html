@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Praxos Apex | Autonomous Terminal v1.1</title>
+  <title>Praxos Apex | Autonomous Terminal v1.2</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <style>
@@ -22,7 +22,7 @@
     <div class="lg:col-span-4 space-y-6">
       <header class="mb-8 border-b border-emerald-500/20 pb-4">
         <h1 class="text-3xl font-black tracking-tighter text-white">PRAXOS <span class="text-emerald-500">APEX</span></h1>
-        <p class="text-[10px] text-emerald-500/70 uppercase tracking-[0.2em] mt-1">Autonomous Multi-Tensor Engine v1.1</p>
+        <p class="text-[10px] text-emerald-500/70 uppercase tracking-[0.2em] mt-1">Autonomous Multi-Tensor Engine v1.2</p>
       </header>
 
       <div class="glass rounded-xl p-5">
@@ -53,8 +53,8 @@
           <button id="copyBtn" class="text-[10px] bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-3 py-1.5 rounded uppercase font-bold transition-all">Copy Report</button>
         </div>
         
-        <textarea id="terminal" readonly class="flex-grow w-full min-h-[500px] bg-transparent text-[13px] text-emerald-400 font-medium leading-relaxed resize-none" placeholder="INITIALIZING PRAXOS CORE v1.1...
-AWAITING MULTI-TENSOR INGESTION. NO MANUAL SORTING REQUIRED."></textarea>
+        <textarea id="terminal" readonly class="flex-grow w-full min-h-[500px] bg-transparent text-[13px] text-emerald-400 font-medium leading-relaxed resize-none" placeholder="INITIALIZING PRAXOS CORE v1.2...
+WATERFALL EXTRACTION PROTOCOL ACTIVE. AWAITING INGESTION."></textarea>
       </div>
     </div>
 
@@ -104,6 +104,7 @@ els.runBtn.onclick = async () => {
 
     const sorted = autoSortDatasets(texts);
     
+    // Using v1.2 Waterfall Extractor
     const h2hRows = extractScoresRobust(sorted.h2hText, 10);
     const homeRows = extractScoresRobust(sorted.homeText, 10);
     const awayRows = extractScoresRobust(sorted.awayText, 10);
@@ -122,7 +123,7 @@ async function runOCR(file) {
   return res.data.text.replace(/\r/g, "\n").replace(/[|]/g, " ").replace(/[^ \S\n]+/g, " ").trim();
 }
 
-/* --- V1.1 AUTONOMOUS ROLE DETECTION (STRICT ALPHA SANITIZATION) --- */
+/* --- AUTONOMOUS ROLE DETECTION (STRICT ALPHA SANITIZATION) --- */
 function autoSortDatasets(texts) {
   let freqs = texts.map(t => getFreqs(t));
   
@@ -149,7 +150,6 @@ function autoSortDatasets(texts) {
   let tAText = form1Team === tA ? form1Text : form2Text;
   let tBText = form1Team === tB ? form1Text : form2Text;
 
-  // Smarter Home/Away Assignment: Count occurrences in H2H to see who is listed first
   let homeName, awayName, homeText, awayText;
   let aFirst = 0; let bFirst = 0;
   
@@ -175,54 +175,82 @@ function autoSortDatasets(texts) {
 }
 
 function getFreqs(text) {
-  // STRICT OCR CLEANUP: Remove logos (©, ®), numbers, dates, punctuation
   let clean = text.replace(/(Summary|Odds|H2H|Standings|Lineups|Advertisement|Stats|Video|Awarded)/gi, "");
-  clean = clean.replace(/[^a-zA-Z\s]/g, " "); // ONLY ALLOW LETTERS AND SPACES
-  clean = clean.replace(/\b[WDL]\b/g, " "); // Strip W D L
+  clean = clean.replace(/[^a-zA-Z\s]/g, " "); 
+  clean = clean.replace(/\b[WDL]\b/g, " "); 
   
   const counts = {};
   clean.split('\n').forEach(line => {
     let t = line.trim().toUpperCase();
-    // Only count words longer than 3 characters (filters out misread logos like 'C' or 'G')
     if (t.length > 3) counts[t] = (counts[t] || 0) + 1;
   });
   return counts;
 }
 
-/* --- V1.1 SCORING EXTRACTOR (SANITY WALLS ADDED) --- */
+/* --- V1.2 WATERFALL SCORING EXTRACTOR (FIXED FLASHSCORE LAYOUT) --- */
 function extractScoresRobust(text, limit) {
   let rows = [];
-  const lines = text.split("\n").map(x => x.trim()).filter(Boolean);
+  let cleanText = text.replace(/\b\d{1,2}\.\d{1,2}\.?\b/g, " ").replace(/\b(19|20)\d{2}\b/g, " ");
+  const lines = cleanText.split("\n").map(x => x.trim()).filter(Boolean);
   
+  // PASS 1: Horizontal Check (e.g. 2 - 1)
   lines.forEach(line => {
-    let clean = line.replace(/\b\d{1,2}\.\d{1,2}\.?\b/g, " ").replace(/\b20\d{2}\b/g, " ");
-    let m = clean.match(/(\d{1,2})\s*[-: ]\s*(\d{1,2})/);
+    let m = line.match(/(\d{1,2})\s*[-:]\s*(\d{1,2})/);
     if (m) {
        let a = parseInt(m[1]), b = parseInt(m[2]);
-       // SANITY WALL: OCR sometimes reads 0 as 8. Discard impossible/rare scores > 7
        if (a <= 7 && b <= 7) rows.push({ h: a, a: b, t: a+b });
     }
   });
 
+  // PASS 2: Vertical Edge Check (Flashscore layout where scores are at the end of consecutive lines)
+  if (rows.length < 3) {
+      rows = [];
+      let eolNums = [];
+      lines.forEach(line => {
+          let m = line.match(/\s+(\d{1,2})$|^(\d{1,2})$/);
+          if (m) {
+              let val = m[1] || m[2];
+              eolNums.push(parseInt(val));
+          }
+      });
+      for(let i=0; i<eolNums.length-1; i+=2) {
+          let a = eolNums[i], b = eolNums[i+1];
+          if(a <= 7 && b <= 7) rows.push({h:a, a:b, t:a+b});
+      }
+  }
+
+  // PASS 3: Brute Force Sequence (If all layout assumptions fail)
+  if (rows.length < 3) {
+      rows = [];
+      let nums = cleanText.match(/\b\d{1,2}\b/g);
+      if (nums) {
+         for(let i=0; i<nums.length-1; i+=2) {
+             let a = parseInt(nums[i]), b = parseInt(nums[i+1]);
+             if(a <= 7 && b <= 7) rows.push({h:a, a:b, t:a+b});
+         }
+      }
+  }
+
+  // Deduplication Filter
   let unique = []; let seen = new Set();
   rows.forEach(r => {
     let key = `${r.h}-${r.a}`;
+    // Flashscore often repeats the score block twice in UI, this deduplicates it while allowing legit identical scores
     if(!seen.has(key)) { seen.add(key); unique.push(r); }
   });
   return unique.slice(0, limit);
 }
 
-/* --- V1.1 PRAXOS APEX ENGINE (MODERN ERA OVERRIDE) --- */
+/* --- PRAXOS APEX ENGINE --- */
 function executePraxosLogic(homeName, awayName, h2h, home, away) {
   if(h2h.length < 1 || home.length < 2 || away.length < 2) {
-      return `>> ERROR: INSUFFICIENT DATA EXTRACTED.\nH2H Rows: ${h2h.length} | Home Rows: ${home.length} | Away Rows: ${away.length}\nCheck screenshot crop.`;
+      return `>> ERROR: INSUFFICIENT DATA EXTRACTED.\nH2H Rows: ${h2h.length} | Home Rows: ${home.length} | Away Rows: ${away.length}\nSystem failed to map the UI lattice. Check screenshot crop.`;
   }
 
   // Analytics
   let h2hHomeWins = h2h.filter(r => r.h > r.a).length / h2h.length;
   let draws = h2h.filter(r => r.h === r.a).length / h2h.length;
   
-  // Modern Era Check (Last 5 H2H matches)
   let recentH2H = h2h.slice(0, 5);
   let recentHomeWins = recentH2H.filter(r => r.h > r.a).length / recentH2H.length;
   
@@ -238,27 +266,23 @@ function executePraxosLogic(homeName, awayName, h2h, home, away) {
   let secLabel = ""; let secConf = 0;
   let sysNote = "";
 
-  // 1. MODERN ERA BOOGEYMAN OVERRIDE
   if (recentHomeWins >= 0.8 || h2hHomeWins >= 0.65) {
     let baseWin = Math.max(recentHomeWins, h2hHomeWins);
     primaryLabel = baseWin >= 0.8 ? `${homeName} Moneyline (1)` : `1X (Home Protection) / ${homeName} Moneyline (1)`;
-    primaryConf = Math.floor(82 + (baseWin * 10)); // 88% - 92%
+    primaryConf = Math.floor(82 + (baseWin * 10)); 
     sysNote = `*(System Note: Extreme Head-to-Head Boogeyman dominance by ${homeName} detected. Structural history overrides localized form fluctuations).*`;
   } 
-  // 2. DRAW GRAVITY CHECK
   else if (draws >= 0.4) {
     primaryLabel = "Draw (X) Detected / X2 (Away Protection)";
     primaryConf = Math.floor(78 + (draws * 15));
     sysNote = `*(System Note: High Draw Gravity detected. Mutual inefficiency matrix is active).*`;
   } 
-  // 3. STANDARD VARIANCE
   else {
     primaryLabel = "1X (Home) or X2 (Away) - Standard Variance";
     primaryConf = 75;
     sysNote = `*(System Note: No extreme structural anomaly detected. Proceed with standard bankroll limits).*`;
   }
 
-  // SECONDARY CONSTRAINTS (GOALS)
   if (avgGoals > 2.6 || (avgGoals > 2.2 && bttsRate > 0.6)) {
     secLabel = bttsRate > 0.6 ? "Over 2.5 Goals / BTTS YES" : "Over 2.5 Goals";
     secConf = Math.floor(75 + (avgGoals * 4));
