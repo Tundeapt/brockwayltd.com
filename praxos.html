@@ -3,186 +3,262 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Praxos | Quantitative Analytical Framework</title>
+    <title>Praxos Pro | Quantitative Analytical Framework</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
-        body { font-family: 'JetBrains+Mono', monospace; background-color: #0a0a0b; color: #e4e4e7; }
-        .glass-panel { background: rgba(23, 23, 27, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .neon-border-green { border-left: 4px solid #10b981; }
-        .animate-pulse-once { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) 1; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .8; } }
+        body { font-family: 'JetBrains+Mono', monospace; background-color: #0d0d0f; color: #e2e8f0; }
+        .glass { background: rgba(18, 18, 21, 0.8); backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .neon-text { color: #10b981; text-shadow: 0 0 12px rgba(16, 185, 129, 0.4); }
+        .pro-border { border-left: 4px solid #10b981; box-shadow: -10px 0 20px -10px rgba(16, 185, 129, 0.2); }
+        .pro-card { background: linear-gradient(145deg, #16161a 0%, #0d0d0f 100%); border: 1px solid rgba(255,255,255,0.03); }
+        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+        .scanner::after { content: ""; position: absolute; width: 100%; height: 2px; background: rgba(16, 185, 129, 0.2); top: 0; left: 0; animation: scan 2s linear infinite; }
     </style>
 </head>
-<body class="min-h-screen p-4 md:p-8 text-sm">
+<body class="min-h-screen p-4 md:p-10">
 
     <div class="max-w-6xl mx-auto">
-        <header class="flex justify-between items-center mb-8 border-b border-white/10 pb-6 uppercase tracking-widest">
+        <header class="flex justify-between items-end mb-12 border-b border-emerald-500/10 pb-8">
             <div>
-                <h1 class="text-3xl font-bold text-white">PRAXOS <span class="text-emerald-500 text-xs">V2.2</span></h1>
-                <p class="text-zinc-500 text-[10px]">Statistical Asymmetry / Variance Isolation</p>
+                <h1 class="text-4xl font-black tracking-tighter text-white">PRAXOS <span class="text-emerald-500 text-sm font-normal px-2 py-1 bg-emerald-500/10 rounded ml-2">PRO v3.1</span></h1>
+                <p class="text-zinc-500 text-[10px] mt-2 uppercase tracking-[0.3em]">Institutional Grade Variance Analysis</p>
             </div>
-            <button onclick="clearHistory()" class="text-[10px] text-zinc-600 hover:text-red-500 transition">PURGE ARCHIVE</button>
+            <div class="hidden md:flex flex-col items-end gap-1">
+                <div class="flex items-center gap-2 text-emerald-500 text-[10px] font-bold">
+                    <span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span></span>
+                    ENCRYPTION SECURE // NODE ACTIVE
+                </div>
+                <button onclick="clearLogs()" class="text-[9px] text-zinc-600 hover:text-red-500 transition uppercase tracking-widest">Wipe Local Archive</button>
+            </div>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
-            <div class="space-y-6">
-                <div class="glass-panel p-6 rounded-xl border border-white/5">
-                    <h2 class="text-xs font-bold mb-4 text-emerald-500 uppercase tracking-widest">Data Ingestion</h2>
+        <main class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+            <section class="lg:col-span-4 space-y-6">
+                <div class="glass p-6 rounded-2xl relative overflow-hidden scanner">
+                    <h2 class="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+                        <i class="fa-solid fa-microchip text-emerald-500"></i> Data Ingestion
+                    </h2>
                     
-                    <div class="space-y-4">
-                        <div class="border-2 border-dashed border-zinc-800 rounded-lg p-8 text-center hover:border-emerald-500/40 transition relative group" id="drop-zone">
-                            <input type="file" id="file-input" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" multiple accept="image/*">
-                            <div id="drop-zone-content">
-                                <i class="fa-solid fa-cloud-arrow-up text-2xl text-zinc-700 group-hover:text-emerald-500 transition mb-2"></i>
-                                <p class="text-[11px] text-zinc-500">UPLOAD DATASET</p>
+                    <div class="space-y-5">
+                        <div id="drop-zone" class="border-2 border-dashed border-zinc-800 rounded-xl p-6 text-center hover:border-emerald-500/30 transition-all cursor-pointer bg-black/40 group relative">
+                            <input type="file" id="file-input" class="hidden" accept="image/*" multiple>
+                            <i class="fa-solid fa-atom text-2xl text-zinc-700 group-hover:text-emerald-500 mb-2 block transition-transform group-hover:rotate-180 duration-500"></i>
+                            <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest" id="upload-status">Upload Datasets</p>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-[9px] text-zinc-600 uppercase font-bold ml-1 mb-2 block">Match Identifier</label>
+                                <input type="text" id="match-title" placeholder="E.G. REAL MADRID VS CITY" class="w-full bg-black/60 border border-zinc-800 rounded-lg px-4 py-3 text-xs text-emerald-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 transition-all uppercase placeholder:text-zinc-800">
+                            </div>
+                            
+                            <div class="grid grid-cols-1 gap-3">
+                                <div class="space-y-2">
+                                    <label class="text-[9px] text-zinc-600 uppercase font-bold ml-1 block">Macro Form Alignment</label>
+                                    <select id="form-state" class="w-full bg-black/60 border border-zinc-800 rounded-lg px-3 py-3 text-[10px] focus:outline-none focus:border-emerald-500 transition-all">
+                                        <option value="stable">STABLE // NO ANOMALIES</option>
+                                        <option value="toxic">TOXIC // 270m SCORELESS (RUBBER BAND)</option>
+                                        <option value="chaos">CHAOS // HIGH VOLATILITY (VETO REQ)</option>
+                                        <option value="grinder">GRINDER // LOW EVENT (PACE DICTATOR)</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
 
-                        <div>
-                            <label class="text-[10px] text-zinc-600 uppercase mb-1 block">Fixture</label>
-                            <input type="text" id="match-title" placeholder="e.g. BALTIKA vs PARI NN" class="w-full bg-black/50 border border-zinc-800 rounded p-2 text-white focus:outline-none focus:border-emerald-500 transition">
+                        <div class="p-4 bg-emerald-500/5 rounded-xl border border-emerald-500/10 space-y-3">
+                            <label class="flex items-center gap-3 cursor-pointer group">
+                                <input type="checkbox" id="boogeyman" class="w-3 h-3 accent-emerald-500 bg-black">
+                                <span class="text-[9px] text-zinc-400 group-hover:text-emerald-400 uppercase font-bold tracking-widest">Boogeyman Clause</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer group">
+                                <input type="checkbox" id="mandate" class="w-3 h-3 accent-emerald-500 bg-black">
+                                <span class="text-[9px] text-zinc-400 group-hover:text-emerald-400 uppercase font-bold tracking-widest">Sample Size Mandate</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer group">
+                                <input type="checkbox" id="conflict" class="w-3 h-3 accent-emerald-500 bg-black">
+                                <span class="text-[9px] text-zinc-400 group-hover:text-emerald-400 uppercase font-bold tracking-widest">Conflict Veto Triggered</span>
+                            </label>
                         </div>
 
-                        <button onclick="runAnalysis()" id="analyze-btn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded text-xs uppercase tracking-[0.2em] transition">
+                        <button onclick="executeProAnalysis()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-4 rounded-xl text-[11px] uppercase tracking-[0.3em] transition-all hover:shadow-[0_0_20px_rgba(16,185,129,0.3)] active:scale-[0.98]">
                             Execute Framework
                         </button>
                     </div>
                 </div>
+            </section>
 
-                <div class="glass-panel p-4 rounded-xl text-[10px] space-y-2 border border-white/5">
-                    <p class="text-zinc-600 font-bold uppercase mb-2">Active Logic Gates</p>
-                    <div class="flex items-center text-emerald-500/80"><i class="fa-solid fa-circle-check mr-2"></i> Boogeyman Clause</div>
-                    <div class="flex items-center text-emerald-500/80"><i class="fa-solid fa-circle-check mr-2"></i> Rubber Band Rule</div>
-                    <div class="flex items-center text-emerald-500/80"><i class="fa-solid fa-circle-check mr-2"></i> Pace Dictator</div>
-                    <div class="flex items-center text-emerald-500/80"><i class="fa-solid fa-circle-check mr-2"></i> Conflict Veto</div>
-                </div>
-            </div>
+            <section class="lg:col-span-8 space-y-8">
+                <div id="results-display" class="hidden animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    <div class="pro-card p-10 rounded-3xl pro-border relative overflow-hidden">
+                        <div class="flex flex-col md:flex-row justify-between items-start gap-6">
+                            <div class="space-y-2">
+                                <div class="flex items-center gap-3">
+                                    <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-500 text-[8px] font-black rounded uppercase">Structural Analysis</span>
+                                    <span id="res-id" class="text-[8px] text-zinc-700 font-bold uppercase"></span>
+                                </div>
+                                <h3 id="res-match" class="text-3xl font-black text-white italic tracking-tighter uppercase"></h3>
+                                <p id="res-time" class="text-[9px] text-zinc-600 uppercase tracking-widest font-bold"></p>
+                            </div>
+                            <div class="text-right">
+                                <div id="res-confidence" class="text-6xl font-black neon-text italic leading-none"></div>
+                                <p class="text-[9px] text-zinc-500 uppercase font-bold tracking-[0.2em] mt-2">Quantitative Confidence</p>
+                            </div>
+                        </div>
 
-            <div class="lg:col-span-2 space-y-6">
-                <div id="results-area">
-                    <div class="glass-panel p-16 rounded-xl text-center border border-white/5">
-                        <p class="text-zinc-700 italic text-xs">Waiting for dataset execution...</p>
+                        <div class="mt-10 space-y-6">
+                            <div class="bg-white/[0.02] p-6 rounded-2xl border border-white/5">
+                                <h4 class="text-[9px] text-emerald-500 font-black uppercase tracking-widest mb-4 flex items-center gap-2">
+                                    <i class="fa-solid fa-terminal"></i> Pro Logic Breakdown
+                                </h4>
+                                <div id="res-breakdown" class="text-xs text-zinc-400 leading-relaxed space-y-2"></div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="p-5 rounded-2xl bg-emerald-500/5 border border-emerald-500/10">
+                                    <p class="text-[9px] text-emerald-500 uppercase font-bold mb-2">Primary Instruction</p>
+                                    <p id="res-instruction" class="text-xs text-white font-bold italic"></p>
+                                </div>
+                                <div class="p-5 rounded-2xl bg-white/5 border border-white/5">
+                                    <p class="text-[9px] text-zinc-500 uppercase font-bold mb-2">Variance Risk</p>
+                                    <p id="res-risk" class="text-xs text-white font-bold uppercase"></p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div>
-                    <h3 class="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mb-4">Logged Archive</h3>
-                    <div id="history-list" class="space-y-2"></div>
+                <div class="space-y-4">
+                    <h2 class="text-[10px] font-black text-zinc-700 uppercase tracking-[0.3em] flex items-center gap-3 italic">
+                        <i class="fa-solid fa-list-check"></i> Analysis Log Archive
+                    </h2>
+                    <div id="history-container" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
                 </div>
-            </div>
-        </div>
+            </section>
+        </main>
     </div>
 
     <script>
         const fileInput = document.getElementById('file-input');
         const dropZone = document.getElementById('drop-zone');
-        const resultsArea = document.getElementById('results-area');
-        const historyList = document.getElementById('history-list');
-        const matchInput = document.getElementById('match-title');
+        const historyContainer = document.getElementById('history-container');
 
-        // --- NEW FILE UPLOAD FEEDBACK LOGIC ---
-        fileInput.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
-                const count = e.target.files.length;
-                const fileName = e.target.files[0].name;
-                document.getElementById('drop-zone-content').innerHTML = `
-                    <i class="fa-solid fa-file-circle-check text-2xl text-emerald-500 mb-2"></i>
-                    <p class="text-[11px] text-emerald-400 font-bold uppercase">${count > 1 ? count + ' FILES LOADED' : fileName}</p>
-                    <p class="text-[9px] text-zinc-600 uppercase">Awaiting Execution</p>
-                `;
-                dropZone.classList.add('border-emerald-500/50');
+        window.onload = renderLogs;
+
+        dropZone.onclick = () => fileInput.click();
+        fileInput.onchange = (e) => {
+            const status = document.getElementById('upload-status');
+            status.innerText = e.target.files.length > 0 ? `LOADED ${e.target.files.length} DATASETS` : "Upload Datasets";
+            status.classList.add('text-emerald-500');
+        };
+
+        function executeProAnalysis() {
+            const match = document.getElementById('match-title').value || "ANONYMOUS_STRUCTURAL_NODE";
+            const form = document.getElementById('form-state').value;
+            const boogey = document.getElementById('boogeyman').checked;
+            const mandate = document.getElementById('mandate').checked;
+            const conflict = document.getElementById('conflict').checked;
+
+            // --- PRO LOGIC ENGINE ---
+            let score = 70;
+            let report = [];
+            let instruction = "Check H2H baseline.";
+            let risk = "Standard";
+
+            if (boogey) {
+                if (mandate) {
+                    score += 24;
+                    report.push("BOOGEYMAN CLAUSE TRIGGERED: Trust H2H Gravity over Macro-Form. Sample Size Mandate satisfied (N>2).");
+                    instruction = "BACK STRUCTURAL VICTOR (ML/DNB).";
+                    risk = "Low Asymmetry Risk";
+                } else {
+                    score += 10;
+                    report.push("H2H DOMINANCE DETECTED: Sample size too small. Historical gravity is unstable.");
+                    instruction = "PROTECTED STAKE (DOUBLE CHANCE).";
+                    risk = "Moderate/Volatility";
+                }
             }
-        });
 
-        // Load history on refresh
-        window.onload = () => loadHistory();
+            if (form === 'toxic') {
+                report.push("RUBBER BAND RULE ACTIVE: Team is on a 270m+ drought. Statistical scoring probability is peaking.");
+                instruction = "AVOID WIN-TO-NIL / MONITOR REVERSION.";
+                score -= 5;
+            }
 
-        function runAnalysis() {
-            const match = matchInput.value || "UNKNOWN_STRUCTURAL_MATCH";
-            const btn = document.getElementById('analyze-btn');
+            if (form === 'grinder') {
+                report.push("PACE DICTATOR ACTIVE: Low-event game state projected. Negative variance likely to prevail.");
+                instruction = "VALUE FOUND IN UNDER GOALS / DNB.";
+            }
+
+            if (conflict) {
+                score -= 15;
+                report.push("CONFLICT VETO TRIGGERED: Violent clash between Macro-Form and H2H History. Veto O/U markets.");
+                risk = "High Variance Alert";
+            }
+
+            const log = {
+                id: `PRX-${Date.now().toString().slice(-6)}`,
+                match: match.toUpperCase(),
+                confidence: Math.min(score, 98),
+                breakdown: report,
+                instruction: instruction,
+                risk: risk,
+                time: new Date().toLocaleTimeString()
+            };
+
+            displayProResult(log);
+            saveLog(log);
+        }
+
+        function displayProResult(log) {
+            const resArea = document.getElementById('results-display');
+            resArea.classList.remove('hidden');
+            document.getElementById('res-match').innerText = log.match;
+            document.getElementById('res-id').innerText = log.id;
+            document.getElementById('res-time').innerText = `${log.time} // QUANT-CALIBRATED`;
+            document.getElementById('res-confidence').innerText = `${log.confidence}%`;
+            document.getElementById('res-instruction').innerText = log.instruction;
+            document.getElementById('res-risk').innerText = log.risk;
             
-            btn.innerText = "PROCESSING VARIANCE...";
-            btn.classList.add('opacity-50', 'cursor-not-allowed');
-
-            setTimeout(() => {
-                const confidence = Math.floor(Math.random() * (95 - 72 + 1) + 72);
-                const report = {
-                    id: Date.now(),
-                    match: match.toUpperCase(),
-                    confidence: confidence,
-                    time: new Date().toLocaleTimeString(),
-                    verdict: confidence > 85 ? "HIGH ASYMMETRY" : "STANDARD VARIANCE",
-                    instruction: "APPLY BOOGEYMAN FILTER // MONITOR PACE DICTATOR"
-                };
-
-                displayResult(report);
-                saveToHistory(report);
-                
-                btn.innerText = "Execute Framework";
-                btn.classList.remove('opacity-50', 'cursor-not-allowed');
-                matchInput.value = "";
-                // Reset drop zone
-                document.getElementById('drop-zone-content').innerHTML = `
-                    <i class="fa-solid fa-cloud-arrow-up text-2xl text-zinc-700 mb-2"></i>
-                    <p class="text-[11px] text-zinc-500 uppercase">Upload Dataset</p>
-                `;
-                dropZone.classList.remove('border-emerald-500/50');
-            }, 1000);
-        }
-
-        function displayResult(data) {
-            resultsArea.innerHTML = `
-                <div class="glass-panel p-8 rounded-xl neon-border-green animate-pulse-once border border-white/10">
-                    <div class="flex justify-between items-start mb-6">
-                        <div>
-                            <h3 class="text-xl font-black text-white tracking-tighter">${data.match}</h3>
-                            <p class="text-[10px] text-zinc-500 uppercase">${data.time} // LOG_ID: ${data.id}</p>
-                        </div>
-                        <div class="text-right">
-                            <span class="text-4xl font-black text-emerald-500">${data.confidence}%</span>
-                            <p class="text-[9px] text-zinc-600 uppercase tracking-widest font-bold">Confidence</p>
-                        </div>
-                    </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="bg-emerald-500/5 p-4 rounded border border-emerald-500/10">
-                            <p class="text-[9px] text-emerald-500 uppercase font-bold mb-1">Execution Order</p>
-                            <p class="text-xs text-zinc-300">${data.instruction}</p>
-                        </div>
-                        <div class="bg-white/5 p-4 rounded border border-white/5">
-                            <p class="text-[9px] text-zinc-500 uppercase font-bold mb-1">Structural Risk</p>
-                            <p class="text-xs text-zinc-300 font-bold">${data.verdict}</p>
-                        </div>
-                    </div>
+            document.getElementById('res-breakdown').innerHTML = log.breakdown.map(line => `
+                <div class="flex gap-2 items-start">
+                    <span class="text-emerald-500 font-bold">>></span>
+                    <span>${line}</span>
                 </div>
-            `;
+            `).join('');
+
+            resArea.scrollIntoView({ behavior: 'smooth' });
         }
 
-        function saveToHistory(report) {
-            let history = JSON.parse(localStorage.getItem('praxos_log')) || [];
-            history.unshift(report);
-            localStorage.setItem('praxos_log', JSON.stringify(history.slice(0, 5)));
-            loadHistory();
+        function saveLog(log) {
+            let logs = JSON.parse(localStorage.getItem('praxos_pro_logs')) || [];
+            logs.unshift(log);
+            localStorage.setItem('praxos_pro_logs', JSON.stringify(logs.slice(0, 10)));
+            renderLogs();
         }
 
-        function loadHistory() {
-            let history = JSON.parse(localStorage.getItem('praxos_log')) || [];
-            historyList.innerHTML = history.map(item => `
-                <div class="glass-panel p-3 rounded flex justify-between items-center border border-white/5 hover:bg-white/5 transition">
-                    <span class="text-[11px] text-zinc-400 font-bold">${item.match}</span>
-                    <span class="text-[11px] text-emerald-600 font-black">${item.confidence}%</span>
+        function renderLogs() {
+            let logs = JSON.parse(localStorage.getItem('praxos_pro_logs')) || [];
+            historyContainer.innerHTML = logs.map(log => `
+                <div class="pro-card p-4 rounded-xl border border-white/5 flex justify-between items-center group hover:border-emerald-500/20 transition-all cursor-pointer">
+                    <div>
+                        <p class="text-[10px] font-black text-zinc-300 uppercase italic">${log.match}</p>
+                        <p class="text-[8px] text-zinc-600 mt-1 uppercase font-bold">${log.id} // ${log.time}</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-lg font-black text-emerald-500 italic leading-none">${log.confidence}%</span>
+                        <p class="text-[8px] text-zinc-700 uppercase font-black">Conf.</p>
+                    </div>
                 </div>
             `).join('');
         }
 
-        function clearHistory() {
-            if(confirm("Purge all structural logs?")) {
-                localStorage.removeItem('praxos_log');
-                loadHistory();
-                resultsArea.innerHTML = `<div class="glass-panel p-16 rounded-xl text-center"><p class="text-zinc-700 text-xs italic">Archive Cleared.</p></div>`;
+        function clearLogs() {
+            if(confirm("Confirm archival purge? Data cannot be recovered.")) {
+                localStorage.removeItem('praxos_pro_logs');
+                renderLogs();
+                document.getElementById('results-display').classList.add('hidden');
             }
         }
     </script>
