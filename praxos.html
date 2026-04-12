@@ -1,1154 +1,628 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Praxos Elite</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <style>
-    body { background: #061018; color: #e5eef7; }
-    .card { background: rgba(10,19,28,0.92); border: 1px solid rgba(255,255,255,0.08); }
-    .soft { color: #8ea3b7; }
-    .good { color: #35d07f; }
-    .warn { color: #ffbf47; }
-    .bad { color: #ff5b6e; }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-    .pill { border: 1px solid rgba(255,255,255,0.08); }
-    .drop-active { outline: 2px dashed #35d07f; outline-offset: 4px; }
-    textarea { resize: vertical; }
-  </style>
-</head>
-<body class="min-h-screen">
-  <div class="max-w-7xl mx-auto px-4 py-6 md:px-6 md:py-8">
-    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
-      <div>
-        <h1 class="text-3xl md:text-4xl font-black tracking-tight">PRAXOS ELITE</h1>
-        <p class="soft text-sm mt-1">3-file screenshot scanner · H2H + Home + Away · weighted market engine</p>
-      </div>
-      <div class="text-xs soft">
-        Upload exactly 3 screenshots:
-        <span class="font-semibold text-white">Head-to-head</span>,
-        <span class="font-semibold text-white">Home team recent form</span>,
-        <span class="font-semibold text-white">Away team recent form</span>
-      </div>
-    </div>
+<!DOCTYPE html>  <html lang="en">  
+<head>  
+  <meta charset="UTF-8" />  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />  
+  <title>Praxos Scanner</title>  
+  <script src="https://cdn.tailwindcss.com"></script>  
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>  
+  <style>  
+    body { background:#07111a; color:#e6edf5; }  
+    .panel { background:rgba(12,20,30,.95); border:1px solid rgba(255,255,255,.08); }  
+    .soft { color:#8ea1b5; }  
+    .good { color:#39d98a; }  
+    .warn { color:#ffbf5f; }  
+    .bad { color:#ff667a; }  
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }  
+  </style>  
+</head>  
+<body class="min-h-screen p-4 md:p-6">  
+  <div class="max-w-7xl mx-auto">  
+    <div class="mb-6">  
+      <h1 class="text-3xl md:text-4xl font-black tracking-tight">PRAXOS SCANNER</h1>  
+      <p class="soft mt-2">Upload 3 screenshots in one go: H2H, home recent form, away recent form.</p>  
+    </div>  <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">  
+  <div class="xl:col-span-4 space-y-6">  
+    <div class="panel rounded-2xl p-4">  
+      <h2 class="text-xl font-bold mb-4">Upload</h2>  
+      <input id="files" type="file" accept="image/*" multiple class="block w-full text-sm mb-4" />  
+      <div class="flex gap-3">  
+        <button id="runBtn" class="flex-1 px-4 py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 font-bold">Run Praxos</button>  
+        <button id="clearBtn" class="px-4 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 font-semibold">Clear</button>  
+      </div>  
 
-    <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
-      <div class="xl:col-span-4 space-y-6">
-        <div class="card rounded-2xl p-4 md:p-5">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-lg font-bold">Upload Screenshots</h2>
-            <button id="clearAllBtn" class="px-3 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-sm">Clear</button>
-          </div>
+      <div class="mt-4">  
+        <div class="flex justify-between text-sm">  
+          <span class="soft">Progress</span>  
+          <span id="progressText" class="mono">0%</span>  
+        </div>  
+        <div class="mt-2 h-2 bg-slate-800 rounded-full overflow-hidden">  
+          <div id="progressBar" class="h-full w-0 bg-emerald-500"></div>  
+        </div>  
+      </div>  
+    </div>  
 
-          <div id="dropzone" class="rounded-2xl border-2 border-dashed border-slate-700 p-5 text-center transition">
-            <p class="font-semibold">Drop 3 images here or tap to select</p>
-            <p class="soft text-sm mt-1">Single multi-file upload. Order does not matter if titles are visible enough.</p>
-            <input id="fileInput" type="file" accept="image/*" multiple class="hidden" />
-            <button id="pickBtn" class="mt-4 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-semibold">Choose 3 Files</button>
-          </div>
+    <div class="panel rounded-2xl p-4">  
+      <h2 class="text-xl font-bold mb-4">OCR / Engine Log</h2>  
+      <textarea id="log" class="w-full min-h-[320px] rounded-xl bg-black/20 p-3 mono text-sm"></textarea>  
+    </div>  
+  </div>  
 
-          <div class="mt-5 grid grid-cols-1 gap-3">
-            <div class="rounded-xl bg-slate-900/70 p-3">
-              <div class="flex items-center justify-between">
-                <div class="font-semibold">Detected H2H</div>
-                <span id="h2hStatus" class="text-xs soft">empty</span>
-              </div>
-              <img id="h2hPreview" class="mt-3 w-full rounded-lg hidden" alt="h2h preview" />
-            </div>
+  <div class="xl:col-span-8 space-y-6">  
+    <div class="panel rounded-2xl p-4">  
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">  
+        <div class="rounded-xl bg-slate-900/70 p-4">  
+          <div class="soft text-sm">Home Team</div>  
+          <div id="homeTeam" class="text-xl font-bold mt-1">-</div>  
+        </div>  
+        <div class="rounded-xl bg-slate-900/70 p-4">  
+          <div class="soft text-sm">Away Team</div>  
+          <div id="awayTeam" class="text-xl font-bold mt-1">-</div>  
+        </div>  
+        <div class="rounded-xl bg-slate-900/70 p-4">  
+          <div class="soft text-sm">Mode / Stake</div>  
+          <div id="modeStake" class="text-xl font-bold mt-1">-</div>  
+        </div>  
+      </div>  
+    </div>  
 
-            <div class="rounded-xl bg-slate-900/70 p-3">
-              <div class="flex items-center justify-between">
-                <div class="font-semibold">Detected Home Form</div>
-                <span id="homeStatus" class="text-xs soft">empty</span>
-              </div>
-              <img id="homePreview" class="mt-3 w-full rounded-lg hidden" alt="home preview" />
-            </div>
+    <div class="panel rounded-2xl p-4">  
+      <h2 class="text-xl font-bold mb-4">Qualified Picks (70%+)</h2>  
+      <div id="qualified" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3"></div>  
+    </div>  
 
-            <div class="rounded-xl bg-slate-900/70 p-3">
-              <div class="flex items-center justify-between">
-                <div class="font-semibold">Detected Away Form</div>
-                <span id="awayStatus" class="text-xs soft">empty</span>
-              </div>
-              <img id="awayPreview" class="mt-3 w-full rounded-lg hidden" alt="away preview" />
-            </div>
-          </div>
+    <div class="panel rounded-2xl p-4">  
+      <h2 class="text-xl font-bold mb-4">Primary</h2>  
+      <div id="primary" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>  
+    </div>  
 
-          <div class="mt-5 flex gap-3">
-            <button id="scanBtn" class="flex-1 px-4 py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 font-bold">Run Praxos</button>
-            <button id="demoBtn" class="px-4 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 font-semibold">Demo</button>
-          </div>
+    <div class="panel rounded-2xl p-4">  
+      <h2 class="text-xl font-bold mb-4">Secondary</h2>  
+      <div id="secondary" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>  
+    </div>  
 
-          <div class="mt-4">
-            <div class="flex items-center justify-between text-sm">
-              <span class="soft">Scan progress</span>
-              <span id="progressLabel" class="mono">0%</span>
-            </div>
-            <div class="mt-2 h-2 w-full rounded-full bg-slate-800 overflow-hidden">
-              <div id="progressBar" class="h-full w-0 bg-emerald-500 transition-all duration-300"></div>
-            </div>
-          </div>
-        </div>
+    <div class="panel rounded-2xl p-4">  
+      <h2 class="text-xl font-bold mb-4">Possible Scores</h2>  
+      <div id="scores" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>  
+    </div>  
 
-        <div class="card rounded-2xl p-4 md:p-5">
-          <h2 class="text-lg font-bold mb-3">OCR + Parse Log</h2>
-          <textarea id="logBox" class="w-full min-h-[260px] rounded-xl bg-black/30 p-3 text-sm mono"></textarea>
-        </div>
-      </div>
+    <div class="panel rounded-2xl p-4">  
+      <h2 class="text-xl font-bold mb-4">Parsed Datasets</h2>  
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">  
+        <pre id="h2hData" class="bg-black/20 p-3 rounded-xl text-xs mono whitespace-pre-wrap"></pre>  
+        <pre id="homeData" class="bg-black/20 p-3 rounded-xl text-xs mono whitespace-pre-wrap"></pre>  
+        <pre id="awayData" class="bg-black/20 p-3 rounded-xl text-xs mono whitespace-pre-wrap"></pre>  
+      </div>  
+    </div>  
+  </div>  
+</div>
 
-      <div class="xl:col-span-8 space-y-6">
-        <div class="card rounded-2xl p-4 md:p-5">
-          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <div>
-              <h2 class="text-xl font-black">Decision Board</h2>
-              <p class="soft text-sm">Primary + Secondary + scores + ranked markets above threshold</p>
-            </div>
-            <div class="flex flex-wrap gap-2 text-sm">
-              <div class="pill rounded-full px-3 py-1 bg-slate-900/70">Threshold: <span id="thresholdView" class="font-bold">70%</span></div>
-              <div class="pill rounded-full px-3 py-1 bg-slate-900/70">Mode: <span id="modeView" class="font-bold">-</span></div>
-              <div class="pill rounded-full px-3 py-1 bg-slate-900/70">Stake: <span id="stakeView" class="font-bold">-</span></div>
-            </div>
-          </div>
+  </div>  <script>  
+<script>
+const els = {
+  files: document.getElementById("files"),
+  runBtn: document.getElementById("runBtn"),
+  clearBtn: document.getElementById("clearBtn"),
+  log: document.getElementById("log"),
+  progressBar: document.getElementById("progressBar"),
+  progressText: document.getElementById("progressText"),
+  homeTeam: document.getElementById("homeTeam"),
+  awayTeam: document.getElementById("awayTeam"),
+  modeStake: document.getElementById("modeStake"),
+  qualified: document.getElementById("qualified"),
+  primary: document.getElementById("primary"),
+  secondary: document.getElementById("secondary"),
+  scores: document.getElementById("scores"),
+  h2hData: document.getElementById("h2hData"),
+  homeData: document.getElementById("homeData"),
+  awayData: document.getElementById("awayData"),
+};
 
-          <div class="mt-5 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="rounded-2xl bg-slate-900/70 p-4">
-              <div class="soft text-sm mb-1">Top Confidence</div>
-              <div id="confidenceView" class="text-3xl font-black">-</div>
-            </div>
-            <div class="rounded-2xl bg-slate-900/70 p-4">
-              <div class="soft text-sm mb-1">Home Team</div>
-              <div id="homeTeamView" class="text-xl font-bold">-</div>
-            </div>
-            <div class="rounded-2xl bg-slate-900/70 p-4">
-              <div class="soft text-sm mb-1">Away Team</div>
-              <div id="awayTeamView" class="text-xl font-bold">-</div>
-            </div>
-          </div>
+function log(msg) {
+  els.log.value += msg + "\n";
+  els.log.scrollTop = els.log.scrollHeight;
+}
 
-          <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-5">
-            <div class="rounded-2xl bg-slate-900/70 p-4">
-              <h3 class="font-bold text-lg mb-3">Primary Patterns</h3>
-              <div id="primaryBox" class="space-y-2"></div>
-            </div>
+function setProgress(v) {
+  const n = Math.max(0, Math.min(100, Math.round(v)));
+  els.progressBar.style.width = n + "%";
+  els.progressText.textContent = n + "%";
+}
 
-            <div class="rounded-2xl bg-slate-900/70 p-4">
-              <h3 class="font-bold text-lg mb-3">Secondary Patterns</h3>
-              <div id="secondaryBox" class="space-y-2"></div>
-            </div>
-          </div>
+function clearUI() {
+  els.log.value = "";
+  setProgress(0);
+  els.homeTeam.textContent = "-";
+  els.awayTeam.textContent = "-";
+  els.modeStake.textContent = "-";
+  els.qualified.innerHTML = "";
+  els.primary.innerHTML = "";
+  els.secondary.innerHTML = "";
+  els.scores.innerHTML = "";
+  els.h2hData.textContent = "";
+  els.homeData.textContent = "";
+  els.awayData.textContent = "";
+  els.files.value = "";
+}
 
-          <div class="mt-5 rounded-2xl bg-slate-900/70 p-4">
-            <h3 class="font-bold text-lg mb-3">Possible Scores</h3>
-            <div id="scoreBox" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
-          </div>
+function clearOutputsOnly() {
+  els.homeTeam.textContent = "-";
+  els.awayTeam.textContent = "-";
+  els.modeStake.textContent = "-";
+  els.qualified.innerHTML = "";
+  els.primary.innerHTML = "";
+  els.secondary.innerHTML = "";
+  els.scores.innerHTML = "";
+  els.h2hData.textContent = "";
+  els.homeData.textContent = "";
+  els.awayData.textContent = "";
+}
 
-          <div class="mt-5 rounded-2xl bg-slate-900/70 p-4">
-            <h3 class="font-bold text-lg mb-3">Qualified Picks (≥ 70%)</h3>
-            <div id="marketBox" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3"></div>
-          </div>
+els.clearBtn.onclick = clearUI;
 
-          <div class="mt-5 rounded-2xl bg-slate-900/70 p-4">
-            <h3 class="font-bold text-lg mb-3">Engine Summary</h3>
-            <div id="summaryBox" class="text-sm leading-7 soft"></div>
-          </div>
-        </div>
+els.runBtn.onclick = async () => {
+  const files = [...els.files.files].filter(f => f.type.startsWith("image/"));
+  if (files.length !== 3) {
+    alert("Please upload exactly 3 images.");
+    return;
+  }
 
-        <div class="card rounded-2xl p-4 md:p-5">
-          <div class="flex items-center justify-between">
-            <h2 class="text-lg font-bold">Parsed Rows</h2>
-            <button id="copyJsonBtn" class="px-3 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-sm">Copy JSON</button>
-          </div>
-          <div class="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div class="rounded-xl bg-black/25 p-3">
-              <div class="font-semibold mb-2">H2H Rows</div>
-              <pre id="h2hRows" class="text-xs mono whitespace-pre-wrap"></pre>
-            </div>
-            <div class="rounded-xl bg-black/25 p-3">
-              <div class="font-semibold mb-2">Home Rows</div>
-              <pre id="homeRows" class="text-xs mono whitespace-pre-wrap"></pre>
-            </div>
-            <div class="rounded-xl bg-black/25 p-3">
-              <div class="font-semibold mb-2">Away Rows</div>
-              <pre id="awayRows" class="text-xs mono whitespace-pre-wrap"></pre>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+  clearOutputsOnly();
+  log("Starting Praxos scan...");
 
-  <script>
-    const state = {
-      files: [],
-      assigned: { h2h: null, home: null, away: null },
-      parsed: { h2h: [], home: [], away: [] },
-      teams: { home: "", away: "" },
-      rawTexts: { h2h: "", home: "", away: "" },
-      lastResult: null,
-      threshold: 70
-    };
+  const scanned = [];
+  for (let i = 0; i < files.length; i++) {
+    const text = await runOCR(files[i], i, files.length);
+    scanned.push({ file: files[i], text });
+  }
 
-    const fileInput = document.getElementById("fileInput");
-    const pickBtn = document.getElementById("pickBtn");
-    const dropzone = document.getElementById("dropzone");
-    const clearAllBtn = document.getElementById("clearAllBtn");
-    const scanBtn = document.getElementById("scanBtn");
-    const demoBtn = document.getElementById("demoBtn");
-    const copyJsonBtn = document.getElementById("copyJsonBtn");
-    const logBox = document.getElementById("logBox");
-    const progressBar = document.getElementById("progressBar");
-    const progressLabel = document.getElementById("progressLabel");
+  const matchup = detectMatchupFromHeaders(scanned);
+  if (!matchup.home || !matchup.away) {
+    log("Could not reliably detect fixture header.");
+    alert("Praxos could not reliably detect the match teams from the screenshot headers.");
+    return;
+  }
 
-    const h2hStatus = document.getElementById("h2hStatus");
-    const homeStatus = document.getElementById("homeStatus");
-    const awayStatus = document.getElementById("awayStatus");
-    const h2hPreview = document.getElementById("h2hPreview");
-    const homePreview = document.getElementById("homePreview");
-    const awayPreview = document.getElementById("awayPreview");
+  els.homeTeam.textContent = matchup.home;
+  els.awayTeam.textContent = matchup.away;
+  log(`Detected matchup: ${matchup.home} vs ${matchup.away}`);
 
-    const thresholdView = document.getElementById("thresholdView");
-    const modeView = document.getElementById("modeView");
-    const stakeView = document.getElementById("stakeView");
-    const confidenceView = document.getElementById("confidenceView");
-    const homeTeamView = document.getElementById("homeTeamView");
-    const awayTeamView = document.getElementById("awayTeamView");
-    const primaryBox = document.getElementById("primaryBox");
-    const secondaryBox = document.getElementById("secondaryBox");
-    const scoreBox = document.getElementById("scoreBox");
-    const marketBox = document.getElementById("marketBox");
-    const summaryBox = document.getElementById("summaryBox");
-    const h2hRows = document.getElementById("h2hRows");
-    const homeRows = document.getElementById("homeRows");
-    const awayRows = document.getElementById("awayRows");
+  const assigned = assignImagesStrict(scanned, matchup);
+  if (!assigned.h2h || !assigned.home || !assigned.away) {
+    log("Could not assign H2H / HOME / AWAY images.");
+    alert("Praxos could not confidently classify the 3 screenshots.");
+    return;
+  }
 
-    thresholdView.textContent = state.threshold + "%";
+  log(`Assigned H2H: ${assigned.h2h.file.name}`);
+  log(`Assigned HOME: ${assigned.home.file.name}`);
+  log(`Assigned AWAY: ${assigned.away.file.name}`);
 
-    function log(msg) {
-      logBox.value += msg + "\n";
-      logBox.scrollTop = logBox.scrollHeight;
-    }
+  const h2hRows = parseScreenshotStrict(assigned.h2h.text, matchup.home, matchup.away, "h2h");
+  const homeRows = parseScreenshotStrict(assigned.home.text, matchup.home, matchup.away, "home");
+  const awayRows = parseScreenshotStrict(assigned.away.text, matchup.home, matchup.away, "away");
 
-    function setProgress(pct) {
-      const n = Math.max(0, Math.min(100, Math.round(pct)));
-      progressBar.style.width = n + "%";
-      progressLabel.textContent = n + "%";
-    }
+  els.h2hData.textContent = JSON.stringify(h2hRows, null, 2);
+  els.homeData.textContent = JSON.stringify(homeRows, null, 2);
+  els.awayData.textContent = JSON.stringify(awayRows, null, 2);
 
-    pickBtn.onclick = () => fileInput.click();
-    fileInput.addEventListener("change", e => handleFiles([...e.target.files]));
+  if (h2hRows.length < 1 || homeRows.length < 3 || awayRows.length < 3) {
+    log("Not enough valid parsed rows.");
+    alert("Not enough valid rows were parsed. Use clearer screenshots.");
+    return;
+  }
 
-    dropzone.addEventListener("dragover", e => {
-      e.preventDefault();
-      dropzone.classList.add("drop-active");
-    });
+  const result = analyzePraxos({
+    homeTeam: matchup.home,
+    awayTeam: matchup.away,
+    h2hRows,
+    homeRows,
+    awayRows,
+    threshold: 70
+  });
 
-    dropzone.addEventListener("dragleave", () => {
-      dropzone.classList.remove("drop-active");
-    });
+  renderResult(result);
+  setProgress(100);
+  log("Analysis complete.");
+};
 
-    dropzone.addEventListener("drop", e => {
-      e.preventDefault();
-      dropzone.classList.remove("drop-active");
-      handleFiles([...e.dataTransfer.files]);
-    });
-
-    clearAllBtn.onclick = clearAll;
-    copyJsonBtn.onclick = copyParsedJson;
-    scanBtn.onclick = runPraxosFromUploads;
-    demoBtn.onclick = runDemo;
-
-    function clearAll() {
-      state.files = [];
-      state.assigned = { h2h: null, home: null, away: null };
-      state.parsed = { h2h: [], home: [], away: [] };
-      state.teams = { home: "", away: "" };
-      state.rawTexts = { h2h: "", home: "", away: "" };
-      state.lastResult = null;
-      logBox.value = "";
-      setProgress(0);
-      [h2hPreview, homePreview, awayPreview].forEach(img => { img.src = ""; img.classList.add("hidden"); });
-      h2hStatus.textContent = "empty";
-      homeStatus.textContent = "empty";
-      awayStatus.textContent = "empty";
-      renderEmpty();
-      fileInput.value = "";
-    }
-
-    function renderEmpty() {
-      modeView.textContent = "-";
-      stakeView.textContent = "-";
-      confidenceView.textContent = "-";
-      homeTeamView.textContent = "-";
-      awayTeamView.textContent = "-";
-      primaryBox.innerHTML = "";
-      secondaryBox.innerHTML = "";
-      scoreBox.innerHTML = "";
-      marketBox.innerHTML = "";
-      summaryBox.innerHTML = "";
-      h2hRows.textContent = "";
-      homeRows.textContent = "";
-      awayRows.textContent = "";
-    }
-
-    function handleFiles(files) {
-      const valid = files.filter(f => f.type.startsWith("image/"));
-      if (!valid.length) return;
-      state.files = valid.slice(0, 3);
-      logBox.value = "";
-      log(`Loaded ${state.files.length} image file(s).`);
-      previewLooseFiles(state.files);
-    }
-
-    function previewLooseFiles(files) {
-      const slots = [
-        { status: h2hStatus, preview: h2hPreview, label: "queued" },
-        { status: homeStatus, preview: homePreview, label: "queued" },
-        { status: awayStatus, preview: awayPreview, label: "queued" }
-      ];
-
-      slots.forEach((slot, i) => {
-        const file = files[i];
-        if (!file) {
-          slot.status.textContent = "empty";
-          slot.preview.classList.add("hidden");
-          return;
-        }
-        slot.status.textContent = file.name;
-        const reader = new FileReader();
-        reader.onload = e => {
-          slot.preview.src = e.target.result;
-          slot.preview.classList.remove("hidden");
-        };
-        reader.readAsDataURL(file);
-      });
-    }
-
-    async function runPraxosFromUploads() {
-      if (state.files.length !== 3) {
-        alert("Upload exactly 3 images first.");
-        return;
+async function runOCR(file, index, total) {
+  log(`OCR -> ${file.name}`);
+  const res = await Tesseract.recognize(file, "eng", {
+    logger: m => {
+      if (m.status === "recognizing text") {
+        const pct = ((index + m.progress) / total) * 100;
+        setProgress(pct);
       }
+    }
+  });
+  return normalizeText(res.data.text);
+}
 
-      clearResultOnly();
-      log("Starting OCR pipeline...");
-      setProgress(2);
+function normalizeText(text) {
+  return text
+    .replace(/\r/g, "\n")
+    .replace(/[|]/g, " ")
+    .replace(/[“”]/g, '"')
+    .replace(/[‘’]/g, "'")
+    .replace(/[—–]/g, "-")
+    .replace(/[^\S\n]+/g, " ")
+    .replace(/\n{2,}/g, "\n")
+    .trim();
+}
 
-      const scanned = [];
-      for (let i = 0; i < state.files.length; i++) {
-        const file = state.files[i];
-        log(`OCR: ${file.name}`);
-        const text = await doOCR(file, i, state.files.length);
-        scanned.push({
-          file,
-          text,
-          meta: classifyTextBlock(text)
-        });
+function normalizeName(s) {
+  return (s || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function sameTeam(a, b) {
+  const x = normalizeName(a);
+  const y = normalizeName(b);
+  if (!x || !y) return false;
+  return x === y || x.includes(y) || y.includes(x);
+}
+
+function looksLikeTeam(s) {
+  if (!s) return false;
+  const t = s.trim();
+  if (!/[A-Za-z]/.test(t)) return false;
+  if (/^(summary|odds|h2h|standings|lineups|news|football|head-to-head matches|head-to-head|stats)$/i.test(t)) return false;
+  if (/^\d{4}$/.test(t)) return false;
+  if (/^\d{1,2}\.\d{1,2}\.?$/.test(t)) return false;
+  if (/^\d{1,2}:\d{2}$/.test(t)) return false;
+  if (/^[WDL]$/.test(t)) return false;
+  return t.length >= 3 && t.length <= 50;
+}
+
+function parseScore(line) {
+  const nums = (line || "").match(/\b\d{1,2}\b/g);
+  if (!nums || nums.length < 2) return null;
+  const home = +nums[nums.length - 2];
+  const away = +nums[nums.length - 1];
+  if (home > 15 || away > 15) return null;
+  return { home, away };
+}
+
+function extractFixtureCandidates(text) {
+  const lines = text.split("\n").map(x => x.trim()).filter(Boolean);
+  const candidates = [];
+
+  for (let i = 0; i < lines.length - 1; i++) {
+    const a = lines[i];
+    const b = lines[i + 1];
+    if (looksLikeTeam(a) && looksLikeTeam(b) && !sameTeam(a, b)) {
+      candidates.push([a, b]);
+    }
+  }
+
+  return candidates;
+}
+
+function detectMatchupFromHeaders(scanned) {
+  const pairScore = new Map();
+
+  for (const item of scanned) {
+    const candidates = extractFixtureCandidates(item.text).slice(0, 8);
+    for (const [a, b] of candidates) {
+      const key = `${normalizeName(a)}|||${normalizeName(b)}`;
+      pairScore.set(key, (pairScore.get(key) || 0) + 1);
+    }
+  }
+
+  const ranked = [...pairScore.entries()].sort((a, b) => b[1] - a[1]);
+  if (!ranked.length) return { home: "", away: "" };
+
+  const best = ranked[0][0].split("|||");
+  return { home: best[0], away: best[1] };
+}
+
+function assignImagesStrict(scanned, matchup) {
+  const homeKey = normalizeName(matchup.home);
+  const awayKey = normalizeName(matchup.away);
+
+  const scored = scanned.map(item => {
+    const t = normalizeName(item.text);
+
+    const hasH2HHeader = t.includes("head to head matches") || t.includes("head to head");
+    const hasHome = t.includes(homeKey);
+    const hasAway = t.includes(awayKey);
+
+    const fixturePairs = extractFixtureCandidates(item.text);
+    const hasExactPair = fixturePairs.some(([a, b]) =>
+      sameTeam(a, matchup.home) && sameTeam(b, matchup.away)
+    ) || fixturePairs.some(([a, b]) =>
+      sameTeam(a, matchup.away) && sameTeam(b, matchup.home)
+    );
+
+    const h2hScore =
+      (hasH2HHeader ? 60 : 0) +
+      (hasExactPair ? 30 : 0) +
+      (hasHome ? 10 : 0) +
+      (hasAway ? 10 : 0);
+
+    const homeScore =
+      (!hasH2HHeader ? 10 : -20) +
+      (hasHome ? 30 : 0) +
+      (hasAway ? 0 : 5);
+
+    const awayScore =
+      (!hasH2HHeader ? 10 : -20) +
+      (hasAway ? 30 : 0) +
+      (hasHome ? 0 : 5);
+
+    return { ...item, h2hScore, homeScore, awayScore };
+  });
+
+  const h2h = [...scored].sort((a, b) => b.h2hScore - a.h2hScore)[0];
+  const rest = scored.filter(x => x.file.name !== h2h.file.name);
+
+  const home = [...rest].sort((a, b) => b.homeScore - a.homeScore)[0];
+  const away = rest.find(x => x.file.name !== home.file.name);
+
+  return { h2h, home, away };
+}
+
+function parseScreenshotStrict(text, homeTeam, awayTeam, type) {
+  const lines = text.split("\n").map(x => x.trim()).filter(Boolean);
+  const rows = [];
+
+  for (let i = 0; i < lines.length - 4; i++) {
+    const a = lines[i];
+    const b = lines[i + 1];
+
+    if (!looksLikeTeam(a) || !looksLikeTeam(b) || sameTeam(a, b)) continue;
+
+    let foundScore = null;
+    let scoreOffset = -1;
+
+    for (let j = 2; j <= 5; j++) {
+      const s = parseScore(lines[i + j] || "");
+      if (s) {
+        foundScore = s;
+        scoreOffset = j;
+        break;
       }
-
-      log("Inferring teams from uploaded screenshots...");
-      const inferredTeams = inferTeamsAcrossScans(scanned);
-      state.teams.home = inferredTeams.home || "";
-      state.teams.away = inferredTeams.away || "";
-
-      log(`Detected matchup: ${state.teams.home || "?"} vs ${state.teams.away || "?"}`);
-
-      log("Assigning H2H / Home / Away buckets...");
-      state.assigned = assignScreens(scanned, state.teams);
-      paintAssignedPreviews();
-
-      state.rawTexts.h2h = state.assigned.h2h?.text || "";
-      state.rawTexts.home = state.assigned.home?.text || "";
-      state.rawTexts.away = state.assigned.away?.text || "";
-
-      state.parsed.h2h = parseRowsFromText(state.rawTexts.h2h, state.teams);
-      state.parsed.home = parseRowsFromText(state.rawTexts.home, state.teams);
-      state.parsed.away = parseRowsFromText(state.rawTexts.away, state.teams);
-
-      h2hRows.textContent = JSON.stringify(state.parsed.h2h, null, 2);
-      homeRows.textContent = JSON.stringify(state.parsed.home, null, 2);
-      awayRows.textContent = JSON.stringify(state.parsed.away, null, 2);
-
-      log(`Parsed rows => H2H:${state.parsed.h2h.length} Home:${state.parsed.home.length} Away:${state.parsed.away.length}`);
-
-      const result = analyzePraxos({
-        homeTeam: state.teams.home,
-        awayTeam: state.teams.away,
-        h2hRows: state.parsed.h2h,
-        homeRows: state.parsed.home,
-        awayRows: state.parsed.away,
-        threshold: state.threshold
-      });
-
-      state.lastResult = result;
-      renderResult(result);
-      setProgress(100);
-      log("Praxos analysis completed.");
     }
 
-    function clearResultOnly() {
-      state.parsed = { h2h: [], home: [], away: [] };
-      state.lastResult = null;
-      renderEmpty();
-    }
+    if (!foundScore) continue;
 
-    async function doOCR(file, index, total) {
-      return new Promise((resolve, reject) => {
-        Tesseract.recognize(file, "eng", {
-          logger: m => {
-            if (m.status === "recognizing text") {
-              const local = m.progress;
-              const whole = ((index + local) / total) * 100;
-              setProgress(whole);
-            }
-          }
-        }).then(res => resolve(cleanOCRText(res.data.text))).catch(reject);
-      });
-    }
+    let home = foundScore.home;
+    let away = foundScore.away;
 
-    function cleanOCRText(text) {
-      return text
-        .replace(/\r/g, "\n")
-        .replace(/[|]/g, " ")
-        .replace(/[“”]/g, '"')
-        .replace(/[‘’]/g, "'")
-        .replace(/[^\S\n]+/g, " ")
-        .replace(/\n{3,}/g, "\n\n")
-        .trim();
-    }
+    if (type === "h2h") {
+      const correct = sameTeam(a, homeTeam) && sameTeam(b, awayTeam);
+      const reversed = sameTeam(a, awayTeam) && sameTeam(b, homeTeam);
 
-    function classifyTextBlock(text) {
-      const lower = text.toLowerCase();
-      const hasHead = lower.includes("head-to-head matches") || /\bh2h\b/.test(lower);
-      const hasH2HTab = lower.includes("head-to-head") || /\bh2h\b/.test(lower);
-      const hasSummary = lower.includes("summary");
-      const hasStandings = lower.includes("standings");
-      const hasOdds = lower.includes("odds");
-      const scores = extractScorePairs(text).length;
-      return { hasHead, hasH2HTab, hasSummary, hasStandings, hasOdds, scores };
-    }
-
-    function inferTeamsAcrossScans(scanned) {
-      const merged = scanned.map(s => s.text).join("\n");
-      const topTeams = inferTopHeaderTeams(merged);
-      return { home: topTeams.home, away: topTeams.away };
-    }
-
-    function inferTopHeaderTeams(text) {
-      const lines = text
-        .split("\n")
-        .map(x => x.trim())
-        .filter(Boolean)
-        .filter(x => x.length >= 3);
-
-      const noise = new Set([
-        "football","summary","odds","h2h","standings","lineups","news","stats",
-        "head-to-head matches","head-to-head","matches","advertisement"
-      ]);
-
-      const cleaned = lines
-        .map(x => x.replace(/\b\d{1,2}\.\d{1,2}\.\d{2,4}\b/g, "").trim())
-        .map(x => x.replace(/\b\d{1,2}:\d{2}\b/g, "").trim())
-        .filter(x => x && !noise.has(x.toLowerCase()));
-
-      const candidates = [];
-      for (const line of cleaned) {
-        if (looksLikeTeamName(line)) candidates.push(line);
+      if (correct) {
+        rows.push({ team1: homeTeam, team2: awayTeam, home, away, total: home + away });
+      } else if (reversed) {
+        rows.push({ team1: homeTeam, team2: awayTeam, home: away, away: home, total: home + away });
       }
+      continue;
+    }
 
-      const counts = {};
-      for (const c of candidates) counts[c] = (counts[c] || 0) + 1;
+    if (type === "home") {
+      const trackedFirst = sameTeam(a, homeTeam);
+      const trackedSecond = sameTeam(b, homeTeam);
+      if (!trackedFirst && !trackedSecond) continue;
 
-      const ranked = Object.entries(counts)
-        .sort((a, b) => b[1] - a[1] || a[0].length - b[0].length)
-        .map(x => x[0]);
-
-      let home = "";
-      let away = "";
-      if (ranked.length >= 2) {
-        home = ranked[0];
-        away = ranked[1];
+      if (trackedFirst) {
+        rows.push({ team1: homeTeam, team2: b, home, away, total: home + away });
       } else {
-        const pair = inferPairFromSequentialLines(cleaned);
-        home = pair.home;
-        away = pair.away;
+        rows.push({ team1: homeTeam, team2: a, home: away, away: home, total: home + away });
       }
-      return { home, away };
+      continue;
     }
 
-    function inferPairFromSequentialLines(lines) {
-      for (let i = 0; i < lines.length - 1; i++) {
-        const a = lines[i];
-        const b = lines[i + 1];
-        if (looksLikeTeamName(a) && looksLikeTeamName(b) && a !== b) {
-          return { home: a, away: b };
-        }
+    if (type === "away") {
+      const trackedFirst = sameTeam(a, awayTeam);
+      const trackedSecond = sameTeam(b, awayTeam);
+      if (!trackedFirst && !trackedSecond) continue;
+
+      if (trackedSecond) {
+        rows.push({ team1: a, team2: awayTeam, home, away, total: home + away });
+      } else {
+        rows.push({ team1: b, team2: awayTeam, home: away, away: home, total: home + away });
       }
-      return { home: "", away: "" };
+      continue;
     }
+  }
 
-    function looksLikeTeamName(line) {
-      if (!line) return false;
-      const lower = line.toLowerCase();
-      if (lower.length < 3 || lower.length > 40) return false;
-      if (/^\d+$/.test(lower)) return false;
-      if (/^\d{4}$/.test(lower)) return false;
-      if (/(summary|odds|h2h|standings|lineups|news|football|advertisement)/i.test(line)) return false;
-      return /[a-z]/i.test(line);
+  return dedupeRows(rows).slice(0, 10);
+}
+
+function dedupeRows(rows) {
+  const seen = new Set();
+  const out = [];
+  for (const r of rows) {
+    const k = `${normalizeName(r.team1)}|${normalizeName(r.team2)}|${r.home}|${r.away}`;
+    if (!seen.has(k)) {
+      seen.add(k);
+      out.push(r);
     }
-
-    function assignScreens(scanned, teams) {
-      const result = { h2h: null, home: null, away: null };
-
-      const h2hCandidate = [...scanned].sort((a, b) => scoreAsH2H(b, teams) - scoreAsH2H(a, teams))[0];
-      result.h2h = h2hCandidate;
-
-      const remaining = scanned.filter(x => x !== h2hCandidate);
-
-      if (!teams.home || !teams.away) {
-        result.home = remaining[0] || null;
-        result.away = remaining[1] || null;
-        return result;
-      }
-
-      const homeCandidate = [...remaining].sort((a, b) => scoreAsHome(b, teams.home, teams.away) - scoreAsHome(a, teams.home, teams.away))[0];
-      result.home = homeCandidate;
-      result.away = remaining.find(x => x !== homeCandidate) || null;
-
-      if (result.away && scoreAsAway(result.away, teams.away, teams.home) < scoreAsHome(result.away, teams.home, teams.away)) {
-        const maybeSwap = result.home;
-        if (scoreAsAway(maybeSwap, teams.away, teams.home) > scoreAsHome(maybeSwap, teams.home, teams.away)) {
-          result.home = result.away;
-          result.away = maybeSwap;
-        }
-      }
-
-      return result;
-    }
-
-    function scoreAsH2H(scan, teams) {
-      let s = 0;
-      const t = scan.text.toLowerCase();
-      if (scan.meta.hasHead || scan.meta.hasH2HTab) s += 60;
-      if (teams.home && t.includes(teams.home.toLowerCase())) s += 15;
-      if (teams.away && t.includes(teams.away.toLowerCase())) s += 15;
-      s += Math.min(scan.meta.scores, 12);
-      return s;
-    }
-
-    function scoreAsHome(scan, homeTeam, awayTeam) {
-      const t = scan.text.toLowerCase();
-      let s = 0;
-      if (homeTeam && t.includes(homeTeam.toLowerCase())) s += 35;
-      if (awayTeam && t.includes(awayTeam.toLowerCase())) s -= 10;
-      if (scan.meta.hasHead || scan.meta.hasH2HTab) s -= 20;
-      s += scan.meta.scores;
-      return s;
-    }
-
-    function scoreAsAway(scan, awayTeam, homeTeam) {
-      const t = scan.text.toLowerCase();
-      let s = 0;
-      if (awayTeam && t.includes(awayTeam.toLowerCase())) s += 35;
-      if (homeTeam && t.includes(homeTeam.toLowerCase())) s -= 10;
-      if (scan.meta.hasHead || scan.meta.hasH2HTab) s -= 20;
-      s += scan.meta.scores;
-      return s;
-    }
-
-    function paintAssignedPreviews() {
-      paintOne(state.assigned.h2h, h2hPreview, h2hStatus, "H2H");
-      paintOne(state.assigned.home, homePreview, homeStatus, "Home");
-      paintOne(state.assigned.away, awayPreview, awayStatus, "Away");
-    }
-
-    function paintOne(obj, imgNode, statusNode, label) {
-      if (!obj) {
-        statusNode.textContent = "not assigned";
-        imgNode.classList.add("hidden");
-        return;
-      }
-      statusNode.textContent = `${label}: ${obj.file.name}`;
-      const reader = new FileReader();
-      reader.onload = e => {
-        imgNode.src = e.target.result;
-        imgNode.classList.remove("hidden");
-      };
-      reader.readAsDataURL(obj.file);
-    }
-
-    function extractScorePairs(text) {
-      const lines = text.split("\n").map(x => x.trim()).filter(Boolean);
-      const out = [];
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
-        const pair = line.match(/\b(\d{1,2})\s*[-:]\s*(\d{1,2})\b/);
-        if (pair) {
-          out.push({ home: +pair[1], away: +pair[2], raw: line });
-          continue;
-        }
-
-        const nums = line.match(/\b\d{1,2}\b/g);
-        if (nums && nums.length >= 2 && !/\b20\d{2}\b/.test(line)) {
-          const a = +nums[nums.length - 2];
-          const b = +nums[nums.length - 1];
-          if (a <= 15 && b <= 15) out.push({ home: a, away: b, raw: line });
-        }
-      }
-      return out;
-    }
-
-    function parseRowsFromText(text, teams) {
-      const lines = text.split("\n").map(x => x.trim()).filter(Boolean);
-      const rows = [];
-      for (let i = 0; i < lines.length; i++) {
-        const score = readScoreAtLine(lines, i);
-        if (!score) continue;
-
-        const neighborhood = lines.slice(Math.max(0, i - 4), i + 1);
-        const teamLines = neighborhood.filter(looksLikeTeamName).slice(-2);
-        let teamA = teamLines[0] || "";
-        let teamB = teamLines[1] || "";
-
-        if (!teamA || !teamB) {
-          const prev = lines[i - 1] || "";
-          const prev2 = lines[i - 2] || "";
-          if (looksLikeTeamName(prev2) && looksLikeTeamName(prev)) {
-            teamA = prev2;
-            teamB = prev;
-          }
-        }
-
-        const row = {
-          teamA,
-          teamB,
-          home: score.home,
-          away: score.away,
-          rawScore: `${score.home}-${score.away}`,
-          rawLine: score.raw
-        };
-
-        if (row.teamA || row.teamB || row.home === 0 || row.away === 0) rows.push(row);
-      }
-
-      const deduped = [];
-      const seen = new Set();
-      for (const r of rows) {
-        const key = `${r.teamA}|${r.teamB}|${r.home}|${r.away}`;
-        if (!seen.has(key)) {
-          seen.add(key);
-          deduped.push(r);
-        }
-      }
-
-      return deduped.slice(0, 12);
-    }
-
-    function readScoreAtLine(lines, i) {
-      const line = lines[i];
-      let pair = line.match(/\b(\d{1,2})\s*[-:]\s*(\d{1,2})\b/);
-      if (pair) return { home: +pair[1], away: +pair[2], raw: line };
-
-      const nums = line.match(/\b\d{1,2}\b/g);
-      if (nums && nums.length >= 2 && !/\b20\d{2}\b/.test(line)) {
-        const a = +nums[nums.length - 2];
-        const b = +nums[nums.length - 1];
-        if (a <= 15 && b <= 15) return { home: a, away: b, raw: line };
-      }
-      return null;
-    }
-
-    function analyzePraxos({ homeTeam, awayTeam, h2hRows, homeRows, awayRows, threshold }) {
-      const h2h = normalizeDataset(h2hRows, "h2h", homeTeam, awayTeam);
-      const home = normalizeDataset(homeRows, "home", homeTeam, awayTeam);
-      const away = normalizeDataset(awayRows, "away", homeTeam, awayTeam);
-
-      const h2hStats = computeStats(h2h, "h2h");
-      const homeStats = computeStats(home, "home");
-      const awayStats = computeStats(away, "away");
-
-      const recentHomeStrength = weightedPointsForHome(home);
-      const recentAwayResistance = weightedPointsForAwayPerspective(away);
-      const awayAttack = weightedScoredForAwayPerspective(away);
-      const homeAttack = weightedScoredForHome(home);
-      const h2hDrawTrap = h2hStats.drawRate * 100 + (h2hStats.lowGoalDrawRate * 100 * 0.6);
-      const h2hAwayEdge = h2hStats.awayWinRate * 100;
-      const h2hHomeEdge = h2hStats.homeWinRate * 100;
-
-      const goalSignal =
-        h2hStats.avgGoals * 0.25 +
-        homeStats.avgGoals * 0.40 +
-        awayStats.avgGoals * 0.35;
-
-      const bttsSignal =
-        h2hStats.bttsRate * 0.25 +
-        homeStats.bttsRate * 0.40 +
-        awayStats.bttsRate * 0.35;
-
-      const drawSignal =
-        h2hStats.drawRate * 0.40 +
-        homeStats.drawRate * 0.30 +
-        awayStats.drawRate * 0.30;
-
-      const homeEdgeSignal =
-        (recentHomeStrength * 0.35) +
-        (homeAttack * 5.5) +
-        (h2hHomeEdge * 0.20) -
-        (awayAttack * 2.8) -
-        (drawSignal * 12);
-
-      const awayEdgeSignal =
-        (recentAwayResistance * 0.20) +
-        (awayAttack * 5.8) +
-        (h2hAwayEdge * 0.28) -
-        (homeAttack * 2.5) -
-        (drawSignal * 10);
-
-      const primary = buildPrimaryMarkets({
-        homeEdgeSignal, awayEdgeSignal, drawSignal, h2hDrawTrap
-      });
-
-      const secondary = buildSecondaryMarkets({
-        goalSignal, bttsSignal, drawSignal, homeStats, awayStats, h2hStats
-      });
-
-      const allMarkets = rankAllMarkets({
-        primary, secondary, homeStats, awayStats, h2hStats,
-        homeEdgeSignal, awayEdgeSignal, drawSignal, goalSignal, bttsSignal
-      });
-
-      const qualified = allMarkets.filter(x => x.confidence >= threshold).sort((a, b) => b.confidence - a.confidence);
-      const topConfidence = qualified.length ? qualified[0].confidence : Math.max(...allMarkets.map(x => x.confidence));
-      const mode = assignMode(topConfidence, drawSignal, goalSignal);
-      const stake = assignStake(topConfidence, qualified.length);
-      const scores = generateEliteScores({
-        mode, primary, secondary, homeStats, awayStats, h2hStats,
-        homeEdgeSignal, awayEdgeSignal, drawSignal, goalSignal, bttsSignal
-      });
-
-      return {
-        teams: { homeTeam, awayTeam },
-        datasets: { h2h, home, away },
-        stats: { h2hStats, homeStats, awayStats },
-        signals: {
-          recentHomeStrength,
-          recentAwayResistance,
-          awayAttack,
-          homeAttack,
-          h2hDrawTrap,
-          goalSignal,
-          bttsSignal,
-          drawSignal,
-          homeEdgeSignal,
-          awayEdgeSignal
-        },
-        mode,
-        stake,
-        confidence: round(topConfidence),
-        primary,
-        secondary,
-        markets: allMarkets,
-        qualified,
-        scores,
-        summary: buildSummary({
-          homeTeam, awayTeam, mode, stake, topConfidence,
-          drawSignal, goalSignal, bttsSignal, homeEdgeSignal, awayEdgeSignal, qualified
-        })
-      };
-    }
-
-    function normalizeDataset(rows, type, homeTeam, awayTeam) {
-      return rows.map((r, i) => {
-        let scored = r.home;
-        let conceded = r.away;
-
-        if (type === "away") {
-          scored = r.away;
-          conceded = r.home;
-        }
-
-        return {
-          ...r,
-          scored,
-          conceded,
-          isWin: scored > conceded,
-          isDraw: scored === conceded,
-          isLoss: scored < conceded,
-          totalGoals: r.home + r.away,
-          btts: r.home > 0 && r.away > 0,
-          weight: recencyWeight(i)
-        };
-      }).slice(0, 10);
-    }
-
-    function recencyWeight(index) {
-      const weights = [1.00, 0.94, 0.89, 0.84, 0.79, 0.74, 0.69, 0.64, 0.60, 0.56];
-      return weights[index] || 0.50;
-    }
-
-    function computeStats(rows, type) {
-      const safeCount = rows.length || 1;
-      const totalWeight = rows.reduce((s, r) => s + r.weight, 0) || 1;
-      const scored = rows.reduce((s, r) => s + (r.scored * r.weight), 0) / totalWeight;
-      const conceded = rows.reduce((s, r) => s + (r.conceded * r.weight), 0) / totalWeight;
-      const avgGoals = rows.reduce((s, r) => s + (r.totalGoals * r.weight), 0) / totalWeight;
-      const drawRate = rows.reduce((s, r) => s + ((r.isDraw ? 1 : 0) * r.weight), 0) / totalWeight;
-      const winRate = rows.reduce((s, r) => s + ((r.isWin ? 1 : 0) * r.weight), 0) / totalWeight;
-      const lossRate = rows.reduce((s, r) => s + ((r.isLoss ? 1 : 0) * r.weight), 0) / totalWeight;
-      const bttsRate = rows.reduce((s, r) => s + ((r.btts ? 1 : 0) * r.weight), 0) / totalWeight;
-      const over25Rate = rows.reduce((s, r) => s + ((r.totalGoals > 2.5 ? 1 : 0) * r.weight), 0) / totalWeight;
-      const under35Rate = rows.reduce((s, r) => s + ((r.totalGoals < 3.5 ? 1 : 0) * r.weight), 0) / totalWeight;
-      const cleanSheetRate = rows.reduce((s, r) => s + ((r.conceded === 0 ? 1 : 0) * r.weight), 0) / totalWeight;
-      const failToScoreRate = rows.reduce((s, r) => s + ((r.scored === 0 ? 1 : 0) * r.weight), 0) / totalWeight;
-
-      let homeWinRate = 0;
-      let awayWinRate = 0;
-      let lowGoalDrawRate = 0;
-
-      if (type === "h2h") {
-        homeWinRate = rows.reduce((s, r) => s + (((r.home > r.away) ? 1 : 0) * r.weight), 0) / totalWeight;
-        awayWinRate = rows.reduce((s, r) => s + (((r.away > r.home) ? 1 : 0) * r.weight), 0) / totalWeight;
-        lowGoalDrawRate = rows.reduce((s, r) => s + ((((r.home === r.away) && (r.totalGoals <= 2)) ? 1 : 0) * r.weight), 0) / totalWeight;
-      }
-
-      return {
-        sample: safeCount,
-        scored: round(scored),
-        conceded: round(conceded),
-        avgGoals: round(avgGoals),
-        drawRate: round(drawRate),
-        winRate: round(winRate),
-        lossRate: round(lossRate),
-        bttsRate: round(bttsRate),
-        over25Rate: round(over25Rate),
-        under35Rate: round(under35Rate),
-        cleanSheetRate: round(cleanSheetRate),
-        failToScoreRate: round(failToScoreRate),
-        homeWinRate: round(homeWinRate),
-        awayWinRate: round(awayWinRate),
-        lowGoalDrawRate: round(lowGoalDrawRate)
-      };
-    }
-
-    function weightedPointsForHome(rows) {
-      const totalWeight = rows.reduce((s, r) => s + r.weight, 0) || 1;
-      const pts = rows.reduce((s, r) => s + ((r.isWin ? 3 : r.isDraw ? 1 : 0) * r.weight), 0);
-      return round((pts / totalWeight));
-    }
-
-    function weightedPointsForAwayPerspective(rows) {
-      const totalWeight = rows.reduce((s, r) => s + r.weight, 0) || 1;
-      const pts = rows.reduce((s, r) => s + ((r.isWin ? 3 : r.isDraw ? 1 : 0) * r.weight), 0);
-      return round((pts / totalWeight));
-    }
-
-    function weightedScoredForHome(rows) {
-      const totalWeight = rows.reduce((s, r) => s + r.weight, 0) || 1;
-      return round(rows.reduce((s, r) => s + (r.scored * r.weight), 0) / totalWeight);
-    }
-
-    function weightedScoredForAwayPerspective(rows) {
-      const totalWeight = rows.reduce((s, r) => s + r.weight, 0) || 1;
-      return round(rows.reduce((s, r) => s + (r.scored * r.weight), 0) / totalWeight);
-    }
-
-    function buildPrimaryMarkets({ homeEdgeSignal, awayEdgeSignal, drawSignal, h2hDrawTrap }) {
-      const homeRaw = 52 + homeEdgeSignal * 1.25;
-      const awayRaw = 52 + awayEdgeSignal * 1.25;
-      const drawRaw = 48 + drawSignal * 26 + h2hDrawTrap * 0.12;
-
-      const doubleHome = Math.max(homeRaw + 8, drawRaw + 4);
-      const doubleAway = Math.max(awayRaw + 8, drawRaw + 4);
-
-      const markets = [
-        { label: "1", market: "Straight Win", side: "home", confidence: clamp(homeRaw, 40, 86) },
-        { label: "2", market: "Straight Win", side: "away", confidence: clamp(awayRaw, 40, 86) },
-        { label: "X", market: "Draw", side: "draw", confidence: clamp(drawRaw, 35, 82) },
-        { label: "1X", market: "Win or Draw", side: "home", confidence: clamp(doubleHome, 45, 88) },
-        { label: "X2", market: "Win or Draw", side: "away", confidence: clamp(doubleAway, 45, 88) }
-      ];
-
-      return markets.sort((a, b) => b.confidence - a.confidence);
-    }
-
-    function buildSecondaryMarkets({ goalSignal, bttsSignal, drawSignal, homeStats, awayStats, h2hStats }) {
-      const under35 = 55 + (homeStats.under35Rate * 18) + (awayStats.under35Rate * 14) + (h2hStats.under35Rate * 12) - Math.max(0, goalSignal - 2.8) * 10;
-      const over15 = 56 + (goalSignal * 6) + (bttsSignal * 7);
-      const over25 = 46 + (goalSignal * 8) + (bttsSignal * 4) - (drawSignal * 8);
-      const under25 = 50 + ((2.7 - goalSignal) * 12) + (drawSignal * 7);
-      const bttsYes = 46 + (bttsSignal * 30) + (goalSignal * 4) - (drawSignal * 4);
-      const bttsNo = 48 + ((1 - bttsSignal) * 28) + (drawSignal * 8) + (homeStats.cleanSheetRate + awayStats.cleanSheetRate) * 10;
-
-      return [
-        { label: "Under 3.5", market: "Goals", confidence: clamp(under35, 42, 88) },
-        { label: "Over 1.5", market: "Goals", confidence: clamp(over15, 45, 86) },
-        { label: "Over 2.5", market: "Goals", confidence: clamp(over25, 38, 84) },
-        { label: "Under 2.5", market: "Goals", confidence: clamp(under25, 38, 84) },
-        { label: "BTTS", market: "BTTS", confidence: clamp(bttsYes, 36, 84) },
-        { label: "No BTTS", market: "BTTS", confidence: clamp(bttsNo, 36, 84) }
-      ].sort((a, b) => b.confidence - a.confidence);
-    }
-
-    function rankAllMarkets(ctx) {
-      const { primary, secondary, homeEdgeSignal, awayEdgeSignal, drawSignal, goalSignal, bttsSignal } = ctx;
-      const map = [...primary, ...secondary];
-
-      const one = getByLabel(map, "1");
-      const two = getByLabel(map, "2");
-      const x = getByLabel(map, "X");
-      const oneX = getByLabel(map, "1X");
-      const x2 = getByLabel(map, "X2");
-      const over15 = getByLabel(map, "Over 1.5");
-      const over25 = getByLabel(map, "Over 2.5");
-      const under25 = getByLabel(map, "Under 2.5");
-      const under35 = getByLabel(map, "Under 3.5");
-      const btts = getByLabel(map, "BTTS");
-      const noBtts = getByLabel(map, "No BTTS");
-
-      const extra = [
-        { label: "Home -0.25", market: "Handicap", confidence: clamp(one.confidence + 4, 40, 84) },
-        { label: "Away +0.5", market: "Handicap", confidence: clamp(x2.confidence + 3, 40, 86) },
-        { label: "Home +0.5", market: "Handicap", confidence: clamp(oneX.confidence + 3, 40, 86) },
-        { label: "Away -0.25", market: "Handicap", confidence: clamp(two.confidence + 4, 40, 84) },
-
-        { label: "1X + Under 3.5", market: "Combo", confidence: combo(oneX.confidence, under35.confidence, drawSignal, -2) },
-        { label: "X2 + Under 3.5", market: "Combo", confidence: combo(x2.confidence, under35.confidence, drawSignal, -1) },
-        { label: "1X + Over 1.5", market: "Combo", confidence: combo(oneX.confidence, over15.confidence, goalSignal, 0) },
-        { label: "X2 + Over 1.5", market: "Combo", confidence: combo(x2.confidence, over15.confidence, goalSignal, 0) },
-        { label: "Draw + Under 3.5", market: "Combo", confidence: combo(x.confidence, under35.confidence, drawSignal, 1) },
-        { label: "Home Win + Over 1.5", market: "Combo", confidence: combo(one.confidence, over15.confidence, homeEdgeSignal, -3) },
-        { label: "Away Win + Over 1.5", market: "Combo", confidence: combo(two.confidence, over15.confidence, awayEdgeSignal, -3) },
-        { label: "Under 3.5 + No BTTS", market: "Combo", confidence: combo(under35.confidence, noBtts.confidence, drawSignal, -1) },
-        { label: "Over 2.5 + BTTS", market: "Combo", confidence: combo(over25.confidence, btts.confidence, goalSignal, -1) }
-      ];
-
-      return [...map, ...extra].map(x => ({
-        ...x,
-        confidence: clamp(round(x.confidence), 35, 88)
-      })).sort((a, b) => b.confidence - a.confidence);
-    }
-
-    function combo(a, b, signal, offset = 0) {
-      return ((a * 0.54) + (b * 0.46)) + offset;
-    }
-
-    function getByLabel(arr, label) {
-      return arr.find(x => x.label === label) || { label, confidence: 40 };
-    }
-
-    function assignMode(topConfidence, drawSignal, goalSignal) {
-      if (topConfidence >= 78) return "ATTACK";
-      if (drawSignal >= 0.38 && topConfidence < 74) return "CHAOS-CONTROL";
-      if (goalSignal <= 2.2 && drawSignal >= 0.26) return "CONTROL";
-      if (topConfidence >= 70) return "CONTROL";
-      return "NO BET";
-    }
-
-    function assignStake(topConfidence, qualifiedCount) {
-      if (topConfidence >= 80 && qualifiedCount >= 2) return "MEDIUM";
-      if (topConfidence >= 75) return "SMALL";
-      if (topConfidence >= 70) return "VERY SMALL";
-      return "NO STAKE";
-    }
-
-    function generateEliteScores({ mode, primary, secondary, homeStats, awayStats, h2hStats, homeEdgeSignal, awayEdgeSignal, drawSignal, goalSignal, bttsSignal }) {
-      const topPrimary = primary[0]?.label || "X2";
-      const topSecondary = secondary[0]?.label || "Under 3.5";
-      let scores = [];
-
-      if (topPrimary === "1") scores = ["1-0", "2-0", "2-1", "3-1"];
-      else if (topPrimary === "2") scores = ["0-1", "0-2", "1-2", "1-3"];
-      else if (topPrimary === "1X") scores = ["1-0", "1-1", "2-0", "2-1"];
-      else if (topPrimary === "X2") scores = ["0-1", "1-1", "0-2", "1-2"];
-      else scores = ["0-0", "1-1", "2-2", "1-0"];
-
-      if (topSecondary === "Under 2.5") {
-        scores = scores.filter(s => totalGoals(s) <= 2);
-      }
-      if (topSecondary === "Under 3.5") {
-        scores = scores.filter(s => totalGoals(s) <= 3);
-      }
-      if (topSecondary === "BTTS") {
-        scores = scores.filter(s => bothTeamsScore(s));
-      }
-      if (topSecondary === "No BTTS") {
-        scores = scores.filter(s => !bothTeamsScore(s));
-      }
-      if (topSecondary === "Over 2.5") {
-        scores = scores.filter(s => totalGoals(s) >= 3);
-      }
-
-      if (drawSignal >= 0.34) {
-        scores = uniqueFront(["1-1", "0-0", ...scores]);
-      }
-
-      if (homeEdgeSignal > awayEdgeSignal + 8) {
-        scores = uniqueFront(["1-0", "2-0", "2-1", ...scores]);
-      }
-
-      if (awayEdgeSignal > homeEdgeSignal + 8) {
-        scores = uniqueFront(["0-1", "0-2", "1-2", ...scores]);
-      }
-
-      while (scores.length < 4) {
-        scores.push("1-1");
-      }
-
-      scores = uniqueFront(scores).slice(0, 4);
-      const base = Math.max(secondary[0]?.confidence || 60, primary[0]?.confidence || 60);
-      return distributeScoreConfidence(scores, base);
-    }
-
-    function totalGoals(score) {
-      const [a, b] = score.split("-").map(Number);
-      return a + b;
-    }
-
-    function bothTeamsScore(score) {
-      const [a, b] = score.split("-").map(Number);
-      return a > 0 && b > 0;
-    }
-
-    function uniqueFront(arr) {
-      const out = [];
-      const seen = new Set();
-      for (const x of arr) {
-        if (!seen.has(x)) {
-          seen.add(x);
-          out.push(x);
-        }
-      }
-      return out;
-    }
-
-    function distributeScoreConfidence(scores, base) {
-      const weights = [1.00, 0.92, 0.84, 0.76];
-      return scores.map((s, i) => ({
-        score: s,
-        confidence: clamp(round(base * weights[i]), 48, 88)
-      }));
-    }
-
-    function buildSummary({ homeTeam, awayTeam, mode, stake, topConfidence, drawSignal, goalSignal, bttsSignal, homeEdgeSignal, awayEdgeSignal, qualified }) {
-      const head = `<div><span class="text-white font-semibold">${homeTeam || "Home"}</span> vs <span class="text-white font-semibold">${awayTeam || "Away"}</span></div>`;
-      const line1 = `<div>Mode: <span class="text-white font-semibold">${mode}</span> · Stake: <span class="text-white font-semibold">${stake}</span> · Top confidence: <span class="text-white font-semibold">${round(topConfidence)}%</span></div>`;
-      const line2 = `<div>Signals → Home edge: <span class="text-white">${round(homeEdgeSignal)}</span> · Away edge: <span class="text-white">${round(awayEdgeSignal)}</span> · Draw: <span class="text-white">${round(drawSignal * 100)}%</span></div>`;
-      const line3 = `<div>Behavior → Avg goals: <span class="text-white">${round(goalSignal)}</span> · BTTS pressure: <span class="text-white">${round(bttsSignal * 100)}%</span></div>`;
-      const line4 = qualified.length
-        ? `<div>Qualified picks: <span class="text-white">${qualified.map(x => `${x.label} (${x.confidence}%)`).join(" · ")}</span></div>`
-        : `<div class="warn">No market cleared ${state.threshold}% threshold.</div>`;
-      return [head, line1, line2, line3, line4].join("");
-    }
-
-    function renderResult(result) {
-      modeView.textContent = result.mode;
-      stakeView.textContent = result.stake;
-      confidenceView.textContent = result.confidence + "%";
-      homeTeamView.textContent = result.teams.homeTeam || "?";
-      awayTeamView.textContent = result.teams.awayTeam || "?";
-
-      primaryBox.innerHTML = result.primary.map(renderMarket).join("");
-      secondaryBox.innerHTML = result.secondary.map(renderMarket).join("");
-      scoreBox.innerHTML = result.scores.map(s => `
-        <div class="rounded-xl bg-black/25 p-3">
-          <div class="text-lg font-black">${s.score}</div>
-          <div class="soft text-sm">${s.confidence}%</div>
-        </div>
-      `).join("");
-
-      marketBox.innerHTML = result.qualified.length
-        ? result.qualified.map(renderQualified).join("")
-        : `<div class="soft">No pick reached ${state.threshold}%.</div>`;
-
-      summaryBox.innerHTML = result.summary;
-    }
-
-    function renderMarket(m) {
-      const cls = m.confidence >= 70 ? "good" : m.confidence >= 60 ? "warn" : "soft";
-      return `
-        <div class="flex items-center justify-between rounded-xl bg-black/25 p-3">
-          <div>
-            <div class="font-semibold">${m.label}</div>
-            <div class="soft text-sm">${m.market}</div>
-          </div>
-          <div class="font-black ${cls}">${m.confidence}%</div>
-        </div>
-      `;
-    }
-
-    function renderQualified(m) {
-      return `
-        <div class="rounded-xl bg-black/25 p-3">
-          <div class="font-bold">${m.label}</div>
-          <div class="soft text-sm">${m.market}</div>
-          <div class="mt-2 text-xl font-black good">${m.confidence}%</div>
-        </div>
-      `;
-    }
-
-    function copyParsedJson() {
-      const data = {
-        teams: state.teams,
-        parsed: state.parsed,
-        result: state.lastResult
-      };
-      navigator.clipboard.writeText(JSON.stringify(data, null, 2));
-    }
-
-    function round(n) {
-      return Math.round(n * 100) / 100;
-    }
-
-    function clamp(n, min, max) {
-      return Math.max(min, Math.min(max, n));
-    }
-
-    function runDemo() {
-      clearAll();
-      state.teams = { home: "Demo Home", away: "Demo Away" };
-
-      state.parsed.h2h = [
-        { teamA: "Demo Home", teamB: "Demo Away", home: 2, away: 2, rawScore: "2-2" },
-        { teamA: "Demo Home", teamB: "Demo Away", home: 0, away: 2, rawScore: "0-2" },
-        { teamA: "Demo Home", teamB: "Demo Away", home: 2, away: 2, rawScore: "2-2" },
-        { teamA: "Demo Home", teamB: "Demo Away", home: 1, away: 4, rawScore: "1-4" },
-        { teamA: "Demo Home", teamB: "Demo Away", home: 1, away: 0, rawScore: "1-0" }
-      ];
-      state.parsed.home = [
-        { teamA: "Demo Home", teamB: "A", home: 1, away: 1 },
-        { teamA: "Demo Home", teamB: "B", home: 1, away: 0 },
-        { teamA: "Demo Home", teamB: "C", home: 2, away: 1 },
-        { teamA: "Demo Home", teamB: "D", home: 3, away: 3 },
-        { teamA: "Demo Home", teamB: "E", home: 3, away: 6 },
-        { teamA: "Demo Home", teamB: "Demo Away", home: 2, away: 2 }
-      ];
-      state.parsed.away = [
-        { teamA: "F", teamB: "Demo Away", home: 0, away: 1 },
-        { teamA: "G", teamB: "Demo Away", home: 5, away: 2 },
-        { teamA: "H", teamB: "Demo Away", home: 2, away: 1 },
-        { teamA: "I", teamB: "Demo Away", home: 0, away: 1 },
-        { teamA: "Demo Home", teamB: "Demo Away", home: 2, away: 2 }
-      ];
-
-      h2hRows.textContent = JSON.stringify(state.parsed.h2h, null, 2);
-      homeRows.textContent = JSON.stringify(state.parsed.home, null, 2);
-      awayRows.textContent = JSON.stringify(state.parsed.away, null, 2);
-
-      const result = analyzePraxos({
-        homeTeam: state.teams.home,
-        awayTeam: state.teams.away,
-        h2hRows: state.parsed.h2h,
-        homeRows: state.parsed.home,
-        awayRows: state.parsed.away,
-        threshold: state.threshold
-      });
-      state.lastResult = result;
-      renderResult(result);
-      log("Demo result rendered.");
-      setProgress(100);
-    }
-
-    renderEmpty();
-  </script>
+  }
+  return out;
+}
+
+function analyzePraxos({ homeTeam, awayTeam, h2hRows, homeRows, awayRows, threshold }) {
+  const h2hStats = calcStats(h2hRows, "h2h");
+  const homeStats = calcStats(homeRows, "home");
+  const awayStats = calcStats(awayRows, "away");
+
+  const homeStrength = 55 + homeStats.winRate * 22 + homeStats.avgScored * 8 - homeStats.failToScoreRate * 12;
+  const awayStrength = 55 + awayStats.winRate * 22 + awayStats.avgScored * 8 - awayStats.failToScoreRate * 12;
+  const drawTrap = h2hStats.drawRate * 20 + h2hStats.lowGoalDrawRate * 20 + ((homeStats.drawRate + awayStats.drawRate) * 10);
+  const goalSignal = h2hStats.avgGoals * 0.25 + homeStats.avgGoals * 0.4 + awayStats.avgGoals * 0.35;
+  const bttsSignal = h2hStats.bttsRate * 0.25 + homeStats.bttsRate * 0.4 + awayStats.bttsRate * 0.35;
+
+  const primary = buildPrimary(homeStrength, awayStrength, drawTrap);
+  const secondary = buildSecondary(goalSignal, bttsSignal);
+  const markets = buildMarkets(primary, secondary, goalSignal, bttsSignal, drawTrap);
+  const qualified = markets.filter(x => x.confidence >= threshold).sort((a, b) => b.confidence - a.confidence);
+
+  const top = qualified[0]?.confidence || primary[0].confidence;
+  const mode = top >= 78 ? "ATTACK" : top >= 70 ? "CONTROL" : "NO BET";
+  const stake = top >= 78 ? "MEDIUM" : top >= 70 ? "SMALL" : "NO STAKE";
+  const scores = buildScores(primary[0], secondary[0], drawTrap);
+
+  return {
+    homeTeam, awayTeam, mode, stake,
+    primary, secondary, markets, qualified, scores
+  };
+}
+
+function calcStats(rows, type) {
+  const n = rows.length || 1;
+  const avgGoals = rows.reduce((s, r) => s + r.total, 0) / n;
+  const bttsRate = rows.filter(r => r.home > 0 && r.away > 0).length / n;
+  const drawRate = rows.filter(r => r.home === r.away).length / n;
+  const lowGoalDrawRate = rows.filter(r => r.home === r.away && r.total <= 2).length / n;
+
+  let avgScored, winRate, failToScoreRate;
+  if (type === "home") {
+    avgScored = rows.reduce((s, r) => s + r.home, 0) / n;
+    winRate = rows.filter(r => r.home > r.away).length / n;
+    failToScoreRate = rows.filter(r => r.home === 0).length / n;
+  } else if (type === "away") {
+    avgScored = rows.reduce((s, r) => s + r.away, 0) / n;
+    winRate = rows.filter(r => r.away > r.home).length / n;
+    failToScoreRate = rows.filter(r => r.away === 0).length / n;
+  } else {
+    avgScored = rows.reduce((s, r) => s + r.home + r.away, 0) / (2 * n);
+    winRate = 0;
+    failToScoreRate = 0;
+  }
+
+  return { avgGoals, bttsRate, drawRate, lowGoalDrawRate, avgScored, winRate, failToScoreRate };
+}
+
+function buildPrimary(homeStrength, awayStrength, drawTrap) {
+  let p = [];
+  if (homeStrength > awayStrength + 5) {
+    p = [
+      { label: "1X", confidence: clamp(Math.round(homeStrength + 8 - drawTrap * 0.2), 50, 88) },
+      { label: "1", confidence: clamp(Math.round(homeStrength - drawTrap * 0.25), 50, 84) }
+    ];
+  } else if (awayStrength > homeStrength + 5) {
+    p = [
+      { label: "X2", confidence: clamp(Math.round(awayStrength + 8 - drawTrap * 0.2), 50, 88) },
+      { label: "2", confidence: clamp(Math.round(awayStrength - drawTrap * 0.25), 50, 84) }
+    ];
+  } else {
+    p = [
+      { label: "X", confidence: clamp(Math.round(58 + drawTrap * 0.5), 50, 82) },
+      { label: "1X", confidence: clamp(Math.round(60 + (homeStrength - awayStrength)), 50, 84) }
+    ];
+  }
+  return p.sort((a,b)=>b.confidence-a.confidence);
+}
+
+function buildSecondary(goalSignal, bttsSignal) {
+  const s1 = goalSignal < 2.6
+    ? { label: "Under 3.5", confidence: clamp(Math.round(60 + (2.6 - goalSignal) * 8), 50, 86) }
+    : { label: "Over 2.5", confidence: clamp(Math.round(56 + (goalSignal - 2.6) * 8), 50, 84) };
+
+  const s2 = bttsSignal > 0.52
+    ? { label: "BTTS", confidence: clamp(Math.round(56 + (bttsSignal - 0.52) * 30), 50, 82) }
+    : { label: "No BTTS", confidence: clamp(Math.round(56 + (0.52 - bttsSignal) * 30), 50, 82) };
+
+  return [s1, s2];
+}
+
+function buildMarkets(primary, secondary, goalSignal, bttsSignal, drawTrap) {
+  const p1 = primary[0], p2 = primary[1];
+  const s1 = secondary[0], s2 = secondary[1];
+
+  const out = [
+    { label: p1.label, market: "Primary", confidence: p1.confidence },
+    { label: p2.label, market: "Primary", confidence: p2.confidence },
+    { label: s1.label, market: "Goals", confidence: s1.confidence },
+    { label: s2.label, market: s2.label.includes("BTTS") ? "BTTS" : "Goals", confidence: s2.confidence },
+  ];
+
+  if (p1.label === "1X") out.push({ label:"Home +0.5", market:"Handicap", confidence: clamp(p1.confidence + 2, 50, 88) });
+  if (p1.label === "X2") out.push({ label:"Away +0.5", market:"Handicap", confidence: clamp(p1.confidence + 2, 50, 88) });
+  if (p1.label === "1") out.push({ label:"Home -0.25", market:"Handicap", confidence: clamp(p1.confidence - 2, 50, 82) });
+  if (p1.label === "2") out.push({ label:"Away -0.25", market:"Handicap", confidence: clamp(p1.confidence - 2, 50, 82) });
+
+  out.push({ label:`${p1.label} + ${s1.label}`, market:"Combo", confidence: clamp(Math.round((p1.confidence*0.55)+(s1.confidence*0.45)-2), 50, 88) });
+  out.push({ label:`${p1.label} + ${s2.label}`, market:"Combo", confidence: clamp(Math.round((p1.confidence*0.55)+(s2.confidence*0.45)-2), 50, 88) });
+
+  return out.sort((a,b)=>b.confidence-a.confidence);
+}
+
+function buildScores(primaryTop, secondaryTop, drawTrap) {
+  let scores = [];
+
+  if (primaryTop.label === "1") scores = ["1-0","2-0","2-1","3-1"];
+  else if (primaryTop.label === "2") scores = ["0-1","0-2","1-2","1-3"];
+  else if (primaryTop.label === "1X") scores = ["1-0","1-1","2-0","2-1"];
+  else if (primaryTop.label === "X2") scores = ["0-1","1-1","0-2","1-2"];
+  else scores = ["0-0","1-1","2-2","1-0"];
+
+  if (secondaryTop.label === "Under 3.5") scores = scores.filter(s => totalGoals(s) <= 3);
+  if (secondaryTop.label === "Over 2.5") scores = scores.filter(s => totalGoals(s) >= 3);
+  if (secondaryTop.label === "BTTS") scores = scores.filter(s => bothTeamsScore(s));
+  if (secondaryTop.label === "No BTTS") scores = scores.filter(s => !bothTeamsScore(s));
+
+  if (drawTrap >= 18) scores.unshift("1-1");
+  scores = unique(scores);
+
+  while (scores.length < 4) scores.push("1-1");
+
+  return scores.slice(0,4).map((s,i)=>({
+    score:s,
+    confidence:[76,71,66,61][i]
+  }));
+}
+
+function totalGoals(s) {
+  const [a,b] = s.split("-").map(Number);
+  return a+b;
+}
+
+function bothTeamsScore(s) {
+  const [a,b] = s.split("-").map(Number);
+  return a>0 && b>0;
+}
+
+function unique(arr) {
+  return [...new Set(arr)];
+}
+
+function clamp(n,min,max){ return Math.max(min, Math.min(max,n)); }
+
+function renderResult(result) {
+  els.modeStake.textContent = `${result.mode} / ${result.stake}`;
+
+  els.primary.innerHTML = result.primary.map(renderCard).join("");
+  els.secondary.innerHTML = result.secondary.map(renderCard).join("");
+  els.scores.innerHTML = result.scores.map(s => `
+    <div class="rounded-xl bg-black/20 p-3">
+      <div class="text-lg font-black">${s.score}</div>
+      <div class="soft text-sm">${s.confidence}%</div>
+    </div>
+  `).join("");
+
+  els.qualified.innerHTML = result.qualified.length
+    ? result.qualified.map(renderCard).join("")
+    : `<div class="soft">No pick cleared 70%.</div>`;
+}
+
+function renderCard(m) {
+  const cls = m.confidence >= 70 ? "good" : m.confidence >= 60 ? "warn" : "soft";
+  return `
+    <div class="rounded-xl bg-black/20 p-3">
+      <div class="font-bold">${m.label}</div>
+      <div class="soft text-sm">${m.market}</div>
+      <div class="mt-2 text-xl font-black ${cls}">${m.confidence}%</div>
+    </div>
+  `;
+}
+</script>
 </body>
 </html>
+
