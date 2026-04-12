@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Praxos Scanner</title>
+  <title>Praxos Simple Extractor</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <style>
@@ -13,29 +13,32 @@
     .good { color:#39d98a; }
     .warn { color:#ffbf5f; }
     .bad { color:#ff667a; }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
     select, input, button, textarea { outline:none; }
   </style>
 </head>
 <body class="min-h-screen p-4 md:p-6">
   <div class="max-w-7xl mx-auto">
     <div class="mb-6">
-      <h1 class="text-3xl md:text-4xl font-black tracking-tight">PRAXOS SCANNER</h1>
-      <p class="soft mt-2">Upload 3 screenshots and assign roles manually: H2H, Home Form, Away Form.</p>
+      <h1 class="text-3xl md:text-4xl font-black tracking-tight">PRAXOS SIMPLE EXTRACTOR</h1>
+      <p class="soft mt-2">Upload 3 screenshots, assign roles manually, extract scorelines only.</p>
     </div>
 
     <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
       <div class="xl:col-span-4 space-y-6">
         <div class="panel rounded-2xl p-4">
           <h2 class="text-xl font-bold mb-4">Upload</h2>
-
           <input id="files" type="file" accept="image/*" multiple class="block w-full text-sm mb-4" />
 
-          <div id="fileRoles" class="space-y-3 mb-4"></div>
+          <div id="roleBox" class="space-y-3 mb-4"></div>
 
           <div class="flex gap-3">
-            <button id="runBtn" class="flex-1 px-4 py-3 rounded-xl bg-cyan-700 hover:bg-cyan-600 font-bold">Run Praxos</button>
-            <button id="clearBtn" class="px-4 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 font-semibold">Clear</button>
+            <button id="runBtn" class="flex-1 px-4 py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 font-bold">
+              Run Praxos
+            </button>
+            <button id="clearBtn" class="px-4 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 font-semibold">
+              Clear
+            </button>
           </div>
 
           <div class="mt-4">
@@ -51,28 +54,24 @@
 
         <div class="panel rounded-2xl p-4">
           <h2 class="text-xl font-bold mb-4">OCR / Engine Log</h2>
-          <textarea id="log" class="w-full min-h-[340px] rounded-xl bg-black/20 p-3 mono text-sm"></textarea>
+          <textarea id="log" class="w-full min-h-[320px] rounded-xl bg-black/20 p-3 mono text-sm"></textarea>
         </div>
       </div>
 
       <div class="xl:col-span-8 space-y-6">
         <div class="panel rounded-2xl p-4">
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div class="rounded-xl bg-slate-900/70 p-4">
-              <div class="soft text-sm">Home Team</div>
-              <div id="homeTeam" class="text-xl font-bold mt-1">-</div>
-            </div>
-            <div class="rounded-xl bg-slate-900/70 p-4">
-              <div class="soft text-sm">Away Team</div>
-              <div id="awayTeam" class="text-xl font-bold mt-1">-</div>
-            </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div class="rounded-xl bg-slate-900/70 p-4">
               <div class="soft text-sm">Mode</div>
-              <div id="modeBox" class="text-xl font-bold mt-1">-</div>
+              <div id="mode" class="text-xl font-bold mt-1">-</div>
             </div>
             <div class="rounded-xl bg-slate-900/70 p-4">
               <div class="soft text-sm">Stake</div>
-              <div id="stakeBox" class="text-xl font-bold mt-1">-</div>
+              <div id="stake" class="text-xl font-bold mt-1">-</div>
+            </div>
+            <div class="rounded-xl bg-slate-900/70 p-4">
+              <div class="soft text-sm">Top Confidence</div>
+              <div id="confidence" class="text-xl font-bold mt-1">-</div>
             </div>
           </div>
         </div>
@@ -80,11 +79,6 @@
         <div class="panel rounded-2xl p-4">
           <h2 class="text-xl font-bold mb-4">Qualified Picks (70%+)</h2>
           <div id="qualified" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3"></div>
-        </div>
-
-        <div class="panel rounded-2xl p-4">
-          <h2 class="text-xl font-bold mb-4">All Markets</h2>
-          <div id="allMarkets" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3"></div>
         </div>
 
         <div class="panel rounded-2xl p-4">
@@ -103,11 +97,20 @@
         </div>
 
         <div class="panel rounded-2xl p-4">
-          <h2 class="text-xl font-bold mb-4">Parsed Datasets</h2>
+          <h2 class="text-xl font-bold mb-4">Extracted Score Arrays</h2>
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <pre id="h2hData" class="bg-black/20 p-3 rounded-xl text-xs mono whitespace-pre-wrap overflow-auto"></pre>
-            <pre id="homeData" class="bg-black/20 p-3 rounded-xl text-xs mono whitespace-pre-wrap overflow-auto"></pre>
-            <pre id="awayData" class="bg-black/20 p-3 rounded-xl text-xs mono whitespace-pre-wrap overflow-auto"></pre>
+            <pre id="h2hData" class="bg-black/20 p-3 rounded-xl text-xs mono whitespace-pre-wrap"></pre>
+            <pre id="homeData" class="bg-black/20 p-3 rounded-xl text-xs mono whitespace-pre-wrap"></pre>
+            <pre id="awayData" class="bg-black/20 p-3 rounded-xl text-xs mono whitespace-pre-wrap"></pre>
+          </div>
+        </div>
+
+        <div class="panel rounded-2xl p-4">
+          <h2 class="text-xl font-bold mb-4">Raw OCR</h2>
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <pre id="ocr1" class="bg-black/20 p-3 rounded-xl text-xs mono whitespace-pre-wrap max-h-[240px] overflow-auto"></pre>
+            <pre id="ocr2" class="bg-black/20 p-3 rounded-xl text-xs mono whitespace-pre-wrap max-h-[240px] overflow-auto"></pre>
+            <pre id="ocr3" class="bg-black/20 p-3 rounded-xl text-xs mono whitespace-pre-wrap max-h-[240px] overflow-auto"></pre>
           </div>
         </div>
       </div>
@@ -117,28 +120,29 @@
 <script>
 const els = {
   files: document.getElementById("files"),
-  fileRoles: document.getElementById("fileRoles"),
+  roleBox: document.getElementById("roleBox"),
   runBtn: document.getElementById("runBtn"),
   clearBtn: document.getElementById("clearBtn"),
   log: document.getElementById("log"),
   progressBar: document.getElementById("progressBar"),
   progressText: document.getElementById("progressText"),
-  homeTeam: document.getElementById("homeTeam"),
-  awayTeam: document.getElementById("awayTeam"),
-  modeBox: document.getElementById("modeBox"),
-  stakeBox: document.getElementById("stakeBox"),
+  mode: document.getElementById("mode"),
+  stake: document.getElementById("stake"),
+  confidence: document.getElementById("confidence"),
   qualified: document.getElementById("qualified"),
-  allMarkets: document.getElementById("allMarkets"),
   primary: document.getElementById("primary"),
   secondary: document.getElementById("secondary"),
   scores: document.getElementById("scores"),
   h2hData: document.getElementById("h2hData"),
   homeData: document.getElementById("homeData"),
   awayData: document.getElementById("awayData"),
+  ocr1: document.getElementById("ocr1"),
+  ocr2: document.getElementById("ocr2"),
+  ocr3: document.getElementById("ocr3"),
 };
 
 function log(msg) {
-  els.log.value += msg + "\n";
+  els.log.value += msg + "\\n";
   els.log.scrollTop = els.log.scrollHeight;
 }
 
@@ -148,27 +152,24 @@ function setProgress(v) {
   els.progressText.textContent = n + "%";
 }
 
-function resetOutput() {
-  els.homeTeam.textContent = "-";
-  els.awayTeam.textContent = "-";
-  els.modeBox.textContent = "-";
-  els.stakeBox.textContent = "-";
+function clearUI() {
+  els.log.value = "";
+  setProgress(0);
+  els.roleBox.innerHTML = "";
+  els.files.value = "";
+  els.mode.textContent = "-";
+  els.stake.textContent = "-";
+  els.confidence.textContent = "-";
   els.qualified.innerHTML = "";
-  els.allMarkets.innerHTML = "";
   els.primary.innerHTML = "";
   els.secondary.innerHTML = "";
   els.scores.innerHTML = "";
   els.h2hData.textContent = "";
   els.homeData.textContent = "";
   els.awayData.textContent = "";
-}
-
-function clearUI() {
-  els.log.value = "";
-  setProgress(0);
-  resetOutput();
-  els.files.value = "";
-  els.fileRoles.innerHTML = "";
+  els.ocr1.textContent = "";
+  els.ocr2.textContent = "";
+  els.ocr3.textContent = "";
 }
 
 els.clearBtn.onclick = clearUI;
@@ -178,72 +179,62 @@ els.files.addEventListener("change", () => {
 });
 
 function buildRoleSelectors() {
-  const files = [...els.files.files].filter(f => f.type.startsWith("image/"));
-  els.fileRoles.innerHTML = "";
-
-  files.forEach((file, i) => {
-    const wrap = document.createElement("div");
-    wrap.className = "grid grid-cols-12 gap-3 items-center";
-
-    const label = document.createElement("div");
-    label.className = "col-span-7 text-sm truncate";
-    label.textContent = file.name;
-
-    const select = document.createElement("select");
-    select.className = "col-span-5 bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-sm";
-    select.dataset.index = String(i);
-
-    const options = [
-      { value: "", text: "Select role" },
-      { value: "h2h", text: "H2H" },
-      { value: "home", text: "Home Form" },
-      { value: "away", text: "Away Form" }
-    ];
-
-    options.forEach(opt => {
-      const o = document.createElement("option");
-      o.value = opt.value;
-      o.textContent = opt.text;
-      select.appendChild(o);
-    });
-
-    if (i === 0) select.value = "h2h";
-    if (i === 1) select.value = "home";
-    if (i === 2) select.value = "away";
-
-    wrap.appendChild(label);
-    wrap.appendChild(select);
-    els.fileRoles.appendChild(wrap);
+  els.roleBox.innerHTML = "";
+  const files = [...els.files.files];
+  files.forEach((file, idx) => {
+    const row = document.createElement("div");
+    row.className = "grid grid-cols-[1fr_140px] gap-3 items-center";
+    row.innerHTML = `
+      <div class="text-sm soft truncate">${file.name}</div>
+      <select class="roleSelect bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-sm" data-index="${idx}">
+        <option value="">Select role</option>
+        <option value="h2h">H2H</option>
+        <option value="home">Home Form</option>
+        <option value="away">Away Form</option>
+      </select>
+    `;
+    els.roleBox.appendChild(row);
   });
 }
 
 els.runBtn.onclick = async () => {
   try {
-    resetOutput();
-    els.log.value = "";
-    setProgress(0);
-
     const files = [...els.files.files].filter(f => f.type.startsWith("image/"));
     if (files.length !== 3) {
       alert("Please upload exactly 3 images.");
       return;
     }
 
-    const roles = [...els.fileRoles.querySelectorAll("select")].map(s => s.value);
-    if (roles.includes("")) {
-      alert("Please assign all 3 roles.");
-      return;
-    }
-    if (new Set(roles).size !== 3) {
-      alert("Use each role once: H2H, Home Form, Away Form.");
+    const roles = [...document.querySelectorAll(".roleSelect")].map(x => x.value);
+    const roleSet = new Set(roles);
+
+    if (roles.includes("") || !roleSet.has("h2h") || !roleSet.has("home") || !roleSet.has("away")) {
+      alert("Assign one file each to H2H, Home Form, and Away Form.");
       return;
     }
 
-    log("Starting Praxos...");
+    els.log.value = "";
+    els.mode.textContent = "-";
+    els.stake.textContent = "-";
+    els.confidence.textContent = "-";
+    els.qualified.innerHTML = "";
+    els.primary.innerHTML = "";
+    els.secondary.innerHTML = "";
+    els.scores.innerHTML = "";
+    els.h2hData.textContent = "";
+    els.homeData.textContent = "";
+    els.awayData.textContent = "";
+    els.ocr1.textContent = "";
+    els.ocr2.textContent = "";
+    els.ocr3.textContent = "";
+
+    log("Starting simple OCR extraction...");
+
     const scanned = [];
-
     for (let i = 0; i < files.length; i++) {
+      log(`OCR -> ${files[i].name}`);
       const text = await runOCR(files[i], i, files.length);
+      log(`OCR done -> ${files[i].name}`);
       scanned.push({
         file: files[i],
         role: roles[i],
@@ -251,46 +242,32 @@ els.runBtn.onclick = async () => {
       });
     }
 
-    const h2hFile = scanned.find(x => x.role === "h2h");
-    const homeFile = scanned.find(x => x.role === "home");
-    const awayFile = scanned.find(x => x.role === "away");
+    els.ocr1.textContent = scanned[0]?.text || "";
+    els.ocr2.textContent = scanned[1]?.text || "";
+    els.ocr3.textContent = scanned[2]?.text || "";
 
-    if (!h2hFile || !homeFile || !awayFile) {
-      alert("Roles are not assigned correctly.");
-      return;
-    }
+    const h2hItem = scanned.find(x => x.role === "h2h");
+    const homeItem = scanned.find(x => x.role === "home");
+    const awayItem = scanned.find(x => x.role === "away");
 
-    const matchup = detectMatchupFromH2H(h2hFile.text);
-    if (!matchup.home || !matchup.away) {
-      log("Could not detect matchup from H2H.");
-      alert("Could not detect home and away teams from the H2H screenshot.");
-      return;
-    }
-
-    els.homeTeam.textContent = matchup.home;
-    els.awayTeam.textContent = matchup.away;
-    log(`Detected fixture: ${matchup.home} vs ${matchup.away}`);
-
-    const h2hRows = parseH2H(h2hFile.text, matchup.home, matchup.away);
-    const homeRows = parseTeamForm(homeFile.text, matchup.home, "home");
-    const awayRows = parseTeamForm(awayFile.text, matchup.away, "away");
+    const h2hRows = extractScoresSimple(h2hItem.text, 12);
+    const homeRows = extractScoresSimple(homeItem.text, 12);
+    const awayRows = extractScoresSimple(awayItem.text, 12);
 
     els.h2hData.textContent = JSON.stringify(h2hRows, null, 2);
     els.homeData.textContent = JSON.stringify(homeRows, null, 2);
     els.awayData.textContent = JSON.stringify(awayRows, null, 2);
 
-    log(`Parsed H2H rows: ${h2hRows.length}`);
-    log(`Parsed HOME rows: ${homeRows.length}`);
-    log(`Parsed AWAY rows: ${awayRows.length}`);
+    log(`H2H extracted rows: ${h2hRows.length}`);
+    log(`HOME extracted rows: ${homeRows.length}`);
+    log(`AWAY extracted rows: ${awayRows.length}`);
 
-    if (h2hRows.length < 1 || homeRows.length < 4 || awayRows.length < 4) {
-      alert("Not enough valid rows were parsed. Use clearer screenshots.");
+    if (h2hRows.length < 1 || homeRows.length < 3 || awayRows.length < 3) {
+      alert("Not enough score pairs were extracted. Try clearer screenshots or crop tighter around the score rows.");
       return;
     }
 
-    const result = analyzePraxos({
-      homeTeam: matchup.home,
-      awayTeam: matchup.away,
+    const result = analyzePraxosSimple({
       h2hRows,
       homeRows,
       awayRows,
@@ -302,32 +279,13 @@ els.runBtn.onclick = async () => {
     log("Analysis complete.");
   } catch (err) {
     console.error(err);
-    const msg = err && err.message ? err.message : String(err);
-    log("ERROR: " + msg);
-    if (err && err.stack) log(err.stack);
-    alert("Praxos crashed: " + msg);
+    log("Crash: " + (err?.message || String(err)));
+    alert("Praxos crashed. Check the log box.");
   }
 };
 
-async function prepareImageForOCR(file) {
-  const bitmap = await createImageBitmap(file);
-  const maxWidth = 1400;
-  const scale = bitmap.width > maxWidth ? maxWidth / bitmap.width : 1;
-
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.round(bitmap.width * scale);
-  canvas.height = Math.round(bitmap.height * scale);
-
-  const ctx = canvas.getContext("2d");
-  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  return canvas;
-}
-
 async function runOCR(file, index, total) {
-  log(`OCR -> ${file.name}`);
-  const optimizedImage = await prepareImageForOCR(file);
-
-  const res = await Tesseract.recognize(optimizedImage, "eng", {
+  const res = await Tesseract.recognize(file, "eng", {
     logger: m => {
       if (m.status === "recognizing text") {
         const pct = ((index + m.progress) / total) * 100;
@@ -335,249 +293,95 @@ async function runOCR(file, index, total) {
       }
     }
   });
-
-  const text = normalizeText(res.data.text || "");
-  log(`OCR done -> ${file.name}`);
-  return text;
+  return normalizeText(res.data.text);
 }
 
 function normalizeText(text) {
-  return text
-    .replace(/\r/g, "\n")
+  return (text || "")
+    .replace(/\\r/g, "\\n")
     .replace(/[|]/g, " ")
-    .replace(/[“”]/g, '"')
-    .replace(/[‘’]/g, "'")
     .replace(/[—–]/g, "-")
-    .replace(/[^\S\n]+/g, " ")
-    .replace(/\n{2,}/g, "\n")
+    .replace(/[Oo]/g, match => match) // keep raw, but regex below will ignore letters
+    .replace(/[^\\S\\n]+/g, " ")
+    .replace(/\\n{2,}/g, "\\n")
     .trim();
 }
 
-function normalizeName(s) {
-  return (s || "")
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, " ")
-    .replace(/\bu21\b/g, " u21 ")
-    .replace(/\bfc\b/g, " fc ")
-    .replace(/\bsc\b/g, " sc ")
-    .replace(/\bkv\b/g, " kv ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function sameTeam(a, b) {
-  const x = normalizeName(a);
-  const y = normalizeName(b);
-  if (!x || !y) return false;
-  return x === y || x.includes(y) || y.includes(x);
-}
-
-function looksLikeTeam(s) {
-  if (!s) return false;
-  const t = s.trim();
-  if (!/[A-Za-z]/.test(t)) return false;
-  if (/^(summary|odds|h2h|standings|lineups|news|football|commentary|stats|head-to-head matches|head-to-head)$/i.test(t)) return false;
-  if (/^\d{4}$/.test(t)) return false;
-  if (/^\d{1,2}\.\d{1,2}\.?$/.test(t)) return false;
-  if (/^\d{1,2}:\d{2}$/.test(t)) return false;
-  if (/^[WDL]$/.test(t)) return false;
-  return t.length >= 3 && t.length <= 50;
-}
-
-function parseTwoGoalNumbers(lines, startIndex) {
-  for (let j = startIndex; j < Math.min(lines.length, startIndex + 5); j++) {
-    const nums = (lines[j] || "").match(/\b\d{1,2}\b/g);
-    if (nums && nums.length >= 2) {
-      const a = +nums[nums.length - 2];
-      const b = +nums[nums.length - 1];
-      if (a <= 15 && b <= 15) return { home: a, away: b };
-    }
-  }
-  return null;
-}
-
-function extractPairRows(text) {
-  const lines = text.split("\n").map(x => x.trim()).filter(Boolean);
+/*
+  SIMPLE EXTRACTION:
+  - finds score pairs like 2 1, 2-1, 2:1
+  - ignores dates like 22.03
+  - ignores years where possible
+  - returns array of {home, away, total}
+*/
+function extractScoresSimple(text, limit = 10) {
+  const lines = text.split("\\n").map(x => x.trim()).filter(Boolean);
   const rows = [];
 
-  for (let i = 0; i < lines.length - 2; i++) {
-    const a = lines[i];
-    const b = lines[i + 1];
-    if (!looksLikeTeam(a) || !looksLikeTeam(b) || sameTeam(a, b)) continue;
+  for (const line of lines) {
+    const clean = line
+      .replace(/\\b\\d{1,2}\\.\\d{1,2}\\.?\\b/g, " ")   // remove dates like 22.03.
+      .replace(/\\b20\\d{2}\\b/g, " ");                  // remove years like 2025
 
-    const score = parseTwoGoalNumbers(lines, i + 2);
-    if (!score) continue;
+    let m;
+    const regexes = [
+      /(\\d{1,2})\\s*[-:]\\s*(\\d{1,2})/g,
+      /\\b(\\d{1,2})\\s+(\\d{1,2})\\b/g
+    ];
 
-    rows.push({
-      team1: a,
-      team2: b,
-      home: score.home,
-      away: score.away,
-      total: score.home + score.away
-    });
-  }
+    for (const rgx of regexes) {
+      while ((m = rgx.exec(clean)) !== null) {
+        const a = parseInt(m[1], 10);
+        const b = parseInt(m[2], 10);
 
-  return dedupeRows(rows);
-}
-
-function detectMatchupFromH2H(text) {
-  const rows = extractPairRows(text);
-  if (!rows.length) return { home: "", away: "" };
-
-  const pairCount = new Map();
-  for (const row of rows) {
-    const key = `${normalizeName(row.team1)}|||${normalizeName(row.team2)}`;
-    if (!pairCount.has(key)) {
-      pairCount.set(key, { count: 0, team1: row.team1, team2: row.team2 });
-    }
-    pairCount.get(key).count += 1;
-  }
-
-  const best = [...pairCount.values()].sort((a, b) => b.count - a.count)[0];
-  return {
-    home: best?.team1 || "",
-    away: best?.team2 || ""
-  };
-}
-
-function parseH2H(text, homeTeam, awayTeam) {
-  const rows = extractPairRows(text);
-  const out = [];
-
-  for (const row of rows) {
-    const direct = sameTeam(row.team1, homeTeam) && sameTeam(row.team2, awayTeam);
-    const reverse = sameTeam(row.team1, awayTeam) && sameTeam(row.team2, homeTeam);
-
-    if (direct) {
-      out.push({
-        team1: homeTeam,
-        team2: awayTeam,
-        home: row.home,
-        away: row.away,
-        total: row.total
-      });
-    } else if (reverse) {
-      out.push({
-        team1: homeTeam,
-        team2: awayTeam,
-        home: row.away,
-        away: row.home,
-        total: row.total
-      });
-    }
-  }
-
-  return dedupeRows(out).slice(0, 12);
-}
-
-function parseTeamForm(text, trackedTeam, role) {
-  const rows = extractPairRows(text);
-  const out = [];
-
-  for (const row of rows) {
-    const trackedFirst = sameTeam(row.team1, trackedTeam);
-    const trackedSecond = sameTeam(row.team2, trackedTeam);
-
-    if (!trackedFirst && !trackedSecond) continue;
-
-    if (role === "home") {
-      if (trackedFirst) {
-        out.push({
-          team1: trackedTeam,
-          team2: row.team2,
-          home: row.home,
-          away: row.away,
-          total: row.total
-        });
-      } else {
-        out.push({
-          team1: trackedTeam,
-          team2: row.team1,
-          home: row.away,
-          away: row.home,
-          total: row.total
-        });
-      }
-    }
-
-    if (role === "away") {
-      if (trackedSecond) {
-        out.push({
-          team1: row.team1,
-          team2: trackedTeam,
-          home: row.home,
-          away: row.away,
-          total: row.total
-        });
-      } else {
-        out.push({
-          team1: row.team2,
-          team2: trackedTeam,
-          home: row.away,
-          away: row.home,
-          total: row.total
-        });
+        if (
+          Number.isFinite(a) &&
+          Number.isFinite(b) &&
+          a >= 0 && b >= 0 &&
+          a <= 12 && b <= 12
+        ) {
+          rows.push({ home: a, away: b, total: a + b });
+        }
       }
     }
   }
 
-  return dedupeRows(out).slice(0, 12);
-}
-
-function dedupeRows(rows) {
+  // dedupe
   const seen = new Set();
   const out = [];
   for (const r of rows) {
-    const key = `${normalizeName(r.team1)}|${normalizeName(r.team2)}|${r.home}|${r.away}`;
-    if (!seen.has(key)) {
-      seen.add(key);
+    const k = `${r.home}-${r.away}`;
+    if (!seen.has(k)) {
+      seen.add(k);
       out.push(r);
     }
   }
-  return out;
-}
 
-function weightedAverage(values, weights) {
-  const sumW = weights.reduce((a, b) => a + b, 0) || 1;
-  const sum = values.reduce((acc, v, i) => acc + (v * weights[i]), 0);
-  return sum / sumW;
-}
-
-function recentWeights(n) {
-  const base = [];
-  for (let i = 0; i < n; i++) base.push(n - i);
-  return base;
+  return out.slice(0, limit);
 }
 
 function calcStats(rows, type) {
-  const weights = recentWeights(rows.length || 1);
+  const n = rows.length || 1;
 
-  const avgGoals = weightedAverage(rows.map(r => r.total), weights);
-  const bttsRate = weightedAverage(rows.map(r => (r.home > 0 && r.away > 0 ? 1 : 0)), weights);
-  const drawRate = weightedAverage(rows.map(r => (r.home === r.away ? 1 : 0)), weights);
-  const lowGoalDrawRate = weightedAverage(rows.map(r => (r.home === r.away && r.total <= 2 ? 1 : 0)), weights);
+  const avgGoals = rows.reduce((s, r) => s + r.total, 0) / n;
+  const bttsRate = rows.filter(r => r.home > 0 && r.away > 0).length / n;
+  const drawRate = rows.filter(r => r.home === r.away).length / n;
+  const lowGoalDrawRate = rows.filter(r => r.home === r.away && r.total <= 2).length / n;
 
   let avgScored = 0;
-  let avgConceded = 0;
   let winRate = 0;
   let failToScoreRate = 0;
-  let cleanSheetRate = 0;
 
   if (type === "home") {
-    avgScored = weightedAverage(rows.map(r => r.home), weights);
-    avgConceded = weightedAverage(rows.map(r => r.away), weights);
-    winRate = weightedAverage(rows.map(r => (r.home > r.away ? 1 : 0)), weights);
-    failToScoreRate = weightedAverage(rows.map(r => (r.home === 0 ? 1 : 0)), weights);
-    cleanSheetRate = weightedAverage(rows.map(r => (r.away === 0 ? 1 : 0)), weights);
+    avgScored = rows.reduce((s, r) => s + r.home, 0) / n;
+    winRate = rows.filter(r => r.home > r.away).length / n;
+    failToScoreRate = rows.filter(r => r.home === 0).length / n;
   } else if (type === "away") {
-    avgScored = weightedAverage(rows.map(r => r.away), weights);
-    avgConceded = weightedAverage(rows.map(r => r.home), weights);
-    winRate = weightedAverage(rows.map(r => (r.away > r.home ? 1 : 0)), weights);
-    failToScoreRate = weightedAverage(rows.map(r => (r.away === 0 ? 1 : 0)), weights);
-    cleanSheetRate = weightedAverage(rows.map(r => (r.home === 0 ? 1 : 0)), weights);
+    avgScored = rows.reduce((s, r) => s + r.away, 0) / n;
+    winRate = rows.filter(r => r.away > r.home).length / n;
+    failToScoreRate = rows.filter(r => r.away === 0).length / n;
   } else {
-    avgScored = weightedAverage(rows.map(r => (r.home + r.away) / 2), weights);
-    avgConceded = avgScored;
+    avgScored = rows.reduce((s, r) => s + r.home + r.away, 0) / (2 * n);
   }
 
   return {
@@ -586,62 +390,57 @@ function calcStats(rows, type) {
     drawRate,
     lowGoalDrawRate,
     avgScored,
-    avgConceded,
     winRate,
-    failToScoreRate,
-    cleanSheetRate
+    failToScoreRate
   };
 }
 
-function analyzePraxos({ homeTeam, awayTeam, h2hRows, homeRows, awayRows, threshold }) {
-  const H = calcStats(h2hRows, "h2h");
-  const Ho = calcStats(homeRows, "home");
-  const Aw = calcStats(awayRows, "away");
+function analyzePraxosSimple({ h2hRows, homeRows, awayRows, threshold = 70 }) {
+  const h2hStats = calcStats(h2hRows, "h2h");
+  const homeStats = calcStats(homeRows, "home");
+  const awayStats = calcStats(awayRows, "away");
 
   const homeStrength =
-    52 +
-    Ho.winRate * 24 +
-    Ho.avgScored * 7 -
-    Ho.failToScoreRate * 12 -
-    Ho.avgConceded * 2;
+    55 +
+    homeStats.winRate * 22 +
+    homeStats.avgScored * 8 -
+    homeStats.failToScoreRate * 12;
 
   const awayStrength =
-    52 +
-    Aw.winRate * 24 +
-    Aw.avgScored * 7 -
-    Aw.failToScoreRate * 12 -
-    Aw.avgConceded * 2;
+    55 +
+    awayStats.winRate * 22 +
+    awayStats.avgScored * 8 -
+    awayStats.failToScoreRate * 12;
 
   const drawTrap =
-    H.drawRate * 22 +
-    H.lowGoalDrawRate * 18 +
-    ((Ho.drawRate + Aw.drawRate) * 10);
+    h2hStats.drawRate * 20 +
+    h2hStats.lowGoalDrawRate * 20 +
+    ((homeStats.drawRate + awayStats.drawRate) * 10);
 
   const goalSignal =
-    H.avgGoals * 0.22 +
-    Ho.avgGoals * 0.43 +
-    Aw.avgGoals * 0.35;
+    h2hStats.avgGoals * 0.25 +
+    homeStats.avgGoals * 0.40 +
+    awayStats.avgGoals * 0.35;
 
   const bttsSignal =
-    H.bttsRate * 0.22 +
-    Ho.bttsRate * 0.43 +
-    Aw.bttsRate * 0.35;
+    h2hStats.bttsRate * 0.25 +
+    homeStats.bttsRate * 0.40 +
+    awayStats.bttsRate * 0.35;
 
   const primary = buildPrimary(homeStrength, awayStrength, drawTrap);
   const secondary = buildSecondary(goalSignal, bttsSignal);
-  const markets = buildMarkets(primary, secondary, goalSignal, bttsSignal, drawTrap);
+  const markets = buildMarkets(primary, secondary);
   const qualified = markets.filter(x => x.confidence >= threshold).sort((a, b) => b.confidence - a.confidence);
 
   const top = qualified[0]?.confidence || primary[0].confidence;
-  const mode = top >= 80 ? "ATTACK" : top >= 70 ? "CONTROL" : "NO BET";
-  const stake = top >= 80 ? "MEDIUM" : top >= 70 ? "SMALL" : "NO STAKE";
+  const mode = top >= 78 ? "ATTACK" : top >= 70 ? "CONTROL" : "NO BET";
+  const stake = top >= 78 ? "MEDIUM" : top >= 70 ? "SMALL" : "NO STAKE";
   const scores = buildScores(primary[0], secondary[0], drawTrap);
 
   return {
-    homeTeam,
-    awayTeam,
     mode,
     stake,
+    confidence: top,
     primary,
     secondary,
     markets,
@@ -651,42 +450,41 @@ function analyzePraxos({ homeTeam, awayTeam, h2hRows, homeRows, awayRows, thresh
 }
 
 function buildPrimary(homeStrength, awayStrength, drawTrap) {
-  const diff = homeStrength - awayStrength;
-  let picks = [];
+  let p = [];
 
-  if (diff >= 7) {
-    picks = [
-      { label: "1X", confidence: clamp(Math.round(homeStrength + 8 - drawTrap * 0.18), 50, 88), market: "Primary" },
-      { label: "1", confidence: clamp(Math.round(homeStrength - drawTrap * 0.22), 50, 84), market: "Primary" }
+  if (homeStrength > awayStrength + 5) {
+    p = [
+      { label: "1X", market: "Primary", confidence: clamp(Math.round(homeStrength + 8 - drawTrap * 0.2), 50, 88) },
+      { label: "1", market: "Primary", confidence: clamp(Math.round(homeStrength - drawTrap * 0.25), 50, 84) }
     ];
-  } else if (diff <= -7) {
-    picks = [
-      { label: "X2", confidence: clamp(Math.round(awayStrength + 8 - drawTrap * 0.18), 50, 88), market: "Primary" },
-      { label: "2", confidence: clamp(Math.round(awayStrength - drawTrap * 0.22), 50, 84), market: "Primary" }
+  } else if (awayStrength > homeStrength + 5) {
+    p = [
+      { label: "X2", market: "Primary", confidence: clamp(Math.round(awayStrength + 8 - drawTrap * 0.2), 50, 88) },
+      { label: "2", market: "Primary", confidence: clamp(Math.round(awayStrength - drawTrap * 0.25), 50, 84) }
     ];
   } else {
-    picks = [
-      { label: "X", confidence: clamp(Math.round(58 + drawTrap * 0.45), 50, 82), market: "Primary" },
-      { label: diff >= 0 ? "1X" : "X2", confidence: clamp(Math.round(62 + Math.abs(diff) - drawTrap * 0.08), 50, 82), market: "Primary" }
+    p = [
+      { label: "X", market: "Primary", confidence: clamp(Math.round(58 + drawTrap * 0.5), 50, 82) },
+      { label: "1X", market: "Primary", confidence: clamp(Math.round(60 + (homeStrength - awayStrength)), 50, 84) }
     ];
   }
 
-  return picks.sort((a, b) => b.confidence - a.confidence);
+  return p.sort((a, b) => b.confidence - a.confidence);
 }
 
 function buildSecondary(goalSignal, bttsSignal) {
   const s1 = goalSignal < 2.6
-    ? { label: "Under 3.5", confidence: clamp(Math.round(60 + (2.6 - goalSignal) * 8), 50, 86), market: "Goals" }
-    : { label: "Over 2.5", confidence: clamp(Math.round(56 + (goalSignal - 2.6) * 8), 50, 84), market: "Goals" };
+    ? { label: "Under 3.5", market: "Goals", confidence: clamp(Math.round(60 + (2.6 - goalSignal) * 8), 50, 86) }
+    : { label: "Over 2.5", market: "Goals", confidence: clamp(Math.round(56 + (goalSignal - 2.6) * 8), 50, 84) };
 
   const s2 = bttsSignal > 0.52
-    ? { label: "BTTS", confidence: clamp(Math.round(56 + (bttsSignal - 0.52) * 30), 50, 82), market: "BTTS" }
-    : { label: "No BTTS", confidence: clamp(Math.round(56 + (0.52 - bttsSignal) * 30), 50, 82), market: "BTTS" };
+    ? { label: "BTTS", market: "BTTS", confidence: clamp(Math.round(56 + (bttsSignal - 0.52) * 30), 50, 82) }
+    : { label: "No BTTS", market: "BTTS", confidence: clamp(Math.round(56 + (0.52 - bttsSignal) * 30), 50, 82) };
 
   return [s1, s2];
 }
 
-function buildMarkets(primary, secondary, goalSignal, bttsSignal, drawTrap) {
+function buildMarkets(primary, secondary) {
   const p1 = primary[0];
   const p2 = primary[1];
   const s1 = secondary[0];
@@ -695,8 +493,8 @@ function buildMarkets(primary, secondary, goalSignal, bttsSignal, drawTrap) {
   const out = [
     { label: p1.label, market: "Primary", confidence: p1.confidence },
     { label: p2.label, market: "Primary", confidence: p2.confidence },
-    { label: s1.label, market: s1.market, confidence: s1.confidence },
-    { label: s2.label, market: s2.market, confidence: s2.confidence }
+    { label: s1.label, market: "Goals", confidence: s1.confidence },
+    { label: s2.label, market: s2.market, confidence: s2.confidence },
   ];
 
   if (p1.label === "1X") out.push({ label: "Home +0.5", market: "Handicap", confidence: clamp(p1.confidence + 2, 50, 88) });
@@ -704,18 +502,17 @@ function buildMarkets(primary, secondary, goalSignal, bttsSignal, drawTrap) {
   if (p1.label === "1") out.push({ label: "Home -0.25", market: "Handicap", confidence: clamp(p1.confidence - 2, 50, 82) });
   if (p1.label === "2") out.push({ label: "Away -0.25", market: "Handicap", confidence: clamp(p1.confidence - 2, 50, 82) });
 
-  out.push({ label: `${p1.label} + ${s1.label}`, market: "Combo", confidence: clamp(Math.round((p1.confidence * 0.55) + (s1.confidence * 0.45) - 2), 50, 88) });
-  out.push({ label: `${p1.label} + ${s2.label}`, market: "Combo", confidence: clamp(Math.round((p1.confidence * 0.55) + (s2.confidence * 0.45) - 2), 50, 88) });
+  out.push({
+    label: `${p1.label} + ${s1.label}`,
+    market: "Combo",
+    confidence: clamp(Math.round((p1.confidence * 0.55) + (s1.confidence * 0.45) - 2), 50, 88)
+  });
 
-  if (goalSignal < 2.2) {
-    out.push({ label: "Under 2.5", market: "Goals", confidence: clamp(Math.round(58 + (2.2 - goalSignal) * 10), 50, 84) });
-  } else if (goalSignal > 3.0) {
-    out.push({ label: "Over 1.5", market: "Goals", confidence: clamp(Math.round(68 + (goalSignal - 3.0) * 6), 50, 88) });
-  }
-
-  if (drawTrap > 22) {
-    out.push({ label: "Draw", market: "Primary", confidence: clamp(Math.round(58 + drawTrap * 0.5), 50, 80) });
-  }
+  out.push({
+    label: `${p1.label} + ${s2.label}`,
+    market: "Combo",
+    confidence: clamp(Math.round((p1.confidence * 0.55) + (s2.confidence * 0.45) - 2), 50, 88)
+  });
 
   return out.sort((a, b) => b.confidence - a.confidence);
 }
@@ -739,19 +536,19 @@ function buildScores(primaryTop, secondaryTop, drawTrap) {
 
   while (scores.length < 4) scores.push("1-1");
 
-  return scores.slice(0, 4).map((score, i) => ({
-    score,
+  return scores.slice(0, 4).map((s, i) => ({
+    score: s,
     confidence: [76, 71, 66, 61][i]
   }));
 }
 
-function totalGoals(score) {
-  const [a, b] = score.split("-").map(Number);
+function totalGoals(s) {
+  const [a, b] = s.split("-").map(Number);
   return a + b;
 }
 
-function bothTeamsScore(score) {
-  const [a, b] = score.split("-").map(Number);
+function bothTeamsScore(s) {
+  const [a, b] = s.split("-").map(Number);
   return a > 0 && b > 0;
 }
 
@@ -760,16 +557,15 @@ function clamp(n, min, max) {
 }
 
 function renderResult(result) {
-  els.modeBox.textContent = result.mode;
-  els.stakeBox.textContent = result.stake;
+  els.mode.textContent = result.mode;
+  els.stake.textContent = result.stake;
+  els.confidence.textContent = result.confidence + "%";
 
+  els.primary.innerHTML = result.primary.map(renderCard).join("");
+  els.secondary.innerHTML = result.secondary.map(renderCard).join("");
   els.qualified.innerHTML = result.qualified.length
     ? result.qualified.map(renderCard).join("")
     : `<div class="soft">No pick cleared 70%.</div>`;
-
-  els.allMarkets.innerHTML = result.markets.map(renderCard).join("");
-  els.primary.innerHTML = result.primary.map(renderCard).join("");
-  els.secondary.innerHTML = result.secondary.map(renderCard).join("");
 
   els.scores.innerHTML = result.scores.map(s => `
     <div class="rounded-xl bg-black/20 p-3">
@@ -784,7 +580,7 @@ function renderCard(m) {
   return `
     <div class="rounded-xl bg-black/20 p-3">
       <div class="font-bold">${m.label}</div>
-      <div class="soft text-sm">${m.market || "Signal"}</div>
+      <div class="soft text-sm">${m.market}</div>
       <div class="mt-2 text-xl font-black ${cls}">${m.confidence}%</div>
     </div>
   `;
