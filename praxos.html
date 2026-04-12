@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Praxos Apex | Autonomous Terminal v1.5</title>
+  <title>Praxos Apex | Final Terminal v1.6</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <style>
@@ -22,7 +22,7 @@
     <div class="lg:col-span-4 space-y-6">
       <header class="mb-8 border-b border-emerald-500/20 pb-4">
         <h1 class="text-3xl font-black tracking-tighter text-white">PRAXOS <span class="text-emerald-500">APEX</span></h1>
-        <p class="text-[10px] text-emerald-500/70 uppercase tracking-[0.2em] mt-1">Friction Protocol v1.5 [STABLE]</p>
+        <p class="text-[10px] text-emerald-500/70 uppercase tracking-[0.2em] mt-1">v1.6 Final Framework</p>
       </header>
 
       <div class="glass rounded-xl p-5">
@@ -30,7 +30,7 @@
         <input id="files" type="file" accept="image/*" multiple class="block w-full text-xs text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-emerald-500/10 file:text-emerald-500 hover:file:bg-emerald-500/20 cursor-pointer mb-6" />
         <button id="runBtn" class="w-full py-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-black font-black uppercase text-[12px] tracking-[0.2em] transition-all mb-4 shadow-[0_0_15px_rgba(16,185,129,0.3)]">Execute Framework</button>
         <div class="flex justify-between text-[10px] font-bold text-emerald-500 uppercase mb-1">
-          <span id="statusText">Awaiting Datasets</span>
+          <span id="statusText">Awaiting Datasets (3)</span>
           <span id="progressText">0%</span>
         </div>
         <div class="h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden">
@@ -45,7 +45,7 @@
           <h2 class="text-[12px] font-black text-emerald-500 uppercase tracking-widest">>> System Output</h2>
           <button id="copyBtn" class="text-[10px] bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-3 py-1.5 rounded uppercase font-bold transition-all">Copy Report</button>
         </div>
-        <textarea id="terminal" readonly class="flex-grow w-full min-h-[500px] bg-transparent text-[13px] text-emerald-400 font-medium leading-relaxed resize-none" placeholder="INITIALIZING PRAXOS CORE v1.5..."></textarea>
+        <textarea id="terminal" readonly class="flex-grow w-full min-h-[500px] bg-transparent text-[13px] text-emerald-400 font-medium leading-relaxed resize-none" placeholder="INITIALIZING PRAXOS CORE v1.6..."></textarea>
       </div>
     </div>
   </div>
@@ -58,15 +58,15 @@ function setProgress(v, text) { let n = Math.round(v); els.progressBar.style.wid
 els.runBtn.onclick = async () => {
   try {
     const files = [...els.files.files];
-    if (files.length !== 3) return alert("Upload exactly 3 images.");
-    logTerm(">> INITIALIZING TESSERACT OCR...");
+    if (files.length !== 3) return alert("Upload exactly 3 images (H2H, Home, Away).");
+    logTerm(">> INITIALIZING TESSERACT OCR ENGINE...");
     const texts = [];
     for (let i = 0; i < files.length; i++) {
-      setProgress((i/3)*100, `SCANNING IMAGE ${i+1}/3`);
+      setProgress((i/3)*100, `SCANNING DATASET ${i+1}/3`);
       const res = await Tesseract.recognize(files[i], "eng");
       texts.push(res.data.text.replace(/\r/g, "\n").trim());
     }
-    setProgress(90, "CALIBRATING TENSORS");
+    setProgress(90, "ANALYZING MULTI-TENSOR DATA");
     const sorted = autoSortDatasets(texts);
     const modernH2HText = truncateDeadZones(sorted.h2hText);
     const h2h = extractScoresRobust(modernH2HText, 10);
@@ -77,6 +77,7 @@ els.runBtn.onclick = async () => {
   } catch (err) { logTerm(">> FATAL ERROR: " + err.message); }
 };
 
+/* --- LOGIC: TEMPORAL ENGINE --- */
 function truncateDeadZones(text) {
    let chunks = text.split(/\b(20\d{2})\b/);
    if (chunks.length === 1) return text; 
@@ -85,10 +86,11 @@ function truncateDeadZones(text) {
    return valid;
 }
 
+/* --- LOGIC: AUTONOMOUS ROLE DETECTION --- */
 function autoSortDatasets(texts) {
   let freqs = texts.map(t => {
     let clean = t.replace(/(Summary|Odds|H2H|Standings|Lineups|Advertisement|Stats|Video|Awarded)/gi, "");
-    clean = clean.replace(/[^a-zA-Z\s]/g, " "); // Fixed: preserves letters
+    clean = clean.replace(/[^a-zA-Z\s]/g, " "); 
     const counts = {};
     clean.split(/\s+/).forEach(word => {
       let w = word.toUpperCase();
@@ -100,11 +102,14 @@ function autoSortDatasets(texts) {
   freqs.forEach(f => { for(let k in f) totalFreqs[k] = (totalFreqs[k] || 0) + f[k]; });
   let sortedTeams = Object.keys(totalFreqs).sort((a,b) => totalFreqs[b] - totalFreqs[a]);
   let tA = sortedTeams[0], tB = sortedTeams[1];
+  
   let h2hIdx = freqs.map(f => Math.abs((f[tA]||0) - (f[tB]||0))).indexOf(Math.min(...freqs.map(f => Math.abs((f[tA]||0) - (f[tB]||0)))));
   let h2hText = texts[h2hIdx], remaining = texts.filter((_,i)=>i!==h2hIdx);
+  
   let fRem = getFreqs(remaining[0]);
   let isTeamA = (fRem[tA]||0) > (fRem[tB]||0);
   let tAText = isTeamA ? remaining[0] : remaining[1], tBText = isTeamA ? remaining[1] : remaining[0];
+  
   let firstA = h2hText.toUpperCase().indexOf(tA), firstB = h2hText.toUpperCase().indexOf(tB);
   return (firstA < firstB) ? {h2hText, homeText:tAText, awayText:tBText, homeName:tA, awayName:tB} : {h2hText, homeText:tBText, awayText:tAText, homeName:tB, awayName:tA};
 }
@@ -116,6 +121,7 @@ function getFreqs(text) {
   return counts;
 }
 
+/* --- LOGIC: WATERFALL EXTRACTION --- */
 function extractScoresRobust(text, limit) {
   let rows = [];
   let clean = text.replace(/\b\d{1,2}\.\d{1,2}\.?\b/g, " ").replace(/\b(19|20)\d{2}\b/g, " ");
@@ -131,45 +137,55 @@ function extractScoresRobust(text, limit) {
   return rows.slice(0, limit);
 }
 
+/* --- LOGIC: CORE APEX ENGINE --- */
 function executePraxosLogic(homeName, awayName, h2h, home, away) {
   if(home.length < 2 || away.length < 2) return ">> ERROR: INSUFFICIENT MACRO DATA.";
   let voidH2H = h2h.length === 0, sysNote = "";
-  if (voidH2H) sysNote = "*(System Note: 🚨 TEMPORAL ENGINE TRIGGERED 🚨. Dead data voided).*";
+  if (voidH2H) sysNote = "*(System Note: 🚨 TEMPORAL ENGINE TRIGGERED 🚨. Historic H2H data was flagged as mathematically dead and completely voided).*";
   
   let h2hHomeWins = voidH2H ? 0 : h2h.filter(r => r.h > r.a).length / h2h.length;
   let draws = voidH2H ? 0 : h2h.filter(r => r.h === r.a).length / h2h.length;
-  let recentHomeWins = voidH2H ? 0 : h2h.slice(0, 5).filter(r => r.h > r.a).length / Math.min(h2h.length, 5);
+  let recentH2H = h2h.slice(0, 5);
+  let recentHomeWins = voidH2H ? 0 : recentH2H.filter(r => r.h > r.a).length / Math.min(h2h.length, 5);
+  
   let h2hAvg = voidH2H ? 0 : (h2h.reduce((s,r)=>s+r.t,0)/h2h.length);
   let macroAvg = (home.reduce((s,r)=>s+r.t,0)/home.length * 0.5) + (away.reduce((s,r)=>s+r.t,0)/away.length * 0.5);
   let avgG = voidH2H ? macroAvg : (h2hAvg * 0.45) + (macroAvg * 0.55);
   let btts = voidH2H ? 0.5 : (h2h.filter(r=>r.h>0 && r.a>0).length/h2h.length * 0.4) + 0.3;
 
   let primaryLabel = "1X (Home) or X2 (Away) - Standard Variance", primaryConf = 75;
+  
+  // 1. BOOGEYMAN CHECK
   if (!voidH2H && (recentHomeWins >= 0.8 || h2hHomeWins >= 0.65)) {
-    primaryLabel = Math.max(recentHomeWins, h2hHomeWins) >= 0.8 ? `${homeName} Moneyline (1)` : `1X / ${homeName} Moneyline (1)`;
-    primaryConf = Math.floor(82 + (Math.max(recentHomeWins, h2hHomeWins) * 10));
-    sysNote += (sysNote ? "\n" : "") + `*(System Note: 🚨 BOOGEYMAN DETECTED 🚨. Structural dominance by ${homeName}).*`;
-  } else if (draws >= 0.4) {
+    let winRate = Math.max(recentHomeWins, h2hHomeWins);
+    primaryLabel = winRate >= 0.8 ? `${homeName} Moneyline (1)` : `1X / ${homeName} Moneyline (1)`;
+    primaryConf = Math.floor(82 + (winRate * 10));
+    sysNote += (sysNote ? "\n" : "") + `*(System Note: 🚨 BOOGEYMAN DETECTED 🚨. Structural dominance by ${homeName} overrides localized fluctuations).*`;
+  } 
+  // 2. DRAW GRAVITY CHECK
+  else if (draws >= 0.4) {
     primaryLabel = "Draw (X) Detected / X2 (Away Protection)";
     primaryConf = Math.floor(78 + (draws * 15));
-    sysNote += (sysNote ? "\n" : "") + "*(System Note: 🚨 DRAW GRAVITY 🚨).*";
+    sysNote += (sysNote ? "\n" : "") + "*(System Note: 🚨 DRAW GRAVITY 🚨. Mutual inefficiency matrix is active).*";
   }
 
   let secLabel = "", secConf = 0;
-  // V1.5 Friction Check (Strict Score Probability)
+  // 3. FRICTION VETO
   let frictionVeto = (!voidH2H && h2hAvg <= 2.2 && macroAvg >= 2.8);
   if (frictionVeto) {
-    secLabel = "Under 3.5 Goals (Friction/Derby Protocol)"; secConf = 85;
-    sysNote += (sysNote ? "\n" : "") + "*(System Note: 🚨 FRICTION VETO 🚨. Derby/Rivalry grinding overrides macro shootout form).*";
-  } else if (avgG > 2.6) {
+    secLabel = "Under 3.5 Goals / BTTS NO"; secConf = 85;
+    sysNote += (sysNote ? "\n" : "") + "*(System Note: 🚨 FRICTION VETO 🚨. High Macro-Volatility overridden by extreme H2H grinding. Derby conditions detected).*";
+  } else if (avgG > 2.6 || (avgG > 2.2 && btts > 0.6)) {
     secLabel = btts > 0.6 ? "Over 2.5 Goals / BTTS YES" : "Over 2.5 Goals"; secConf = Math.floor(75 + (avgG * 4));
   } else {
     secLabel = "Under 3.5 Goals / BTTS NO"; secConf = 85;
   }
 
-  if (sysNote === "") sysNote = "*(System Note: No extreme structural anomaly detected).*";
+  if (sysNote === "") sysNote = "*(System Note: No extreme structural anomaly detected. Proceed with standard bankroll limits).*";
   return `**NODE: ${homeName} VS ${awayName}**\n\nPRIMARY VECTOR:\nTarget: ${primaryLabel}\nConfidence: ${primaryConf}%\n\nSECONDARY CONSTRAINT:\nTarget: ${secLabel}\nConfidence: ${secConf}%\n\n${sysNote}`;
 }
+
+els.copyBtn.onclick = () => { els.terminal.select(); document.execCommand('copy'); els.copyBtn.innerText = "COPIED!"; setTimeout(() => els.copyBtn.innerText = "Copy Report", 2000); };
 </script>
 </body>
 </html>
