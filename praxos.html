@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Praxos Apex | Terminal v2.0</title>
+  <title>Praxos Apex | Terminal v2.1</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <style>
@@ -20,11 +20,11 @@
     <div class="lg:col-span-4 space-y-6">
       <header class="mb-8 border-b border-emerald-500/20 pb-4">
         <h1 class="text-3xl font-black tracking-tighter text-white">PRAXOS <span class="text-emerald-500">APEX</span></h1>
-        <p class="text-[10px] text-emerald-500/70 uppercase tracking-[0.2em] mt-1">v2.0 [BURNOUT CALIBRATED]</p>
+        <p class="text-[10px] text-emerald-500/70 uppercase tracking-[0.2em] mt-1">v2.1 [PRECISION LATTICE]</p>
       </header>
       <div class="glass rounded-xl p-5">
         <input id="files" type="file" accept="image/*" multiple class="block w-full text-xs text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-emerald-500/10 file:text-emerald-500 cursor-pointer mb-6" />
-        <button id="runBtn" class="w-full py-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-black font-black uppercase text-[12px] tracking-[0.2em] transition-all mb-4">Execute Framework</button>
+        <button id="runBtn" class="w-full py-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-black font-black uppercase text-[12px] tracking-[0.2em] transition-all mb-4 shadow-[0_0_15px_rgba(16,185,129,0.2)]">Execute Framework</button>
         <div class="h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden"><div id="progressBar" class="h-full bg-emerald-500 w-0 transition-all shadow-[0_0_10px_#10b981]"></div></div>
       </div>
     </div>
@@ -40,8 +40,8 @@ const els = { files: document.getElementById("files"), runBtn: document.getEleme
 
 els.runBtn.onclick = async () => {
   const files = [...els.files.files];
-  if (files.length !== 3) return alert("Upload 3 images.");
-  els.terminal.value = ">> INITIALIZING V2.0 BURNOUT PROTOCOLS...";
+  if (files.length !== 3) return alert("Upload exactly 3 images.");
+  els.terminal.value = ">> INITIALIZING V2.1 PRECISION EXTRACTION...";
   const texts = [];
   for (let i = 0; i < files.length; i++) {
     const res = await Tesseract.recognize(files[i], "eng");
@@ -67,37 +67,56 @@ function extract(t) {
 }
 
 function autoSort(texts) {
-  let pools = texts.map(t => t.split('\n').map(l => l.replace(/[^A-Z\s]/g, "").trim()).filter(l => l.length > 3 && !/SUMMARY|ODDS|H2H|NEWS|LINEUPS/.test(l)));
-  let flat = pools.flat();
-  let counts = {}; flat.forEach(e => counts[e] = (counts[e] || 0) + 1);
+  // Enhanced Blacklist
+  const blacklist = /SUMMARY|ODDS|H2H|NEWS|LINEUPS|STANDINGS|COMMENTARY|STATS|ADVERTISEMENT|RELOAD|FOOTBALL|PEN|ADCHOICES|MACHINESEEKER/;
+  
+  let entityPool = [];
+  texts.forEach(t => {
+    t.split('\n').forEach(line => {
+      let clean = line.replace(/[^a-zA-Z\s]/g, "").trim();
+      if(clean.length > 3 && !blacklist.test(clean.toUpperCase())) {
+        entityPool.push(clean.toUpperCase());
+      }
+    });
+  });
+
+  let counts = {}; entityPool.forEach(e => counts[e] = (counts[e] || 0) + 1);
   let sorted = Object.keys(counts).sort((a,b) => counts[b] - counts[a]);
-  let tA = sorted[0], tB = sorted[1];
+  
+  // Logic: The actual team names appear in the H2H and their respective forms
+  let tA = sorted[0] || "TEAM_A", tB = sorted[1] || "TEAM_B";
+  
   let h2hIdx = texts.findIndex(t => t.toUpperCase().includes(tA) && t.toUpperCase().includes(tB));
   if(h2hIdx === -1) h2hIdx = 0;
+  
   let h2hText = texts[h2hIdx], rem = texts.filter((_,i)=>i!==h2hIdx);
   let isAHome = rem[0].toUpperCase().includes(tA);
+  
   return (h2hText.toUpperCase().indexOf(tA) < h2hText.toUpperCase().indexOf(tB)) 
     ? {h2hText, homeText:isAHome?rem[0]:rem[1], awayText:isAHome?rem[1]:rem[0], homeName:tA, awayName:tB}
     : {h2hText, homeText:isAHome?rem[1]:rem[0], awayText:isAHome?rem[0]:rem[1], homeName:tB, awayName:tA};
 }
 
 function runLogic(hN, aN, h2h, home, away) {
+  if(h2h.length === 0) return ">> ERROR: INSUFFICIENT DATA TENSORS.";
   let h2hW = h2h.filter(r=>r.h>r.a).length/h2h.length, draws = h2h.filter(r=>r.h===r.a).length/h2h.length;
   let h2hAvg = h2h.reduce((s,r)=>s+r.t,0)/h2h.length;
   let macroAvg = (home.reduce((s,r)=>s+r.t,0)/home.length + away.reduce((s,r)=>s+r.t,0)/away.length)/2;
   
-  // V2.0 BURNOUT LOGIC
-  let burnout = (macroAvg >= 3.0 && h2hAvg >= 2.8); 
+  // V2.1 BURNOUT + FRICTION
+  let burnout = (macroAvg >= 3.0 && h2hAvg >= 2.8);
+  let friction = (h2hAvg <= 2.1 && macroAvg >= 2.8);
+  
   let primaryLabel = draws >= 0.35 ? "Draw (X) Risk / 1X Protection" : (h2hW >= 0.6 ? `${hN} Moneyline (1)` : "1X (Home) or X2 (Away)");
   let secLabel = "Over 2.5 Goals / BTTS YES", secConf = Math.min(99, Math.floor(75 + (macroAvg * 4)));
-  let note = "No extreme structural anomaly.";
+  let note = "No extreme structural anomaly detected.";
 
   if (burnout) {
     secLabel = "Under 3.5 Goals / BTTS NO"; secConf = 85;
-    note = "🚨 LATTICE BURNOUT 🚨. Macro-velocity is dangerously high. Tactical regression to a defensive lock (0-0/1-0) is mathematically probable.";
-  } else if (h2hAvg <= 2.2 && macroAvg >= 2.8) {
+    note = "🚨 LATTICE BURNOUT 🚨. Macro-velocity is dangerously high. Tactical regression to a defensive lock is probable.";
+  } else if (friction) {
     secLabel = "Under 3.5 Goals"; secConf = 85;
-    note = "🚨 FRICTION VETO 🚨.";
+    note = "🚨 FRICTION VETO 🚨. H2H history indicates a tactical grind despite high league scoring.";
   }
 
   return `**NODE: ${hN} VS ${aN}**\n\nPRIMARY VECTOR: ${primaryLabel}\n\nSECONDARY CONSTRAINT: ${secLabel}\nConfidence: ${secConf}%\n\n*(System Note: ${note})*`;
