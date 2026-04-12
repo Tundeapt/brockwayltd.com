@@ -3,27 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Praxos Scanner Elite</title>
+  <title>Praxos Scanner</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <style>
     body { background:#07111a; color:#e6edf5; }
-    .panel { background:rgba(12,20,30,.95); border:1px solid rgba(255,255,255,.08); }
+    .panel { background:rgba(12,20,30,.96); border:1px solid rgba(255,255,255,.08); }
     .soft { color:#8ea1b5; }
     .good { color:#39d98a; }
     .warn { color:#ffbf5f; }
     .bad { color:#ff667a; }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-    select, input, button, textarea {
-      outline: none;
-    }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    select, input, button, textarea { outline:none; }
   </style>
 </head>
 <body class="min-h-screen p-4 md:p-6">
   <div class="max-w-7xl mx-auto">
     <div class="mb-6">
-      <h1 class="text-3xl md:text-4xl font-black tracking-tight">PRAXOS SCANNER ELITE</h1>
-      <p class="soft mt-2">Upload exactly 3 screenshots and assign each role manually for stable parsing.</p>
+      <h1 class="text-3xl md:text-4xl font-black tracking-tight">PRAXOS SCANNER</h1>
+      <p class="soft mt-2">Upload 3 screenshots, assign the roles, run analysis.</p>
     </div>
 
     <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
@@ -33,37 +31,10 @@
 
           <input id="files" type="file" accept="image/*" multiple class="block w-full text-sm mb-4" />
 
-          <div class="space-y-3 mb-4">
-            <div class="grid grid-cols-2 gap-2 items-center">
-              <label class="soft text-sm">File 1 role</label>
-              <select id="role0" class="rounded-lg bg-slate-900 p-2 text-sm">
-                <option value="h2h">H2H</option>
-                <option value="home">Home Form</option>
-                <option value="away">Away Form</option>
-              </select>
-            </div>
-
-            <div class="grid grid-cols-2 gap-2 items-center">
-              <label class="soft text-sm">File 2 role</label>
-              <select id="role1" class="rounded-lg bg-slate-900 p-2 text-sm">
-                <option value="home">Home Form</option>
-                <option value="h2h">H2H</option>
-                <option value="away">Away Form</option>
-              </select>
-            </div>
-
-            <div class="grid grid-cols-2 gap-2 items-center">
-              <label class="soft text-sm">File 3 role</label>
-              <select id="role2" class="rounded-lg bg-slate-900 p-2 text-sm">
-                <option value="away">Away Form</option>
-                <option value="h2h">H2H</option>
-                <option value="home">Home Form</option>
-              </select>
-            </div>
-          </div>
+          <div id="fileRoles" class="space-y-3 mb-4"></div>
 
           <div class="flex gap-3">
-            <button id="runBtn" class="flex-1 px-4 py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 font-bold">Run Praxos</button>
+            <button id="runBtn" class="flex-1 px-4 py-3 rounded-xl bg-cyan-700 hover:bg-cyan-600 font-bold">Run Praxos</button>
             <button id="clearBtn" class="px-4 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 font-semibold">Clear</button>
           </div>
 
@@ -80,13 +51,13 @@
 
         <div class="panel rounded-2xl p-4">
           <h2 class="text-xl font-bold mb-4">OCR / Engine Log</h2>
-          <textarea id="log" class="w-full min-h-[320px] rounded-xl bg-black/20 p-3 mono text-sm"></textarea>
+          <textarea id="log" class="w-full min-h-[340px] rounded-xl bg-black/20 p-3 mono text-sm"></textarea>
         </div>
       </div>
 
       <div class="xl:col-span-8 space-y-6">
         <div class="panel rounded-2xl p-4">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div class="rounded-xl bg-slate-900/70 p-4">
               <div class="soft text-sm">Home Team</div>
               <div id="homeTeam" class="text-xl font-bold mt-1">-</div>
@@ -96,8 +67,12 @@
               <div id="awayTeam" class="text-xl font-bold mt-1">-</div>
             </div>
             <div class="rounded-xl bg-slate-900/70 p-4">
-              <div class="soft text-sm">Mode / Stake</div>
-              <div id="modeStake" class="text-xl font-bold mt-1">-</div>
+              <div class="soft text-sm">Mode</div>
+              <div id="modeBox" class="text-xl font-bold mt-1">-</div>
+            </div>
+            <div class="rounded-xl bg-slate-900/70 p-4">
+              <div class="soft text-sm">Stake</div>
+              <div id="stakeBox" class="text-xl font-bold mt-1">-</div>
             </div>
           </div>
         </div>
@@ -105,6 +80,11 @@
         <div class="panel rounded-2xl p-4">
           <h2 class="text-xl font-bold mb-4">Qualified Picks (70%+)</h2>
           <div id="qualified" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3"></div>
+        </div>
+
+        <div class="panel rounded-2xl p-4">
+          <h2 class="text-xl font-bold mb-4">All Markets</h2>
+          <div id="allMarkets" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3"></div>
         </div>
 
         <div class="panel rounded-2xl p-4">
@@ -125,9 +105,9 @@
         <div class="panel rounded-2xl p-4">
           <h2 class="text-xl font-bold mb-4">Parsed Datasets</h2>
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <pre id="h2hData" class="bg-black/20 p-3 rounded-xl text-xs mono whitespace-pre-wrap"></pre>
-            <pre id="homeData" class="bg-black/20 p-3 rounded-xl text-xs mono whitespace-pre-wrap"></pre>
-            <pre id="awayData" class="bg-black/20 p-3 rounded-xl text-xs mono whitespace-pre-wrap"></pre>
+            <pre id="h2hData" class="bg-black/20 p-3 rounded-xl text-xs mono whitespace-pre-wrap overflow-auto"></pre>
+            <pre id="homeData" class="bg-black/20 p-3 rounded-xl text-xs mono whitespace-pre-wrap overflow-auto"></pre>
+            <pre id="awayData" class="bg-black/20 p-3 rounded-xl text-xs mono whitespace-pre-wrap overflow-auto"></pre>
           </div>
         </div>
       </div>
@@ -137,9 +117,7 @@
 <script>
 const els = {
   files: document.getElementById("files"),
-  role0: document.getElementById("role0"),
-  role1: document.getElementById("role1"),
-  role2: document.getElementById("role2"),
+  fileRoles: document.getElementById("fileRoles"),
   runBtn: document.getElementById("runBtn"),
   clearBtn: document.getElementById("clearBtn"),
   log: document.getElementById("log"),
@@ -147,8 +125,10 @@ const els = {
   progressText: document.getElementById("progressText"),
   homeTeam: document.getElementById("homeTeam"),
   awayTeam: document.getElementById("awayTeam"),
-  modeStake: document.getElementById("modeStake"),
+  modeBox: document.getElementById("modeBox"),
+  stakeBox: document.getElementById("stakeBox"),
   qualified: document.getElementById("qualified"),
+  allMarkets: document.getElementById("allMarkets"),
   primary: document.getElementById("primary"),
   secondary: document.getElementById("secondary"),
   scores: document.getElementById("scores"),
@@ -168,102 +148,143 @@ function setProgress(v) {
   els.progressText.textContent = n + "%";
 }
 
+function resetOutput() {
+  els.homeTeam.textContent = "-";
+  els.awayTeam.textContent = "-";
+  els.modeBox.textContent = "-";
+  els.stakeBox.textContent = "-";
+  els.qualified.innerHTML = "";
+  els.allMarkets.innerHTML = "";
+  els.primary.innerHTML = "";
+  els.secondary.innerHTML = "";
+  els.scores.innerHTML = "";
+  els.h2hData.textContent = "";
+  els.homeData.textContent = "";
+  els.awayData.textContent = "";
+}
+
 function clearUI() {
   els.log.value = "";
   setProgress(0);
-  els.homeTeam.textContent = "-";
-  els.awayTeam.textContent = "-";
-  els.modeStake.textContent = "-";
-  els.qualified.innerHTML = "";
-  els.primary.innerHTML = "";
-  els.secondary.innerHTML = "";
-  els.scores.innerHTML = "";
-  els.h2hData.textContent = "";
-  els.homeData.textContent = "";
-  els.awayData.textContent = "";
+  resetOutput();
   els.files.value = "";
-}
-
-function clearOutputsOnly() {
-  els.homeTeam.textContent = "-";
-  els.awayTeam.textContent = "-";
-  els.modeStake.textContent = "-";
-  els.qualified.innerHTML = "";
-  els.primary.innerHTML = "";
-  els.secondary.innerHTML = "";
-  els.scores.innerHTML = "";
-  els.h2hData.textContent = "";
-  els.homeData.textContent = "";
-  els.awayData.textContent = "";
+  els.fileRoles.innerHTML = "";
 }
 
 els.clearBtn.onclick = clearUI;
 
+els.files.addEventListener("change", () => {
+  buildRoleSelectors();
+});
+
+function buildRoleSelectors() {
+  const files = [...els.files.files].filter(f => f.type.startsWith("image/"));
+  els.fileRoles.innerHTML = "";
+
+  files.forEach((file, i) => {
+    const wrap = document.createElement("div");
+    wrap.className = "grid grid-cols-12 gap-3 items-center";
+
+    const label = document.createElement("div");
+    label.className = "col-span-7 text-sm truncate";
+    label.textContent = file.name;
+
+    const select = document.createElement("select");
+    select.className = "col-span-5 bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-sm";
+    select.dataset.index = String(i);
+
+    const options = [
+      { value: "", text: "Select role" },
+      { value: "h2h", text: "H2H" },
+      { value: "home", text: "Home Form" },
+      { value: "away", text: "Away Form" }
+    ];
+
+    options.forEach(opt => {
+      const o = document.createElement("option");
+      o.value = opt.value;
+      o.textContent = opt.text;
+      select.appendChild(o);
+    });
+
+    if (i === 0) select.value = "h2h";
+    if (i === 1) select.value = "home";
+    if (i === 2) select.value = "away";
+
+    wrap.appendChild(label);
+    wrap.appendChild(select);
+    els.fileRoles.appendChild(wrap);
+  });
+}
+
 els.runBtn.onclick = async () => {
   try {
+    resetOutput();
+    els.log.value = "";
+    setProgress(0);
+
     const files = [...els.files.files].filter(f => f.type.startsWith("image/"));
     if (files.length !== 3) {
       alert("Please upload exactly 3 images.");
       return;
     }
 
-    if (!window.Tesseract) {
-      alert("Tesseract failed to load. Reload page.");
+    const roles = [...els.fileRoles.querySelectorAll("select")].map(s => s.value);
+    if (roles.includes("")) {
+      alert("Please assign all 3 roles.");
+      return;
+    }
+    if (new Set(roles).size !== 3) {
+      alert("Use each role once: H2H, Home Form, Away Form.");
       return;
     }
 
-    clearOutputsOnly();
-    els.log.value = "";
-    log("Starting Praxos scan...");
-
-    const roles = [els.role0.value, els.role1.value, els.role2.value];
-    const roleSet = new Set(roles);
-    if (roleSet.size !== 3) {
-      alert("Assign one unique role to each file: H2H, Home Form, Away Form.");
-      return;
-    }
-
+    log("Starting Praxos...");
     const scanned = [];
+
     for (let i = 0; i < files.length; i++) {
       const text = await runOCR(files[i], i, files.length);
       scanned.push({
         file: files[i],
-        text,
-        role: roles[i]
+        role: roles[i],
+        text
       });
     }
 
-    const h2hShot = scanned.find(x => x.role === "h2h");
-    const homeShot = scanned.find(x => x.role === "home");
-    const awayShot = scanned.find(x => x.role === "away");
+    const h2hFile = scanned.find(x => x.role === "h2h");
+    const homeFile = scanned.find(x => x.role === "home");
+    const awayFile = scanned.find(x => x.role === "away");
 
-    if (!h2hShot || !homeShot || !awayShot) {
-      alert("Could not map the three image roles.");
+    if (!h2hFile || !homeFile || !awayFile) {
+      alert("Roles are not assigned correctly.");
       return;
     }
 
-    const matchup = detectMatchupFromH2H(h2hShot.text);
+    const matchup = detectMatchupFromH2H(h2hFile.text);
     if (!matchup.home || !matchup.away) {
-      log("Could not detect matchup from H2H screenshot.");
-      alert("Praxos could not detect the fixture from the H2H screenshot.");
+      log("Could not detect matchup from H2H.");
+      alert("Could not detect home and away teams from the H2H screenshot.");
       return;
     }
 
     els.homeTeam.textContent = matchup.home;
     els.awayTeam.textContent = matchup.away;
-    log(`Detected matchup: ${matchup.home} vs ${matchup.away}`);
+    log(`Detected fixture: ${matchup.home} vs ${matchup.away}`);
 
-    const h2hRows = parseScreenshotStrict(h2hShot.text, matchup.home, matchup.away, "h2h");
-    const homeRows = parseScreenshotStrict(homeShot.text, matchup.home, matchup.away, "home");
-    const awayRows = parseScreenshotStrict(awayShot.text, matchup.home, matchup.away, "away");
+    const h2hRows = parseH2H(h2hFile.text, matchup.home, matchup.away);
+    const homeRows = parseTeamForm(homeFile.text, matchup.home, "home");
+    const awayRows = parseTeamForm(awayFile.text, matchup.away, "away");
 
     els.h2hData.textContent = JSON.stringify(h2hRows, null, 2);
     els.homeData.textContent = JSON.stringify(homeRows, null, 2);
     els.awayData.textContent = JSON.stringify(awayRows, null, 2);
 
-    if (h2hRows.length < 1 || homeRows.length < 2 || awayRows.length < 2) {
-      log("Not enough valid rows were parsed.");
-      alert("Not enough valid rows were parsed. Use clearer screenshots or re-check role assignment.");
+    log(`Parsed H2H rows: ${h2hRows.length}`);
+    log(`Parsed HOME rows: ${homeRows.length}`);
+    log(`Parsed AWAY rows: ${awayRows.length}`);
+
+    if (h2hRows.length < 1 || homeRows.length < 4 || awayRows.length < 4) {
+      alert("Not enough valid rows were parsed. Use clearer screenshots.");
       return;
     }
 
@@ -281,14 +302,32 @@ els.runBtn.onclick = async () => {
     log("Analysis complete.");
   } catch (err) {
     console.error(err);
-    log("ERROR: " + err.message);
-    alert("Praxos crashed. Open browser console if needed.");
+    const msg = err && err.message ? err.message : String(err);
+    log("ERROR: " + msg);
+    if (err && err.stack) log(err.stack);
+    alert("Praxos crashed: " + msg);
   }
 };
 
+async function prepareImageForOCR(file) {
+  const bitmap = await createImageBitmap(file);
+  const maxWidth = 1400;
+  const scale = bitmap.width > maxWidth ? maxWidth / bitmap.width : 1;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  return canvas;
+}
+
 async function runOCR(file, index, total) {
   log(`OCR -> ${file.name}`);
-  const res = await Tesseract.recognize(file, "eng", {
+  const optimizedImage = await prepareImageForOCR(file);
+
+  const res = await Tesseract.recognize(optimizedImage, "eng", {
     logger: m => {
       if (m.status === "recognizing text") {
         const pct = ((index + m.progress) / total) * 100;
@@ -296,7 +335,10 @@ async function runOCR(file, index, total) {
       }
     }
   });
-  return normalizeText(res.data.text || "");
+
+  const text = normalizeText(res.data.text || "");
+  log(`OCR done -> ${file.name}`);
+  return text;
 }
 
 function normalizeText(text) {
@@ -315,6 +357,10 @@ function normalizeName(s) {
   return (s || "")
     .toLowerCase()
     .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\bu21\b/g, " u21 ")
+    .replace(/\bfc\b/g, " fc ")
+    .replace(/\bsc\b/g, " sc ")
+    .replace(/\bkv\b/g, " kv ")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -330,229 +376,323 @@ function looksLikeTeam(s) {
   if (!s) return false;
   const t = s.trim();
   if (!/[A-Za-z]/.test(t)) return false;
-  if (/^(summary|commentary|odds|h2h|standings|lineups|news|football|head-to-head matches|head-to-head|stats)$/i.test(t)) return false;
+  if (/^(summary|odds|h2h|standings|lineups|news|football|commentary|stats|head-to-head matches|head-to-head)$/i.test(t)) return false;
   if (/^\d{4}$/.test(t)) return false;
   if (/^\d{1,2}\.\d{1,2}\.?$/.test(t)) return false;
   if (/^\d{1,2}:\d{2}$/.test(t)) return false;
   if (/^[WDL]$/.test(t)) return false;
-  return t.length >= 3 && t.length <= 60;
+  return t.length >= 3 && t.length <= 50;
 }
 
-function parseScore(line) {
-  const nums = (line || "").match(/\b\d{1,2}\b/g);
-  if (!nums || nums.length < 2) return null;
-  const home = +nums[nums.length - 2];
-  const away = +nums[nums.length - 1];
-  if (home > 15 || away > 15) return null;
-  return { home, away };
-}
-
-function detectMatchupFromH2H(text) {
-  const lines = text.split("\n").map(x => x.trim()).filter(Boolean);
-
-  for (let i = 0; i < lines.length - 3; i++) {
-    const a = lines[i];
-    const b = lines[i + 1];
-
-    if (!looksLikeTeam(a) || !looksLikeTeam(b) || sameTeam(a, b)) continue;
-
-    for (let j = 2; j <= 6; j++) {
-      if (parseScore(lines[i + j] || "")) {
-        return { home: a, away: b };
-      }
+function parseTwoGoalNumbers(lines, startIndex) {
+  for (let j = startIndex; j < Math.min(lines.length, startIndex + 5); j++) {
+    const nums = (lines[j] || "").match(/\b\d{1,2}\b/g);
+    if (nums && nums.length >= 2) {
+      const a = +nums[nums.length - 2];
+      const b = +nums[nums.length - 1];
+      if (a <= 15 && b <= 15) return { home: a, away: b };
     }
   }
-
-  return { home: "", away: "" };
+  return null;
 }
 
-function parseScreenshotStrict(text, homeTeam, awayTeam, type) {
+function extractPairRows(text) {
   const lines = text.split("\n").map(x => x.trim()).filter(Boolean);
   const rows = [];
 
-  for (let i = 0; i < lines.length - 1; i++) {
+  for (let i = 0; i < lines.length - 2; i++) {
     const a = lines[i];
     const b = lines[i + 1];
-
     if (!looksLikeTeam(a) || !looksLikeTeam(b) || sameTeam(a, b)) continue;
 
-    let foundScore = null;
+    const score = parseTwoGoalNumbers(lines, i + 2);
+    if (!score) continue;
 
-    for (let j = 2; j <= 8; j++) {
-      const candidate = parseScore(lines[i + j] || "");
-      if (candidate) {
-        foundScore = candidate;
-        break;
-      }
+    rows.push({
+      team1: a,
+      team2: b,
+      home: score.home,
+      away: score.away,
+      total: score.home + score.away
+    });
+  }
+
+  return dedupeRows(rows);
+}
+
+function detectMatchupFromH2H(text) {
+  const rows = extractPairRows(text);
+  if (!rows.length) return { home: "", away: "" };
+
+  const pairCount = new Map();
+  for (const row of rows) {
+    const key = `${normalizeName(row.team1)}|||${normalizeName(row.team2)}`;
+    if (!pairCount.has(key)) {
+      pairCount.set(key, { count: 0, team1: row.team1, team2: row.team2 });
     }
+    pairCount.get(key).count += 1;
+  }
 
-    if (!foundScore) {
-      const joined = [
-        lines[i],
-        lines[i + 1],
-        lines[i + 2] || "",
-        lines[i + 3] || "",
-        lines[i + 4] || ""
-      ].join(" ");
+  const best = [...pairCount.values()].sort((a, b) => b.count - a.count)[0];
+  return {
+    home: best?.team1 || "",
+    away: best?.team2 || ""
+  };
+}
 
-      const nums = joined.match(/\b\d{1,2}\b/g);
-      if (nums && nums.length >= 2) {
-        const h = +nums[nums.length - 2];
-        const aw = +nums[nums.length - 1];
-        if (h <= 15 && aw <= 15) {
-          foundScore = { home: h, away: aw };
-        }
-      }
-    }
+function parseH2H(text, homeTeam, awayTeam) {
+  const rows = extractPairRows(text);
+  const out = [];
 
-    if (!foundScore) continue;
+  for (const row of rows) {
+    const direct = sameTeam(row.team1, homeTeam) && sameTeam(row.team2, awayTeam);
+    const reverse = sameTeam(row.team1, awayTeam) && sameTeam(row.team2, homeTeam);
 
-    let home = foundScore.home;
-    let away = foundScore.away;
-
-    if (type === "h2h") {
-      const correct = sameTeam(a, homeTeam) && sameTeam(b, awayTeam);
-      const reversed = sameTeam(a, awayTeam) && sameTeam(b, homeTeam);
-
-      if (correct) {
-        rows.push({ team1: homeTeam, team2: awayTeam, home, away, total: home + away });
-      } else if (reversed) {
-        rows.push({ team1: homeTeam, team2: awayTeam, home: away, away: home, total: home + away });
-      }
-      continue;
-    }
-
-    if (type === "home") {
-      const trackedFirst = sameTeam(a, homeTeam);
-      const trackedSecond = sameTeam(b, homeTeam);
-      if (!trackedFirst && !trackedSecond) continue;
-
-      if (trackedFirst) {
-        rows.push({ team1: homeTeam, team2: b, home, away, total: home + away });
-      } else {
-        rows.push({ team1: homeTeam, team2: a, home: away, away: home, total: home + away });
-      }
-      continue;
-    }
-
-    if (type === "away") {
-      const trackedFirst = sameTeam(a, awayTeam);
-      const trackedSecond = sameTeam(b, awayTeam);
-      if (!trackedFirst && !trackedSecond) continue;
-
-      if (trackedSecond) {
-        rows.push({ team1: a, team2: awayTeam, home, away, total: home + away });
-      } else {
-        rows.push({ team1: b, team2: awayTeam, home: away, away: home, total: home + away });
-      }
-      continue;
+    if (direct) {
+      out.push({
+        team1: homeTeam,
+        team2: awayTeam,
+        home: row.home,
+        away: row.away,
+        total: row.total
+      });
+    } else if (reverse) {
+      out.push({
+        team1: homeTeam,
+        team2: awayTeam,
+        home: row.away,
+        away: row.home,
+        total: row.total
+      });
     }
   }
 
-  return dedupeRows(rows).slice(0, 12);
+  return dedupeRows(out).slice(0, 12);
+}
+
+function parseTeamForm(text, trackedTeam, role) {
+  const rows = extractPairRows(text);
+  const out = [];
+
+  for (const row of rows) {
+    const trackedFirst = sameTeam(row.team1, trackedTeam);
+    const trackedSecond = sameTeam(row.team2, trackedTeam);
+
+    if (!trackedFirst && !trackedSecond) continue;
+
+    if (role === "home") {
+      if (trackedFirst) {
+        out.push({
+          team1: trackedTeam,
+          team2: row.team2,
+          home: row.home,
+          away: row.away,
+          total: row.total
+        });
+      } else {
+        out.push({
+          team1: trackedTeam,
+          team2: row.team1,
+          home: row.away,
+          away: row.home,
+          total: row.total
+        });
+      }
+    }
+
+    if (role === "away") {
+      if (trackedSecond) {
+        out.push({
+          team1: row.team1,
+          team2: trackedTeam,
+          home: row.home,
+          away: row.away,
+          total: row.total
+        });
+      } else {
+        out.push({
+          team1: row.team2,
+          team2: trackedTeam,
+          home: row.away,
+          away: row.home,
+          total: row.total
+        });
+      }
+    }
+  }
+
+  return dedupeRows(out).slice(0, 12);
 }
 
 function dedupeRows(rows) {
   const seen = new Set();
   const out = [];
   for (const r of rows) {
-    const k = `${normalizeName(r.team1)}|${normalizeName(r.team2)}|${r.home}|${r.away}`;
-    if (!seen.has(k)) {
-      seen.add(k);
+    const key = `${normalizeName(r.team1)}|${normalizeName(r.team2)}|${r.home}|${r.away}`;
+    if (!seen.has(key)) {
+      seen.add(key);
       out.push(r);
     }
   }
   return out;
 }
 
-function analyzePraxos({ homeTeam, awayTeam, h2hRows, homeRows, awayRows, threshold }) {
-  const h2hStats = calcStats(h2hRows, "h2h");
-  const homeStats = calcStats(homeRows, "home");
-  const awayStats = calcStats(awayRows, "away");
+function weightedAverage(values, weights) {
+  const sumW = weights.reduce((a, b) => a + b, 0) || 1;
+  const sum = values.reduce((acc, v, i) => acc + (v * weights[i]), 0);
+  return sum / sumW;
+}
 
-  const homeStrength = 55 + homeStats.winRate * 22 + homeStats.avgScored * 8 - homeStats.failToScoreRate * 12;
-  const awayStrength = 55 + awayStats.winRate * 22 + awayStats.avgScored * 8 - awayStats.failToScoreRate * 12;
-  const drawTrap = h2hStats.drawRate * 20 + h2hStats.lowGoalDrawRate * 20 + ((homeStats.drawRate + awayStats.drawRate) * 10);
-  const goalSignal = h2hStats.avgGoals * 0.25 + homeStats.avgGoals * 0.4 + awayStats.avgGoals * 0.35;
-  const bttsSignal = h2hStats.bttsRate * 0.25 + homeStats.bttsRate * 0.4 + awayStats.bttsRate * 0.35;
-
-  const primary = buildPrimary(homeStrength, awayStrength, drawTrap);
-  const secondary = buildSecondary(goalSignal, bttsSignal);
-  const markets = buildMarkets(primary, secondary);
-  const qualified = markets.filter(x => x.confidence >= threshold).sort((a, b) => b.confidence - a.confidence);
-
-  const top = qualified[0]?.confidence || primary[0].confidence;
-  const mode = top >= 78 ? "ATTACK" : top >= 70 ? "CONTROL" : "NO BET";
-  const stake = top >= 78 ? "MEDIUM" : top >= 70 ? "SMALL" : "NO STAKE";
-  const scores = buildScores(primary[0], secondary[0], drawTrap);
-
-  return {
-    homeTeam, awayTeam, mode, stake,
-    primary, secondary, markets, qualified, scores
-  };
+function recentWeights(n) {
+  const base = [];
+  for (let i = 0; i < n; i++) base.push(n - i);
+  return base;
 }
 
 function calcStats(rows, type) {
   const n = rows.length || 1;
-  const avgGoals = rows.reduce((s, r) => s + r.total, 0) / n;
-  const bttsRate = rows.filter(r => r.home > 0 && r.away > 0).length / n;
-  const drawRate = rows.filter(r => r.home === r.away).length / n;
-  const lowGoalDrawRate = rows.filter(r => r.home === r.away && r.total <= 2).length / n;
+  const weights = recentWeights(rows.length || 1);
 
-  let avgScored, winRate, failToScoreRate;
+  const avgGoals = weightedAverage(rows.map(r => r.total), weights);
+  const bttsRate = weightedAverage(rows.map(r => (r.home > 0 && r.away > 0 ? 1 : 0)), weights);
+  const drawRate = weightedAverage(rows.map(r => (r.home === r.away ? 1 : 0)), weights);
+  const lowGoalDrawRate = weightedAverage(rows.map(r => (r.home === r.away && r.total <= 2 ? 1 : 0)), weights);
+
+  let avgScored = 0;
+  let avgConceded = 0;
+  let winRate = 0;
+  let failToScoreRate = 0;
+  let cleanSheetRate = 0;
+
   if (type === "home") {
-    avgScored = rows.reduce((s, r) => s + r.home, 0) / n;
-    winRate = rows.filter(r => r.home > r.away).length / n;
-    failToScoreRate = rows.filter(r => r.home === 0).length / n;
+    avgScored = weightedAverage(rows.map(r => r.home), weights);
+    avgConceded = weightedAverage(rows.map(r => r.away), weights);
+    winRate = weightedAverage(rows.map(r => (r.home > r.away ? 1 : 0)), weights);
+    failToScoreRate = weightedAverage(rows.map(r => (r.home === 0 ? 1 : 0)), weights);
+    cleanSheetRate = weightedAverage(rows.map(r => (r.away === 0 ? 1 : 0)), weights);
   } else if (type === "away") {
-    avgScored = rows.reduce((s, r) => s + r.away, 0) / n;
-    winRate = rows.filter(r => r.away > r.home).length / n;
-    failToScoreRate = rows.filter(r => r.away === 0).length / n;
+    avgScored = weightedAverage(rows.map(r => r.away), weights);
+    avgConceded = weightedAverage(rows.map(r => r.home), weights);
+    winRate = weightedAverage(rows.map(r => (r.away > r.home ? 1 : 0)), weights);
+    failToScoreRate = weightedAverage(rows.map(r => (r.away === 0 ? 1 : 0)), weights);
+    cleanSheetRate = weightedAverage(rows.map(r => (r.home === 0 ? 1 : 0)), weights);
   } else {
-    avgScored = rows.reduce((s, r) => s + r.home + r.away, 0) / (2 * n);
-    winRate = 0;
-    failToScoreRate = 0;
+    avgScored = weightedAverage(rows.map(r => (r.home + r.away) / 2), weights);
+    avgConceded = avgScored;
   }
 
-  return { avgGoals, bttsRate, drawRate, lowGoalDrawRate, avgScored, winRate, failToScoreRate };
+  return {
+    n,
+    avgGoals,
+    bttsRate,
+    drawRate,
+    lowGoalDrawRate,
+    avgScored,
+    avgConceded,
+    winRate,
+    failToScoreRate,
+    cleanSheetRate
+  };
+}
+
+function analyzePraxos({ homeTeam, awayTeam, h2hRows, homeRows, awayRows, threshold }) {
+  const H = calcStats(h2hRows, "h2h");
+  const Ho = calcStats(homeRows, "home");
+  const Aw = calcStats(awayRows, "away");
+
+  const homeStrength =
+    52 +
+    Ho.winRate * 24 +
+    Ho.avgScored * 7 -
+    Ho.failToScoreRate * 12 -
+    Ho.avgConceded * 2;
+
+  const awayStrength =
+    52 +
+    Aw.winRate * 24 +
+    Aw.avgScored * 7 -
+    Aw.failToScoreRate * 12 -
+    Aw.avgConceded * 2;
+
+  const drawTrap =
+    H.drawRate * 22 +
+    H.lowGoalDrawRate * 18 +
+    ((Ho.drawRate + Aw.drawRate) * 10);
+
+  const goalSignal =
+    H.avgGoals * 0.22 +
+    Ho.avgGoals * 0.43 +
+    Aw.avgGoals * 0.35;
+
+  const bttsSignal =
+    H.bttsRate * 0.22 +
+    Ho.bttsRate * 0.43 +
+    Aw.bttsRate * 0.35;
+
+  const primary = buildPrimary(homeStrength, awayStrength, drawTrap);
+  const secondary = buildSecondary(goalSignal, bttsSignal, Ho, Aw);
+  const markets = buildMarkets(primary, secondary, goalSignal, bttsSignal, drawTrap);
+  const qualified = markets.filter(x => x.confidence >= threshold).sort((a, b) => b.confidence - a.confidence);
+
+  const top = qualified[0]?.confidence || primary[0].confidence;
+  const mode = top >= 80 ? "ATTACK" : top >= 70 ? "CONTROL" : "NO BET";
+  const stake = top >= 80 ? "MEDIUM" : top >= 70 ? "SMALL" : "NO STAKE";
+  const scores = buildScores(primary[0], secondary[0], drawTrap);
+
+  return {
+    homeTeam,
+    awayTeam,
+    mode,
+    stake,
+    primary,
+    secondary,
+    markets,
+    qualified,
+    scores
+  };
 }
 
 function buildPrimary(homeStrength, awayStrength, drawTrap) {
-  let p = [];
+  const diff = homeStrength - awayStrength;
+  let picks = [];
 
-  if (homeStrength > awayStrength + 5) {
-    p = [
-      { label: "1X", confidence: clamp(Math.round(homeStrength + 8 - drawTrap * 0.2), 50, 88), market: "Primary" },
-      { label: "1", confidence: clamp(Math.round(homeStrength - drawTrap * 0.25), 50, 84), market: "Primary" }
+  if (diff >= 7) {
+    picks = [
+      { label: "1X", confidence: clamp(Math.round(homeStrength + 8 - drawTrap * 0.18), 50, 88) },
+      { label: "1", confidence: clamp(Math.round(homeStrength - drawTrap * 0.22), 50, 84) }
     ];
-  } else if (awayStrength > homeStrength + 5) {
-    p = [
-      { label: "X2", confidence: clamp(Math.round(awayStrength + 8 - drawTrap * 0.2), 50, 88), market: "Primary" },
-      { label: "2", confidence: clamp(Math.round(awayStrength - drawTrap * 0.25), 50, 84), market: "Primary" }
+  } else if (diff <= -7) {
+    picks = [
+      { label: "X2", confidence: clamp(Math.round(awayStrength + 8 - drawTrap * 0.18), 50, 88) },
+      { label: "2", confidence: clamp(Math.round(awayStrength - drawTrap * 0.22), 50, 84) }
     ];
   } else {
-    p = [
-      { label: "X", confidence: clamp(Math.round(58 + drawTrap * 0.5), 50, 82), market: "Primary" },
-      { label: "1X", confidence: clamp(Math.round(60 + (homeStrength - awayStrength)), 50, 84), market: "Primary" }
+    picks = [
+      { label: "X", confidence: clamp(Math.round(58 + drawTrap * 0.45), 50, 82) },
+      { label: diff >= 0 ? "1X" : "X2", confidence: clamp(Math.round(62 + Math.abs(diff) - drawTrap * 0.08), 50, 82) }
     ];
   }
 
-  return p.sort((a,b) => b.confidence - a.confidence);
+  return picks.sort((a, b) => b.confidence - a.confidence);
 }
 
-function buildSecondary(goalSignal, bttsSignal) {
-  const s1 = goalSignal < 2.6
+function buildSecondary(goalSignal, bttsSignal, Ho, Aw) {
+  const underBias = (goalSignal < 2.6);
+  const s1 = underBias
     ? { label: "Under 3.5", confidence: clamp(Math.round(60 + (2.6 - goalSignal) * 8), 50, 86), market: "Goals" }
     : { label: "Over 2.5", confidence: clamp(Math.round(56 + (goalSignal - 2.6) * 8), 50, 84), market: "Goals" };
 
-  const s2 = bttsSignal > 0.52
-    ? { label: "BTTS", confidence: clamp(Math.round(56 + (bttsSignal - 0.52) * 30), 50, 82), market: "BTTS" }
-    : { label: "No BTTS", confidence: clamp(Math.round(56 + (0.52 - bttsSignal) * 30), 50, 82), market: "BTTS" };
+  let s2;
+  if (bttsSignal > 0.52) {
+    s2 = { label: "BTTS", confidence: clamp(Math.round(56 + (bttsSignal - 0.52) * 30), 50, 82), market: "BTTS" };
+  } else {
+    s2 = { label: "No BTTS", confidence: clamp(Math.round(56 + (0.52 - bttsSignal) * 30), 50, 82), market: "BTTS" };
+  }
 
   return [s1, s2];
 }
 
-function buildMarkets(primary, secondary) {
+function buildMarkets(primary, secondary, goalSignal, bttsSignal, drawTrap) {
   const p1 = primary[0];
   const p2 = primary[1];
   const s1 = secondary[0];
@@ -562,28 +702,38 @@ function buildMarkets(primary, secondary) {
     { label: p1.label, market: "Primary", confidence: p1.confidence },
     { label: p2.label, market: "Primary", confidence: p2.confidence },
     { label: s1.label, market: s1.market, confidence: s1.confidence },
-    { label: s2.label, market: s2.market, confidence: s2.confidence },
+    { label: s2.label, market: s2.market, confidence: s2.confidence }
   ];
 
-  if (p1.label === "1X") out.push({ label:"Home +0.5", market:"Handicap", confidence: clamp(p1.confidence + 2, 50, 88) });
-  if (p1.label === "X2") out.push({ label:"Away +0.5", market:"Handicap", confidence: clamp(p1.confidence + 2, 50, 88) });
-  if (p1.label === "1") out.push({ label:"Home -0.25", market:"Handicap", confidence: clamp(p1.confidence - 2, 50, 82) });
-  if (p1.label === "2") out.push({ label:"Away -0.25", market:"Handicap", confidence: clamp(p1.confidence - 2, 50, 82) });
+  if (p1.label === "1X") out.push({ label: "Home +0.5", market: "Handicap", confidence: clamp(p1.confidence + 2, 50, 88) });
+  if (p1.label === "X2") out.push({ label: "Away +0.5", market: "Handicap", confidence: clamp(p1.confidence + 2, 50, 88) });
+  if (p1.label === "1") out.push({ label: "Home -0.25", market: "Handicap", confidence: clamp(p1.confidence - 2, 50, 82) });
+  if (p1.label === "2") out.push({ label: "Away -0.25", market: "Handicap", confidence: clamp(p1.confidence - 2, 50, 82) });
 
-  out.push({ label:`${p1.label} + ${s1.label}`, market:"Combo", confidence: clamp(Math.round((p1.confidence*0.55)+(s1.confidence*0.45)-2), 50, 88) });
-  out.push({ label:`${p1.label} + ${s2.label}`, market:"Combo", confidence: clamp(Math.round((p1.confidence*0.55)+(s2.confidence*0.45)-2), 50, 88) });
+  out.push({ label: `${p1.label} + ${s1.label}`, market: "Combo", confidence: clamp(Math.round((p1.confidence * 0.55) + (s1.confidence * 0.45) - 2), 50, 88) });
+  out.push({ label: `${p1.label} + ${s2.label}`, market: "Combo", confidence: clamp(Math.round((p1.confidence * 0.55) + (s2.confidence * 0.45) - 2), 50, 88) });
 
-  return out.sort((a,b) => b.confidence - a.confidence);
+  if (goalSignal < 2.2) {
+    out.push({ label: "Under 2.5", market: "Goals", confidence: clamp(Math.round(58 + (2.2 - goalSignal) * 10), 50, 84) });
+  } else if (goalSignal > 3.0) {
+    out.push({ label: "Over 1.5", market: "Goals", confidence: clamp(Math.round(68 + (goalSignal - 3.0) * 6), 50, 88) });
+  }
+
+  if (drawTrap > 22) {
+    out.push({ label: "Draw", market: "Primary", confidence: clamp(Math.round(58 + drawTrap * 0.5), 50, 80) });
+  }
+
+  return out.sort((a, b) => b.confidence - a.confidence);
 }
 
 function buildScores(primaryTop, secondaryTop, drawTrap) {
   let scores = [];
 
-  if (primaryTop.label === "1") scores = ["1-0","2-0","2-1","3-1"];
-  else if (primaryTop.label === "2") scores = ["0-1","0-2","1-2","1-3"];
-  else if (primaryTop.label === "1X") scores = ["1-0","1-1","2-0","2-1"];
-  else if (primaryTop.label === "X2") scores = ["0-1","1-1","0-2","1-2"];
-  else scores = ["0-0","1-1","2-2","1-0"];
+  if (primaryTop.label === "1") scores = ["1-0", "2-0", "2-1", "3-1"];
+  else if (primaryTop.label === "2") scores = ["0-1", "0-2", "1-2", "1-3"];
+  else if (primaryTop.label === "1X") scores = ["1-0", "1-1", "2-0", "2-1"];
+  else if (primaryTop.label === "X2") scores = ["0-1", "1-1", "0-2", "1-2"];
+  else scores = ["0-0", "1-1", "2-2", "1-0"];
 
   if (secondaryTop.label === "Under 3.5") scores = scores.filter(s => totalGoals(s) <= 3);
   if (secondaryTop.label === "Over 2.5") scores = scores.filter(s => totalGoals(s) >= 3);
@@ -591,49 +741,48 @@ function buildScores(primaryTop, secondaryTop, drawTrap) {
   if (secondaryTop.label === "No BTTS") scores = scores.filter(s => !bothTeamsScore(s));
 
   if (drawTrap >= 18) scores.unshift("1-1");
-  scores = unique(scores);
+  scores = [...new Set(scores)];
 
   while (scores.length < 4) scores.push("1-1");
 
-  return scores.slice(0,4).map((s,i) => ({
-    score:s,
-    confidence:[76,71,66,61][i]
+  return scores.slice(0, 4).map((score, i) => ({
+    score,
+    confidence: [76, 71, 66, 61][i]
   }));
 }
 
-function totalGoals(s) {
-  const [a,b] = s.split("-").map(Number);
+function totalGoals(score) {
+  const [a, b] = score.split("-").map(Number);
   return a + b;
 }
 
-function bothTeamsScore(s) {
-  const [a,b] = s.split("-").map(Number);
+function bothTeamsScore(score) {
+  const [a, b] = score.split("-").map(Number);
   return a > 0 && b > 0;
 }
 
-function unique(arr) {
-  return [...new Set(arr)];
-}
-
-function clamp(n,min,max){
-  return Math.max(min, Math.min(max,n));
+function clamp(n, min, max) {
+  return Math.max(min, Math.min(max, n));
 }
 
 function renderResult(result) {
-  els.modeStake.textContent = `${result.mode} / ${result.stake}`;
+  els.modeBox.textContent = result.mode;
+  els.stakeBox.textContent = result.stake;
 
+  els.qualified.innerHTML = result.qualified.length
+    ? result.qualified.map(renderCard).join("")
+    : `<div class="soft">No pick cleared 70%.</div>`;
+
+  els.allMarkets.innerHTML = result.markets.map(renderCard).join("");
   els.primary.innerHTML = result.primary.map(renderCard).join("");
   els.secondary.innerHTML = result.secondary.map(renderCard).join("");
+
   els.scores.innerHTML = result.scores.map(s => `
     <div class="rounded-xl bg-black/20 p-3">
       <div class="text-lg font-black">${s.score}</div>
       <div class="soft text-sm">${s.confidence}%</div>
     </div>
   `).join("");
-
-  els.qualified.innerHTML = result.qualified.length
-    ? result.qualified.map(renderCard).join("")
-    : `<div class="soft">No pick cleared 70%.</div>`;
 }
 
 function renderCard(m) {
@@ -641,7 +790,7 @@ function renderCard(m) {
   return `
     <div class="rounded-xl bg-black/20 p-3">
       <div class="font-bold">${m.label}</div>
-      <div class="soft text-sm">${m.market}</div>
+      <div class="soft text-sm">${m.market || "Signal"}</div>
       <div class="mt-2 text-xl font-black ${cls}">${m.confidence}%</div>
     </div>
   `;
