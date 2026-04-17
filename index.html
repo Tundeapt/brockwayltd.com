@@ -2,1555 +2,506 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Shield by Brockway — Institutional risk infrastructure for MT5. Terminal-level enforcement. Zero override.">
-<link rel="icon" href="favicon.ico" sizes="any">
-<link rel="apple-touch-icon" href="shield-apple-touch-180.png">
-<title>SHIELD — Brockway Risk Infrastructure</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=Libre+Franklin:wght@200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Shield — Terminal-Level Risk Governance for MT5</title>
+<meta name="description" content="Shield by Brockway — 8-layer risk enforcement for MT5. No override. No negotiation. Protect funded accounts from revenge trades, blown floors, and missing stop losses.">
+<meta property="og:title" content="Shield by Brockway — Institutional Risk Infrastructure">
+<meta property="og:description" content="Terminal-level risk governance for MT5. 8 enforcement layers. Zero override.">
+<meta property="og:type" content="website">
+<link rel="icon" href="favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 <style>
-/* ================================================================
-   SHIELD — BROCKWAY RISK INFRASTRUCTURE
-   Nasdaq institutional authority + Bloomberg terminal DNA.
-   The page that closes.
-================================================================ */
-:root {
-  --bg:       #050607;
-  --surface:  #0A0B0D;
-  --panel:    #0E0F11;
-  --elevated: #131416;
-  --card:     #161719;
-  --border:   #1C1D20;
-  --border-h: #27282C;
-  --dim:      #363840;
-  --muted:    #7A7D87;
-  --sub:      #9BA0AB;
-  --body:     #C0C3CC;
-  --text:     #E0E3ED;
-  --bright:   #EEF0F6;
-  --white:    #F0F1F5;
-
-  /* Institutional blue — Nasdaq trust signal */
-  --blue:     #0094FF;
-  --blue-hi:  #40AFFF;
-  --blue-30:  rgba(0,148,255,0.30);
-  --blue-20:  rgba(0,148,255,0.20);
-  --blue-10:  rgba(0,148,255,0.10);
-  --blue-05:  rgba(0,148,255,0.05);
-  --blue-03:  rgba(0,148,255,0.03);
-
-  /* Signal palette — surgical use only */
-  --green:    #00D26A;
-  --green-20: rgba(0,210,106,0.20);
-  --green-10: rgba(0,210,106,0.10);
-  --green-05: rgba(0,210,106,0.05);
-  --amber:    #FF9500;
-  --amber-20: rgba(255,149,0,0.20);
-  --amber-10: rgba(255,149,0,0.10);
-  --red:      #FF3B3B;
-  --red-20:   rgba(255,59,59,0.20);
-  --red-10:   rgba(255,59,59,0.10);
-  --cyan:     #00D4FF;
-
-  --mono:  'IBM Plex Mono', monospace;
-  --serif: 'Instrument Serif', Georgia, serif;
-  --sans:  'Libre Franklin', system-ui, sans-serif;
-}
-
-*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-html { font-size: 16px; -webkit-font-smoothing: antialiased; scroll-behavior: smooth; }
-body { background: var(--bg); color: var(--text); font-family: var(--sans); overflow-x: hidden; }
-::selection { background: var(--blue-20); color: var(--white); }
-
-/* Scanline texture */
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 99999;
-  pointer-events: none;
-  background: repeating-linear-gradient(to bottom, transparent 0px, transparent 3px, rgba(0,0,0,0.015) 3px, rgba(0,0,0,0.015) 6px);
-}
-
-/* ── NAV ── */
-.nav {
-  position: fixed;
-  top: 0; left: 0; right: 0;
-  z-index: 1000;
-  height: 56px;
-  background: rgba(5,6,7,0.88);
-  backdrop-filter: blur(24px) saturate(1.3);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 48px;
-}
-
-.nav-left { display: flex; align-items: center; gap: 20px; }
-.nav-mark {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  text-decoration: none;
-}
-.nav-logo {
-  width: 28px; height: 28px;
-  object-fit: contain;
-}
-.nav-mark-text {
-  font-family: var(--sans);
-  font-size: 16px;
-  font-weight: 800;
-  color: var(--white);
-  letter-spacing: 4px;
-  text-transform: uppercase;
-}
-.nav-sep { width: 1px; height: 18px; background: var(--border-h); }
-.nav-corp {
-  font-family: var(--mono);
-  font-size: 9px;
-  color: var(--muted);
-  letter-spacing: 1px;
-}
-
-.nav-right { display: flex; align-items: center; gap: 32px; }
-.nav-link {
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--sub);
-  text-decoration: none;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  transition: color 0.2s;
-}
-.nav-link:hover { color: var(--white); }
-
-.nav-cta {
-  font-family: var(--mono);
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  padding: 8px 22px;
-  background: var(--blue);
-  color: var(--white);
-  text-decoration: none;
-  transition: all 0.25s;
-}
-.nav-cta:hover { background: var(--blue-hi); box-shadow: 0 0 24px var(--blue-20); }
-
-@media (max-width: 768px) {
-  .nav { padding: 0 20px; }
-  .nav-link, .nav-sep, .nav-corp { display: none; }
-}
-
-/* ── HERO ── */
-.hero {
-  position: relative;
-  min-height: auto;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  padding: 120px 0 60px;
-  overflow: hidden;
-}
-
-/* Shield HUD — 8-layer arc visualization */
-.shield-hud {
-  position: absolute;
-  top: 40%; right: -5%;
-  transform: translateY(-40%);
-  width: 500px; height: 500px;
-  opacity: 0;
-  animation: hudFadeIn 2s 0.5s ease forwards;
-  pointer-events: none;
-}
-@keyframes hudFadeIn { to { opacity: 1; } }
-.shield-hud svg { width: 100%; height: 100%; }
-.hud-arc {
-  fill: none;
-  stroke-linecap: round;
-  opacity: 0;
-}
-.hud-arc.a1 { stroke: var(--blue); stroke-width: 2; stroke-dasharray: 180 400; animation: arcSpin1 20s linear infinite, arcIn 1s 0.8s ease forwards; }
-.hud-arc.a2 { stroke: rgba(0,148,255,0.6); stroke-width: 1.5; stroke-dasharray: 120 400; animation: arcSpin2 25s linear infinite reverse, arcIn 1s 1.0s ease forwards; }
-.hud-arc.a3 { stroke: rgba(0,148,255,0.4); stroke-width: 1; stroke-dasharray: 90 400; animation: arcSpin3 30s linear infinite, arcIn 1s 1.2s ease forwards; }
-.hud-arc.a4 { stroke: rgba(0,210,106,0.3); stroke-width: 1; stroke-dasharray: 60 400; animation: arcSpin2 35s linear infinite reverse, arcIn 1s 1.4s ease forwards; }
-.hud-arc.a5 { stroke: rgba(0,148,255,0.2); stroke-width: 0.5; stroke-dasharray: 40 400; animation: arcSpin1 40s linear infinite, arcIn 1s 1.6s ease forwards; }
-.hud-ring { fill: none; stroke: rgba(0,148,255,0.06); stroke-width: 1; }
-.hud-ring-d { fill: none; stroke: rgba(0,148,255,0.04); stroke-width: 0.5; stroke-dasharray: 4 6; }
-.hud-center { fill: var(--blue); opacity: 0; animation: centerPulse 3s 1.5s ease-in-out infinite; }
-@keyframes arcIn { to { opacity: 1; } }
-@keyframes arcSpin1 { from { transform-origin: center; transform: rotate(0deg); } to { transform-origin: center; transform: rotate(360deg); } }
-@keyframes arcSpin2 { from { transform-origin: center; transform: rotate(0deg); } to { transform-origin: center; transform: rotate(360deg); } }
-@keyframes arcSpin3 { from { transform-origin: center; transform: rotate(0deg); } to { transform-origin: center; transform: rotate(360deg); } }
-@keyframes centerPulse { 0%,100% { opacity: 0.6; r: 3; } 50% { opacity: 1; r: 5; } }
-.hud-label {
-  font-family: var(--mono);
-  font-size: 7px;
-  fill: rgba(0,148,255,0.35);
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  text-anchor: middle;
-}
-@media(max-width:768px) {
-  .hero { padding: 100px 0 40px; }
-  .shield-hud { width: 300px; height: 300px; right: -20%; top: 50%; }
-  .hud-label { font-size: 5px; }
-}
-
-/* Cinematic gradient field */
-.hero-field {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse 80% 60% at 20% 80%, rgba(0,148,255,0.06) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 50% at 80% 20%, rgba(0,148,255,0.04) 0%, transparent 50%);
-}
-
-/* Grid overlay */
-.hero-grid-bg {
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(0,148,255,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,148,255,0.03) 1px, transparent 1px);
-  background-size: 100px 100px;
-  mask-image: radial-gradient(ellipse 70% 60% at 50% 50%, black 20%, transparent 70%);
-  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 50%, black 20%, transparent 70%);
-}
-
-/* Datum line */
-.hero-datum {
-  position: absolute;
-  left: 0; right: 0;
-  top: 52%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--blue-20) 25%, var(--blue) 50%, var(--blue-20) 75%, transparent);
-  opacity: 0;
-  animation: datumIn 2s 1s ease forwards;
-}
-@keyframes datumIn { to { opacity: 0.6; } }
-
-
-
-/* Hero content */
-.hero-content {
-  position: relative;
-  z-index: 2;
-  padding: 0 48px 140px;
-  max-width: 1400px;
-  margin: 0 auto;
-  width: 100%;
-}
-
-.hero-kicker {
-  font-family: var(--mono);
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 6px;
-  text-transform: uppercase;
-  color: var(--blue);
-  margin-bottom: 24px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  opacity: 0;
-  animation: fadeUp 0.8s 0.5s ease forwards;
-}
-.hero-kicker::before {
-  content: '';
-  width: 32px; height: 2px;
-  background: var(--blue);
-}
-
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.hero-h1 {
-  font-family: var(--sans);
-  font-weight: 900;
-  font-size: clamp(48px, 8vw, 120px);
-  line-height: 0.9;
-  letter-spacing: -0.035em;
-  color: var(--white);
-  margin-bottom: 20px;
-  opacity: 0;
-  animation: fadeUp 0.8s 0.6s ease forwards;
-}
-.hero-h1 .serif {
-  font-family: var(--serif);
-  font-weight: 400;
-  font-style: italic;
-  color: var(--blue);
-  letter-spacing: -0.01em;
-}
-
-.hero-h1-sub {
-  font-family: var(--sans);
-  font-weight: 500;
-  font-size: clamp(22px, 3.5vw, 52px);
-  line-height: 1.05;
-  letter-spacing: -0.02em;
-  color: var(--sub);
-  margin-bottom: 28px;
-  opacity: 0;
-  animation: fadeUp 0.8s 0.7s ease forwards;
-}
-
-.hero-body {
-  max-width: 580px;
-  font-size: 16px;
-  line-height: 1.8;
-  color: var(--body);
-  font-weight: 500;
-  margin-bottom: 28px;
-  opacity: 0;
-  animation: fadeUp 0.8s 0.8s ease forwards;
-}
-.hero-body strong { color: var(--white); font-weight: 500; }
-
-.hero-actions {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  opacity: 0;
-  animation: fadeUp 0.8s 0.9s ease forwards;
-}
-
-.btn-main {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 16px 40px;
-  background: var(--blue);
-  color: var(--white);
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  text-decoration: none;
-  transition: all 0.3s;
-  position: relative;
-  overflow: hidden;
-}
-.btn-main::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-  transform: translateX(-100%);
-  transition: transform 0.5s;
-}
-.btn-main:hover::after { transform: translateX(100%); }
-.btn-main:hover {
-  background: var(--blue-hi);
-  box-shadow: 0 4px 40px var(--blue-20);
-  transform: translateY(-1px);
-}
-
-.btn-ghost {
-  display: inline-flex;
-  align-items: center;
-  padding: 16px 40px;
-  border: 1px solid var(--border-h);
-  color: var(--sub);
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  text-decoration: none;
-  transition: all 0.3s;
-}
-.btn-ghost:hover { border-color: var(--blue-20); color: var(--blue); }
-
-/* Hero bottom strip — live system data */
-.hero-strip {
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  border-top: 1px solid var(--border);
-  background: rgba(5,6,7,0.6);
-  backdrop-filter: blur(12px);
-  opacity: 0;
-  animation: fadeUp 0.8s 1.1s ease forwards;
-}
-.hs-cell {
-  padding: 20px 32px;
-  border-right: 1px solid var(--border);
-  transition: background 0.3s;
-}
-.hs-cell:last-child { border-right: none; }
-.hs-cell:hover { background: var(--blue-03); }
-.hs-label {
-  font-family: var(--mono);
-  font-size: 8px;
-  color: var(--muted);
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  margin-bottom: 8px;
-}
-.hs-val {
-  font-family: var(--sans);
-  font-weight: 700;
-  font-size: 22px;
-  color: var(--white);
-  letter-spacing: -0.5px;
-}
-.hs-val .u { font-size: 11px; font-weight: 500; color: var(--muted); margin-left: 3px; }
-.hs-val .sig { color: var(--blue); }
-.hs-val .grn { color: var(--green); }
-
-@media (max-width: 1100px) {
-  .hero-strip { grid-template-columns: repeat(3, 1fr); }
-  .hs-cell:nth-child(n+4) { display: none; }
-}
-@media (max-width: 640px) {
-  .hero-strip { grid-template-columns: repeat(2, 1fr); }
-  .hs-cell:nth-child(n+3) { display: none; }
-  .hero-content { padding: 0 20px; }
-
-}
-
-/* ── INSTITUTIONAL STATEMENT (Nasdaq-style) ── */
-.statement {
-  padding: 140px 48px;
-  position: relative;
-  overflow: hidden;
-  text-align: center;
-}
-.statement::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse 50% 60% at 50% 40%, var(--blue-05), transparent);
-}
-.st-inner {
-  position: relative;
-  z-index: 1;
-  max-width: 900px;
-  margin: 0 auto;
-}
-.st-tag {
-  font-family: var(--mono);
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 6px;
-  text-transform: uppercase;
-  color: var(--blue);
-  margin-bottom: 32px;
-}
-.st-headline {
-  font-family: var(--serif);
-  font-size: clamp(32px, 5vw, 64px);
-  line-height: 1.1;
-  color: var(--white);
-  margin-bottom: 24px;
-  letter-spacing: -0.01em;
-}
-.st-headline em { color: var(--blue); font-style: italic; }
-.st-body {
-  font-size: 17px;
-  line-height: 1.85;
-  color: var(--body);
-  font-weight: 500;
-  max-width: 640px;
-  margin: 0 auto;
-}
-.st-body strong { color: var(--white); font-weight: 500; }
-
-@media (max-width: 768px) { .statement { padding: 80px 20px; } }
-
-/* ── SECTION DIVIDER ── */
-.divider {
-  height: 1px;
-  background: var(--border);
-  position: relative;
-}
-.divider::after {
-  content: '';
-  position: absolute;
-  left: 50%; top: -1px;
-  transform: translateX(-50%);
-  width: 120px;
-  height: 3px;
-  background: var(--blue);
-  opacity: 0.4;
-}
-
-/* ── PROBLEM / RESPONSE — SPLIT PANEL ── */
-.split {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  min-height: 600px;
-}
-@media (max-width: 960px) { .split { grid-template-columns: 1fr; } }
-
-.split-panel {
-  padding: 64px 56px;
-  position: relative;
-}
-.split-panel.left { border-right: 1px solid var(--border); }
-
-.sp-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--mono);
-  font-size: 8px;
-  font-weight: 600;
-  letter-spacing: 4px;
-  text-transform: uppercase;
-  padding: 4px 14px;
-  margin-bottom: 32px;
-  border: 1px solid;
-}
-.sp-tag.red { color: var(--red); border-color: var(--red-20); background: var(--red-10); }
-.sp-tag.blue { color: var(--blue); border-color: var(--blue-20); background: var(--blue-05); }
-.sp-tag.green { color: var(--green); border-color: var(--green-20); background: var(--green-05); }
-.sp-tag.amber { color: var(--amber); border-color: var(--amber-20); background: var(--amber-10); }
-
-.sp-headline {
-  font-family: var(--serif);
-  font-size: clamp(28px, 3.5vw, 44px);
-  color: var(--white);
-  line-height: 1.12;
-  margin-bottom: 20px;
-}
-.sp-headline em { font-style: italic; }
-.sp-headline em.red { color: var(--red); }
-.sp-headline em.blue { color: var(--blue); }
-.sp-headline em.green { color: var(--green); }
-.sp-headline em.amber { color: var(--amber); }
-
-.sp-body {
-  font-size: 14px;
-  line-height: 1.85;
-  color: var(--body);
-  font-weight: 500;
-  margin-bottom: 28px;
-}
-
-/* Failure table */
-.fail-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-family: var(--mono);
-  font-size: 10px;
-}
-.fail-table th {
-  text-align: left;
-  font-weight: 600;
-  color: var(--blue);
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  padding: 10px 12px;
-  border-bottom: 2px solid var(--blue-20);
-  font-size: 8px;
-}
-.fail-table td {
-  padding: 12px 12px;
-  border-bottom: 1px solid var(--border);
-  vertical-align: top;
-}
-.fail-table tr:hover td { background: var(--red-10); }
-.ft-id { color: var(--dim); width: 40px; }
-.ft-mode { color: var(--red); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
-.ft-desc { color: var(--sub); font-family: var(--sans); line-height: 1.5; }
-.ft-sev { width: 70px; }
-.sev-bar { display: inline-block; height: 3px; background: var(--red); }
-
-/* Response card */
-.response-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  overflow: hidden;
-}
-.rc-header {
-  padding: 10px 20px;
-  background: var(--elevated);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.rc-title {
-  font-family: var(--mono);
-  font-size: 9px;
-  font-weight: 600;
-  color: var(--green);
-  letter-spacing: 3px;
-  text-transform: uppercase;
-}
-.rc-live {
-  font-family: var(--mono);
-  font-size: 8px;
-  color: var(--green);
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-.rc-live::before {
-  content: '';
-  width: 4px; height: 4px;
-  background: var(--green);
-  box-shadow: 0 0 8px var(--green);
-  animation: blink 2s infinite;
-}
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
-
-.rc-body { padding: 28px; }
-
-.rc-hed {
-  font-family: var(--serif);
-  font-size: 30px;
-  color: var(--white);
-  line-height: 1.15;
-  margin-bottom: 16px;
-}
-.rc-hed em { color: var(--green); font-style: italic; }
-
-.rc-text {
-  font-size: 13px;
-  line-height: 1.85;
-  color: var(--body);
-  margin-bottom: 28px;
-}
-
-.spec-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1px;
-  background: var(--border);
-  margin-bottom: 28px;
-}
-.spec-cell {
-  background: var(--panel);
-  padding: 16px 18px;
-}
-.spec-k {
-  font-family: var(--mono);
-  font-size: 8px;
-  color: var(--muted);
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  margin-bottom: 6px;
-}
-.spec-v {
-  font-family: var(--mono);
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--green);
-}
-.spec-v.red { color: var(--red); }
-
-/* ── ARCHITECTURE ── */
-.arch {
-  padding: 120px 0 0;
-  background: var(--surface);
-}
-.arch-top {
-  padding: 0 48px 60px;
-  max-width: 1400px;
-  margin: 0 auto;
-}
-
-/* Layer data grid */
-.layer-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-family: var(--mono);
-  font-size: 10px;
-}
-.layer-table thead th {
-  text-align: left;
-  font-weight: 600;
-  color: var(--blue);
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  padding: 12px 24px;
-  border-bottom: 2px solid var(--blue-20);
-  border-top: 1px solid var(--border);
-  font-size: 8px;
-  background: var(--elevated);
-}
-.layer-table thead th:last-child { text-align: right; }
-.layer-table tbody td {
-  padding: 18px 24px;
-  border-bottom: 1px solid var(--border);
-}
-.layer-table tbody tr { transition: background 0.15s; cursor: default; }
-.layer-table tbody tr:hover { background: var(--blue-03); }
-.lt-num { color: var(--dim); width: 60px; }
-.lt-name { color: var(--white); font-weight: 600; letter-spacing: 2px; text-transform: uppercase; width: 200px; }
-.lt-desc { color: var(--sub); font-family: var(--sans); line-height: 1.6; font-size: 12px; }
-.lt-status {
-  text-align: right;
-  font-weight: 600;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  width: 130px;
-}
-.lt-status.green { color: var(--green); }
-.lt-status.amber { color: var(--amber); }
-.lt-status.blue { color: var(--blue); }
-
-/* ── PROFILES ── */
-.profiles {
-  padding: 120px 0 0;
-}
-.profiles-top {
-  padding: 0 48px 60px;
-  max-width: 1400px;
-  margin: 0 auto;
-}
-.profiles-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  max-width: 640px;
-}
-@media (max-width: 900px) { .profiles-grid { grid-template-columns: 1fr; } }
-
-.p-card {
-  border-top: 1px solid var(--border);
-  border-right: 1px solid var(--border);
-}
-.p-card:last-child { border-right: none; }
-
-.pc-header {
-  padding: 10px 24px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.pc-header.inst { background: var(--green-05); }
-.pc-name {
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 4px;
-  text-transform: uppercase;
-}
-.pc-header.inst .pc-name { color: var(--green); }
-.pc-tier {
-  font-family: var(--mono);
-  font-size: 8px;
-  color: var(--muted);
-  letter-spacing: 2px;
-}
-
-.pc-body { padding: 28px 24px; }
-
-.pc-tagline {
-  font-family: var(--serif);
-  font-style: italic;
-  font-size: 19px;
-  color: var(--body);
-  margin-bottom: 6px;
-}
-.pc-for {
-  font-family: var(--mono);
-  font-size: 9px;
-  color: var(--muted);
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  margin-bottom: 32px;
-}
-
-.pc-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-family: var(--mono);
-  font-size: 10px;
-  margin-bottom: 28px;
-}
-.pc-table td {
-  padding: 10px 0;
-  border-bottom: 1px solid var(--border);
-}
-.pc-table td:first-child { color: var(--sub); letter-spacing: 1px; text-transform: uppercase; }
-.pc-table td:last-child { text-align: right; font-weight: 600; }
-.p-card:first-child .pc-table td:last-child { color: var(--green); }
-.p-card:last-child .pc-table td:last-child { color: var(--amber); }
-
-.pc-toggles-label {
-  font-family: var(--mono);
-  font-size: 8px;
-  color: var(--muted);
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  margin-bottom: 10px;
-}
-.pc-toggle {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 14px;
-  border: 1px solid var(--border);
-  margin-bottom: 4px;
-  background: var(--surface);
-  font-size: 11px;
-}
-.pct-name { color: var(--text); }
-.pct-name small { display: block; font-family: var(--mono); font-size: 9px; color: var(--muted); margin-top: 2px; }
-.pct-state {
-  font-family: var(--mono);
-  font-size: 8px;
-  font-weight: 600;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  padding: 2px 8px;
-  border: 1px solid;
-}
-.pct-state.on { color: var(--green); border-color: var(--green-20); background: var(--green-05); }
-.pct-state.off { color: var(--dim); border-color: var(--border); }
-.pct-state.user { color: var(--amber); border-color: var(--amber-20); background: var(--amber-10); }
-
-.pc-price {
-  margin-top: 32px;
-  padding-top: 24px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  margin-bottom: 20px;
-}
-.pc-price-val {
-  font-family: var(--sans);
-  font-weight: 800;
-  font-size: 44px;
-  color: var(--white);
-  letter-spacing: -1px;
-}
-.pc-price-per {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--muted);
-}
-
-.pc-cta {
-  display: block;
-  text-align: center;
-  padding: 14px 0;
-  font-family: var(--mono);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  text-decoration: none;
-  transition: all 0.25s;
-  cursor: pointer;
-}
-.p-card:first-child .pc-cta { background: var(--green); color: var(--bg); }
-.p-card:first-child .pc-cta:hover { background: #33FF99; box-shadow: 0 0 20px var(--green-20); }
-.p-card:last-child .pc-cta { border: 1px solid var(--amber); color: var(--amber); background: transparent; }
-.p-card:last-child .pc-cta:hover { background: var(--amber); color: var(--bg); }
-
-/* ── DEPLOY ── */
-.deploy {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-}
-@media (max-width: 900px) { .deploy { grid-template-columns: 1fr; } }
-
-.deploy-panel { padding: 64px 48px; }
-.deploy-panel.left { border-right: 1px solid var(--border); }
-
-.steps { counter-reset: step; }
-.step {
-  counter-increment: step;
-  display: grid;
-  grid-template-columns: 44px 1fr;
-  gap: 0;
-  border-top: 1px solid var(--border);
-  padding: 20px 0;
-}
-.step:last-child { border-bottom: 1px solid var(--border); }
-.step-n {
-  font-family: var(--sans);
-  font-weight: 800;
-  font-size: 28px;
-  color: var(--border-h);
-  line-height: 1;
-}
-.step-n::before { content: counter(step, decimal-leading-zero); }
-.step-inner { padding-left: 20px; border-left: 1px solid var(--border); }
-.step-title {
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--blue);
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  margin-bottom: 6px;
-}
-.step-desc {
-  font-size: 12px;
-  color: var(--sub);
-  line-height: 1.65;
-}
-.step-desc code {
-  font-family: var(--mono);
-  font-size: 10px;
-  background: var(--blue-05);
-  color: var(--blue);
-  padding: 1px 5px;
-  border: 1px solid var(--blue-10);
-}
-
-/* Alert feed */
-.af-item {
-  display: grid;
-  grid-template-columns: 3px 1fr;
-  gap: 14px;
-  padding: 14px 0;
-  border-bottom: 1px solid var(--border);
-}
-.af-item:first-child { border-top: 1px solid var(--border); }
-.af-bar { width: 2px; margin-top: 3px; }
-.af-item.g .af-bar { background: var(--green); }
-.af-item.a .af-bar { background: var(--amber); }
-.af-item.r .af-bar { background: var(--red); }
-.af-item.c .af-bar { background: var(--cyan); }
-.af-name {
-  font-family: var(--mono);
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  margin-bottom: 3px;
-}
-.af-item.g .af-name { color: var(--green); }
-.af-item.a .af-name { color: var(--amber); }
-.af-item.r .af-name { color: var(--red); }
-.af-item.c .af-name { color: var(--cyan); }
-.af-text { font-size: 10px; color: var(--sub); line-height: 1.5; font-family: var(--mono); }
-
-.deploy-note {
-  margin-top: 28px;
-  padding: 14px 18px;
-  border-left: 2px solid var(--blue-20);
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--muted);
-  line-height: 1.7;
-}
-.deploy-note strong { color: var(--blue); }
-
-/* ── FINAL CTA ── */
-.final-cta {
-  padding: 140px 48px;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-}
-.final-cta::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse 40% 50% at 50% 50%, var(--blue-05), transparent);
-  pointer-events: none;
-}
-.fc-inner { position: relative; z-index: 1; }
-
-.fc-tag {
-  font-family: var(--mono);
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 6px;
-  text-transform: uppercase;
-  color: var(--blue);
-  margin-bottom: 28px;
-}
-
-.fc-hed {
-  font-family: var(--sans);
-  font-weight: 900;
-  font-size: clamp(36px, 6vw, 80px);
-  line-height: 0.9;
-  letter-spacing: -0.035em;
-  color: var(--white);
-  margin-bottom: 20px;
-}
-.fc-hed .serif {
-  font-family: var(--serif);
-  font-weight: 400;
-  font-style: italic;
-  color: var(--blue);
-}
-
-.fc-sub {
-  font-size: 16px;
-  color: var(--sub);
-  max-width: 520px;
-  margin: 0 auto 44px;
-  line-height: 1.75;
-  font-weight: 500;
-}
-
-.fc-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  padding: 18px 56px;
-  background: var(--blue);
-  color: var(--white);
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  text-decoration: none;
-  transition: all 0.3s;
-  position: relative;
-  overflow: hidden;
-}
-.fc-btn::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-  transform: translateX(-100%);
-  transition: transform 0.5s;
-}
-.fc-btn:hover::after { transform: translateX(100%); }
-.fc-btn:hover {
-  background: var(--blue-hi);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 60px var(--blue-20);
-}
-
-.fc-proof {
-  margin-top: 28px;
-  font-family: var(--mono);
-  font-size: 9px;
-  color: var(--dim);
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-.fc-proof::before {
-  content: '';
-  width: 5px; height: 5px;
-  background: var(--green);
-  box-shadow: 0 0 8px var(--green);
-  animation: blink 2s infinite;
-}
-
-/* ── FOOTER ── */
-.footer {
-  border-top: 1px solid var(--border);
-  padding: 32px 48px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.footer-left {
-  font-family: var(--mono);
-  font-size: 9px;
-  color: var(--dim);
-  letter-spacing: 1px;
-}
-.footer-right { display: flex; gap: 24px; }
-.footer-link {
-  font-family: var(--mono);
-  font-size: 9px;
-  color: var(--muted);
-  text-decoration: none;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  transition: color 0.2s;
-}
-.footer-link:hover { color: var(--blue); }
-
-@media (max-width: 768px) {
-  .footer { flex-direction: column; gap: 12px; text-align: center; padding: 24px 20px; }
-  .footer-link { margin: 0 8px; }
-  .split-panel { padding: 40px 20px; }
-  .arch-top, .profiles-top { padding-left: 20px; padding-right: 20px; }
-  .deploy-panel { padding: 40px 20px; }
-  .final-cta { padding: 80px 20px; }
-}
-
-/* ── SCROLL REVEAL ── */
-.rv {
-  opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.6s ease, transform 0.6s ease;
-}
-.rv.vis {
-  opacity: 1;
-  transform: translateY(0);
+:root{
+--bg:#050607;--surface:#0A0B0D;--border:#1C1D20;--border-h:#2A2B30;
+--white:#E8EAEF;--sub:#B0B4BE;--muted:#6B7080;--dim:#3A3D48;
+--blue:#0094FF;--blue-10:rgba(0,148,255,.1);--blue-20:rgba(0,148,255,.2);
+--green:#00D26A;--green-10:rgba(0,210,106,.1);
+--red:#FF3B3B;--red-10:rgba(255,59,59,.1);
+--amber:#FF9500;--amber-10:rgba(255,149,0,.1);
+--mono:'JetBrains Mono',monospace;--serif:'Instrument Serif',Georgia,serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--sub);font-family:var(--mono);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+::selection{background:var(--blue);color:var(--bg)}
+
+/* NAV */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:16px 32px;display:flex;justify-content:space-between;align-items:center;background:rgba(5,6,7,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+.nav-brand{font-size:13px;font-weight:800;letter-spacing:6px;color:var(--white);text-transform:uppercase;text-decoration:none}
+.nav-links{display:flex;gap:28px;align-items:center}
+.nav-links a{font-size:9px;font-weight:600;letter-spacing:2px;color:var(--muted);text-decoration:none;text-transform:uppercase;transition:color .2s}
+.nav-links a:hover{color:var(--white)}
+.nav-cta{background:var(--blue);color:var(--white);padding:8px 20px;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-decoration:none;transition:all .2s}
+.nav-cta:hover{background:#0080E0}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:120px 48px 80px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse 60% 40% at 20% 50%,rgba(0,148,255,.04),transparent);pointer-events:none}
+.hero-kicker{font-size:10px;font-weight:600;letter-spacing:6px;text-transform:uppercase;color:var(--blue);margin-bottom:28px;display:flex;align-items:center;gap:14px}
+.hero-kicker::before{content:'';width:32px;height:2px;background:var(--blue)}
+.hero-h1{font-size:clamp(42px,7vw,96px);font-weight:800;line-height:.92;letter-spacing:-.03em;color:var(--white);margin-bottom:20px}
+.hero-h1 em{font-family:var(--serif);font-weight:400;font-style:italic;color:var(--blue)}
+.hero-sub{font-size:clamp(18px,2.5vw,36px);font-weight:500;color:var(--muted);margin-bottom:32px;letter-spacing:-.01em}
+.hero-body{max-width:560px;font-size:14px;line-height:1.9;font-weight:500;margin-bottom:36px}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap}
+.btn-main{display:inline-flex;align-items:center;gap:10px;padding:16px 40px;background:var(--blue);color:var(--white);font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;text-decoration:none;transition:all .3s;position:relative;overflow:hidden}
+.btn-main:hover{background:#0080E0;transform:translateY(-1px);box-shadow:0 4px 40px var(--blue-20)}
+.btn-ghost{display:inline-flex;align-items:center;padding:16px 40px;border:1px solid var(--border-h);color:var(--sub);font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:3px;text-transform:uppercase;text-decoration:none;transition:all .3s}
+.btn-ghost:hover{border-color:var(--blue-20);color:var(--blue)}
+
+/* SECTIONS */
+section{padding:100px 48px}
+.sec-tag{font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:16px}
+.sec-tag.blue{color:var(--blue)}.sec-tag.green{color:var(--green)}.sec-tag.red{color:var(--red)}.sec-tag.amber{color:var(--amber)}
+.sec-h2{font-size:clamp(28px,4vw,48px);font-weight:800;color:var(--white);line-height:1.05;letter-spacing:-.02em;margin-bottom:20px}
+.sec-h2 em{font-family:var(--serif);font-weight:400;font-style:italic;color:var(--blue)}
+.sec-body{max-width:600px;font-size:13px;line-height:1.8;font-weight:500}
+.divider{height:1px;background:var(--border);margin:0 48px}
+
+/* PROBLEM STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1px;background:var(--border);margin-top:48px}
+.stat-card{background:var(--surface);padding:32px 28px}
+.stat-val{font-size:36px;font-weight:800;color:var(--red);margin-bottom:8px}
+.stat-label{font-size:11px;font-weight:600;color:var(--sub);line-height:1.5}
+
+/* ARCHITECTURE LAYERS */
+.layers{display:flex;flex-direction:column;gap:1px;margin-top:40px;max-width:700px}
+.layer{display:flex;align-items:center;gap:16px;background:var(--surface);padding:16px 20px;border-left:3px solid var(--border-h);transition:all .2s;cursor:default}
+.layer:hover{border-left-color:var(--blue);background:#0D0E10}
+.layer.guil{border-left-color:var(--red)}
+.layer-num{font-size:9px;font-weight:800;color:var(--muted);letter-spacing:2px;min-width:24px}
+.layer-name{font-size:12px;font-weight:700;color:var(--white);letter-spacing:1px}
+.layer-desc{font-size:11px;color:var(--muted);font-weight:500}
+.layer.guil .layer-name{color:var(--red)}
+
+/* INTERACTIVE COMPONENTS */
+.component-wrap{margin-top:60px;max-width:800px}
+.comp-title{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--blue);margin-bottom:20px}
+
+/* EQUITY CHART */
+.eq-chart-box{background:var(--surface);border:1px solid var(--border);padding:24px;position:relative}
+.eq-toggle{display:flex;gap:0;margin-bottom:20px}
+.eq-toggle button{padding:10px 24px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;border:1px solid var(--border);background:var(--bg);color:var(--muted);cursor:pointer;transition:all .2s}
+.eq-toggle button.active{background:var(--blue);color:var(--white);border-color:var(--blue)}
+.eq-canvas{width:100%;height:240px;position:relative}
+.eq-label{position:absolute;font-size:9px;font-weight:700;letter-spacing:1px;padding:4px 8px}
+
+/* TELEGRAM MOCK */
+.tg-container{display:flex;gap:48px;align-items:flex-start;flex-wrap:wrap;margin-top:40px}
+.tg-phone{width:320px;background:#1B2836;border-radius:20px;padding:16px;box-shadow:0 20px 60px rgba(0,0,0,.4);flex-shrink:0}
+.tg-header{display:flex;align-items:center;gap:10px;padding:8px 4px 16px;border-bottom:1px solid rgba(255,255,255,.06)}
+.tg-avatar{width:36px;height:36px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:var(--white)}
+.tg-name{font-size:13px;font-weight:700;color:var(--white)}
+.tg-status{font-size:10px;color:var(--muted)}
+.tg-msgs{padding:16px 0;display:flex;flex-direction:column;gap:8px;min-height:280px}
+.tg-msg{background:#2B5278;padding:10px 14px;border-radius:0 12px 12px 12px;max-width:90%;font-size:11px;line-height:1.6;color:var(--white);animation:msgIn .3s ease}
+.tg-msg .tg-bold{font-weight:700;color:#7EB8F0}
+.tg-msg .tg-time{display:block;text-align:right;font-size:9px;color:rgba(255,255,255,.4);margin-top:4px}
+@keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* RISK CALCULATOR */
+.calc-box{background:var(--surface);border:1px solid var(--border);padding:32px}
+.calc-slider-wrap{margin:24px 0}
+.calc-slider{-webkit-appearance:none;width:100%;height:4px;background:var(--border);outline:none;border-radius:2px}
+.calc-slider::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;background:var(--blue);border-radius:50%;cursor:pointer;box-shadow:0 0 12px var(--blue-20)}
+.calc-val{font-size:48px;font-weight:800;color:var(--white);text-align:center}
+.calc-label{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:8px}
+.calc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);margin-top:24px}
+.calc-cell{background:var(--bg);padding:20px 16px;text-align:center}
+.calc-cell-val{font-size:24px;font-weight:800;margin-bottom:4px}
+.calc-cell-lbl{font-size:9px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+.calc-sentence{font-size:12px;color:var(--sub);text-align:center;margin-top:24px;line-height:1.7;font-weight:500}
+
+/* PROFILES */
+.profiles-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1px;background:var(--border);margin-top:40px}
+.profile-card{background:var(--surface);padding:28px 24px}
+.profile-tag{font-size:9px;font-weight:700;letter-spacing:2px;margin-bottom:8px}
+.profile-name{font-size:18px;font-weight:800;color:var(--white);margin-bottom:6px}
+.profile-desc{font-size:11px;color:var(--muted);line-height:1.6;font-weight:500}
+
+/* PRICING */
+.pricing-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin-top:40px;max-width:700px}
+.price-card{background:var(--surface);border:1px solid var(--border);padding:32px 28px;position:relative}
+.price-card.featured{border-color:var(--blue-20)}
+.price-badge{position:absolute;top:-10px;right:16px;background:var(--amber);color:var(--bg);font-size:9px;font-weight:700;letter-spacing:1px;padding:4px 10px}
+.price-tier{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:16px}
+.price-val{font-size:42px;font-weight:800;color:var(--white)}
+.price-per{font-size:12px;color:var(--muted);font-weight:500;margin-bottom:20px}
+.price-features{list-style:none;margin-bottom:24px}
+.price-features li{font-size:11px;color:var(--sub);padding:6px 0;border-bottom:1px solid var(--border);font-weight:500;display:flex;align-items:center;gap:8px}
+.price-features li::before{content:'';width:4px;height:4px;background:var(--blue);border-radius:50%;flex-shrink:0}
+.price-cta{display:block;width:100%;padding:14px;background:var(--blue);color:var(--white);border:none;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.price-cta:hover{background:#0080E0}
+
+/* FAQ */
+.faq-list{margin-top:40px;max-width:700px}
+.faq-item{border-bottom:1px solid var(--border);padding:20px 0}
+.faq-q{font-size:13px;font-weight:700;color:var(--white);cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.faq-q::after{content:'+';font-size:18px;color:var(--muted);transition:transform .2s}
+.faq-item.open .faq-q::after{transform:rotate(45deg);color:var(--blue)}
+.faq-a{font-size:12px;color:var(--sub);line-height:1.8;max-height:0;overflow:hidden;transition:max-height .3s;font-weight:500}
+.faq-item.open .faq-a{max-height:200px;padding-top:12px}
+
+/* FINAL CTA */
+.final-cta{text-align:center;padding:120px 48px;background:linear-gradient(180deg,var(--bg),#080A0C)}
+.final-h2{font-size:clamp(32px,5vw,56px);font-weight:800;color:var(--white);margin-bottom:16px}
+.final-h2 em{font-family:var(--serif);font-weight:400;font-style:italic}
+.final-sub{font-size:14px;color:var(--sub);margin-bottom:32px;font-weight:500}
+
+/* FOOTER */
+.footer{display:flex;justify-content:space-between;align-items:center;padding:24px 48px;border-top:1px solid var(--border);font-size:10px;color:var(--dim);font-weight:500}
+.footer a{color:var(--muted);text-decoration:none;margin-left:24px}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);align-items:center;justify-content:center}
+.modal-overlay.active{display:flex}
+.modal-box{background:var(--surface);border:1px solid var(--border);padding:40px;width:100%;max-width:420px;position:relative}
+.modal-close{position:absolute;top:16px;right:16px;font-size:20px;color:var(--muted);cursor:pointer}
+.modal-h{font-size:16px;font-weight:800;color:var(--white);letter-spacing:2px;margin-bottom:6px}
+.modal-sub{font-size:11px;color:var(--muted);margin-bottom:24px;font-weight:500}
+.modal-field{margin-bottom:16px}
+.modal-field label{display:block;font-size:9px;font-weight:700;letter-spacing:2px;color:var(--muted);margin-bottom:6px;text-transform:uppercase}
+.modal-field input,.modal-field select{width:100%;padding:12px 14px;background:var(--bg);border:1px solid var(--border);color:var(--white);font-family:var(--mono);font-size:13px;font-weight:500;outline:none}
+.modal-field input:focus,.modal-field select:focus{border-color:var(--blue)}
+.modal-submit{width:100%;padding:14px;background:var(--blue);color:var(--white);border:none;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;margin-top:8px}
+.modal-err{font-size:10px;color:var(--red);text-align:center;min-height:14px;margin-top:8px;font-weight:500}
+.modal-note{font-size:9px;color:var(--dim);text-align:center;margin-top:12px;line-height:1.6;font-weight:500}
+
+@media(max-width:768px){
+.nav{padding:12px 20px}.nav-links a{display:none}.hero{padding:100px 24px 60px}
+section{padding:60px 24px}.divider{margin:0 24px}.footer{flex-direction:column;gap:12px;padding:24px}
+.tg-container{flex-direction:column}.tg-phone{width:100%}
 }
 </style>
 </head>
-<body id="top">
+<body>
 
 <!-- NAV -->
 <nav class="nav">
-  <div class="nav-left">
-    <a href="#top" class="nav-mark">
-      <img class="nav-logo" src="shield-logomark.svg?v=3" alt="Shield Logo">
-      <span class="nav-mark-text">Shield</span>
-    </a>
-    <div class="nav-sep"></div>
-    <span class="nav-corp">Brockway Trading & Technical Analysis Ltd</span>
-  </div>
-  <div class="nav-right">
-    <a href="#architecture" class="nav-link">Architecture</a>
-    <a href="#profiles" class="nav-link">Profiles</a>
-    <a href="#deploy" class="nav-link">Deploy</a>
-    <a href="#pricing" class="nav-cta">Get Shield</a>
+  <a href="#" class="nav-brand">Shield</a>
+  <div class="nav-links">
+    <a href="#architecture">Architecture</a>
+    <a href="#telegram">Alerts</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#faq">FAQ</a>
+    <a href="#" class="nav-cta" onclick="openModal()">Deploy Shield</a>
   </div>
 </nav>
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-field"></div>
-  <div class="hero-grid-bg"></div>
-  <div class="hero-datum"></div>
-
-
-
-
-  <!-- Shield HUD Visualization -->
-  <div class="shield-hud">
-    <svg viewBox="0 0 600 600">
-      <!-- Static rings -->
-      <circle class="hud-ring" cx="300" cy="300" r="280"/>
-      <circle class="hud-ring-d" cx="300" cy="300" r="240"/>
-      <circle class="hud-ring" cx="300" cy="300" r="200"/>
-      <circle class="hud-ring-d" cx="300" cy="300" r="160"/>
-      <circle class="hud-ring" cx="300" cy="300" r="120"/>
-      <circle class="hud-ring-d" cx="300" cy="300" r="80"/>
-      <circle class="hud-ring" cx="300" cy="300" r="40"/>
-      <!-- Rotating arcs — 8 protection layers -->
-      <circle class="hud-arc a1" cx="300" cy="300" r="275"/>
-      <circle class="hud-arc a2" cx="300" cy="300" r="235"/>
-      <circle class="hud-arc a3" cx="300" cy="300" r="195"/>
-      <circle class="hud-arc a1" cx="300" cy="300" r="155"/>
-      <circle class="hud-arc a4" cx="300" cy="300" r="115"/>
-      <circle class="hud-arc a5" cx="300" cy="300" r="85"/>
-      <circle class="hud-arc a2" cx="300" cy="300" r="45"/>
-      <!-- Layer labels -->
-      <text class="hud-label" x="300" y="18">SOD Floor</text>
-      <text class="hud-label" x="300" y="55">Ratchet</text>
-      <text class="hud-label" x="300" y="95">Trail Floor</text>
-      <text class="hud-label" x="300" y="138">Heat Cap</text>
-      <text class="hud-label" x="540" y="300">Session</text>
-      <text class="hud-label" x="60" y="300">News</text>
-      <text class="hud-label" x="300" y="585">Velocity</text>
-      <text class="hud-label" x="300" y="565">Guillotine</text>
-      <!-- Center dot -->
-      <circle class="hud-center" cx="300" cy="300" r="3"/>
-      <!-- Cross hairs -->
-      <line x1="300" y1="295" x2="300" y2="270" stroke="rgba(0,148,255,0.15)" stroke-width="0.5"/>
-      <line x1="300" y1="305" x2="300" y2="330" stroke="rgba(0,148,255,0.15)" stroke-width="0.5"/>
-      <line x1="295" y1="300" x2="270" y2="300" stroke="rgba(0,148,255,0.15)" stroke-width="0.5"/>
-      <line x1="305" y1="300" x2="330" y2="300" stroke="rgba(0,148,255,0.15)" stroke-width="0.5"/>
-    </svg>
-  </div>
-
-  <div class="hero-content">
-    <div class="hero-kicker">Institutional Risk Infrastructure</div>
-    <h1 class="hero-h1">You don't blow accounts<br>from bad <span class="serif">trades.</span></h1>
-    <p class="hero-h1-sub">You blow them when nothing stops you.</p>
-    <p class="hero-body">
-      Shield is a terminal-level risk governor for MT5.
-      It enforces your limits when discipline fails.
-      <strong>No override. No negotiation.</strong>
-      One prevented mistake pays for this.
-    </p>
-    <div class="hero-actions">
-      <a href="#pricing" class="btn-main">Deploy Shield <span>&rarr;</span></a>
-      <a href="#architecture" class="btn-ghost">View Architecture</a>
-    </div>
-  </div>
-
-  <div class="hero-strip" style="margin-top:40px;">
-    <div class="hs-cell">
-      <div class="hs-label">Enforcement</div>
-      <div class="hs-val"><span class="sig">Terminal</span><span class="u">level</span></div>
-    </div>
-    <div class="hs-cell">
-      <div class="hs-label">Override</div>
-      <div class="hs-val">Zero</div>
-    </div>
-    <div class="hs-cell">
-      <div class="hs-label">Session Close</div>
-      <div class="hs-val">21:55<span class="u">UTC</span></div>
-    </div>
-    <div class="hs-cell">
-      <div class="hs-label">Uptime</div>
-      <div class="hs-val"><span class="grn">99.97</span><span class="u">%</span></div>
-    </div>
-    <div class="hs-cell">
-      <div class="hs-label">Version</div>
-      <div class="hs-val">2.0<span class="u">stable</span></div>
-    </div>
+  <div class="hero-kicker">Institutional Risk Infrastructure</div>
+  <h1 class="hero-h1">You don't blow accounts<br>from bad <em>trades.</em></h1>
+  <p class="hero-sub">You blow them when nothing stops you.</p>
+  <p class="hero-body">Shield is a terminal-level risk governor for MT5. It enforces your limits when discipline fails. <strong style="color:var(--white)">No override. No negotiation.</strong> One prevented mistake pays for this.</p>
+  <div class="hero-actions">
+    <a href="#pricing" class="btn-main">Deploy Shield <span>&rarr;</span></a>
+    <a href="#architecture" class="btn-ghost">View Architecture</a>
   </div>
 </section>
 
-<!-- STATEMENT -->
+<!-- PROBLEM -->
 <div class="divider"></div>
-<section class="statement rv">
-  <div class="st-inner">
-    <div class="st-tag">The Problem</div>
-    <h2 class="st-headline">The trade that blows your account is not the first loss.<br><em>It's the one you take after.</em></h2>
-    <p class="st-body">
-      MT5 will execute both trades. The first loss and the revenge trade after it.
-      It doesn't know your daily limit. It doesn't care about your prop firm's rules.
-      It does exactly what you tell it — especially when you shouldn't be trading.
-      <strong>Shield won't.</strong>
-    </p>
-  </div>
-</section>
-<div class="divider"></div>
-
-<!-- PROBLEM / RESPONSE -->
-<section class="split rv">
-  <div class="split-panel left">
-    <div class="sp-tag red">Failure Analysis</div>
-    <h2 class="sp-headline">
-      Four failure modes<br>destroy <em class="red">funded accounts.</em>
-    </h2>
-    <p class="sp-body">
-      Every prop firm breach traces back to one of these. None are strategy failures. All are enforcement failures that MT5 cannot prevent.
-    </p>
-    <table class="fail-table">
-      <thead><tr><th>ID</th><th>Mode</th><th>Description</th><th>Sev</th></tr></thead>
-      <tbody>
-        <tr><td class="ft-id">001</td><td class="ft-mode">Session Overrun</td><td class="ft-desc">Positions held past risk window. Overnight gaps compound loss.</td><td class="ft-sev"><span class="sev-bar" style="width:90%"></span></td></tr>
-        <tr><td class="ft-id">002</td><td class="ft-mode">Exposure Drift</td><td class="ft-desc">Correlated pairs stacked without aggregate cap enforcement.</td><td class="ft-sev"><span class="sev-bar" style="width:85%"></span></td></tr>
-        <tr><td class="ft-id">003</td><td class="ft-mode">Revenge Exec</td><td class="ft-desc">Emotional recovery trade doubles the drawdown.</td><td class="ft-sev"><span class="sev-bar" style="width:95%"></span></td></tr>
-        <tr><td class="ft-id">004</td><td class="ft-mode">Floor Breach</td><td class="ft-desc">Prop firm daily limit exceeded. MT5 doesn't enforce it.</td><td class="ft-sev"><span class="sev-bar" style="width:100%"></span></td></tr>
-      </tbody>
-    </table>
-  </div>
-  <div class="split-panel">
-    <div class="response-card">
-      <div class="rc-header">
-        <span class="rc-title">Shield Response</span>
-        <span class="rc-live">Enforcing</span>
-      </div>
-      <div class="rc-body">
-        <h3 class="rc-hed">Enforce the floor.<br><em>At the terminal.</em></h3>
-        <p class="rc-text">Shield sits on your MT5 terminal as a compiled Expert Advisor. When a threshold is hit, trading stops. No confirmation dialog. No manual bypass. No override.</p>
-        <div class="spec-grid">
-          <div class="spec-cell"><div class="spec-k">Daily Floor</div><div class="spec-v">Hardcoded</div></div>
-          <div class="spec-cell"><div class="spec-k">Exposure Cap</div><div class="spec-v">Per-Session</div></div>
-          <div class="spec-cell"><div class="spec-k">Session Close</div><div class="spec-v">21:55 UTC</div></div>
-          <div class="spec-cell"><div class="spec-k">Override</div><div class="spec-v red">Impossible</div></div>
-        </div>
-        
-      </div>
-    </div>
+<section>
+  <div class="sec-tag red">The Problem</div>
+  <h2 class="sec-h2">Discipline has a <em>failure rate.</em></h2>
+  <p class="sec-body">Every funded trader knows their rules. The floor, the max lot, the session close. They still break them — because knowing and enforcing are not the same thing.</p>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-val">78%</div><div class="stat-label">of prop firm traders fail challenges due to risk violations — not bad strategy</div></div>
+    <div class="stat-card"><div class="stat-val">$100–500</div><div class="stat-label">average cost of one blown challenge fee. Most traders buy 3–5 before passing.</div></div>
+    <div class="stat-card"><div class="stat-val">1 trade</div><div class="stat-label">One revenge trade at 2 AM can erase a month of disciplined execution.</div></div>
   </div>
 </section>
 
 <!-- ARCHITECTURE -->
 <div class="divider"></div>
-<section class="arch rv" id="architecture">
-  <div class="arch-top">
-    <div class="sp-tag blue">Architecture</div>
-    <h2 class="sp-headline" style="font-size:clamp(28px,4vw,48px);">Eight layers. <em class="blue">Zero gaps.</em></h2>
-    <p class="sp-body" style="max-width:600px;">Defence-in-depth. Each layer enforces independently. Eight independent governors, any one of which stops a breach.</p>
+<section id="architecture">
+  <div class="sec-tag blue">The Architecture</div>
+  <h2 class="sec-h2">Eight layers. <em>Zero gaps.</em></h2>
+  <p class="sec-body">Defence-in-depth. Each layer enforces independently. Eight independent governors, any one of which stops a breach.</p>
+  <div class="layers">
+    <div class="layer"><span class="layer-num">01</span><span class="layer-name">SOD Floor</span><span class="layer-desc">&mdash; Hard daily loss limit. Breach = day locked.</span></div>
+    <div class="layer"><span class="layer-num">02</span><span class="layer-name">Ratchet</span><span class="layer-desc">&mdash; Automatic gain lock-in tiers.</span></div>
+    <div class="layer"><span class="layer-num">03</span><span class="layer-name">Trail Floor</span><span class="layer-desc">&mdash; Dynamic floor tracks HWM.</span></div>
+    <div class="layer"><span class="layer-num">04</span><span class="layer-name">Heat Cap</span><span class="layer-desc">&mdash; Aggregate portfolio risk limit.</span></div>
+    <div class="layer"><span class="layer-num">05</span><span class="layer-name">Session Sweep</span><span class="layer-desc">&mdash; 21:55 hard close. No overnight.</span></div>
+    <div class="layer"><span class="layer-num">06</span><span class="layer-name">News Filter</span><span class="layer-desc">&mdash; Calendar-driven entry blocking.</span></div>
+    <div class="layer"><span class="layer-num">07</span><span class="layer-name">Velocity Halt</span><span class="layer-desc">&mdash; Flash crash protection.</span></div>
+    <div class="layer guil"><span class="layer-num">08</span><span class="layer-name">Guillotine</span><span class="layer-desc">&mdash; No SL? Closed in milliseconds.</span></div>
   </div>
-  <table class="layer-table">
-    <thead><tr><th>Layer</th><th>Component</th><th>Description</th><th>Status</th></tr></thead>
-    <tbody>
-      <tr><td class="lt-num">01</td><td class="lt-name">Daily Floor</td><td class="lt-desc">Hardcoded max daily loss. Equity below threshold closes all positions and blocks new orders.</td><td class="lt-status green">ENFORCED</td></tr>
-      <tr><td class="lt-num">02</td><td class="lt-name">Exposure Governor</td><td class="lt-desc">Aggregate lot exposure capped across all open positions. Prevents concentration and correlated pair stacking.</td><td class="lt-status green">ENFORCED</td></tr>
-      <tr><td class="lt-num">03</td><td class="lt-name">Session Sweep</td><td class="lt-desc">All open positions swept at 21:55 UTC. No overnight holds. No weekend gap exposure. Non-negotiable.</td><td class="lt-status amber">21:55 UTC</td></tr>
-      <tr><td class="lt-num">04</td><td class="lt-name">Heartbeat Monitor</td><td class="lt-desc">Continuous health telemetry to web dashboard. Four-state arc: nominal, caution, critical, halted.</td><td class="lt-status blue">STREAMING</td></tr>
-      <tr><td class="lt-num">05</td><td class="lt-name">License Gate</td><td class="lt-desc">Cryptographic license validation on every startup. No valid key, no execution. Account-ID locked.</td><td class="lt-status green">LOCKED</td></tr>
-      <tr><td class="lt-num">06</td><td class="lt-name">News Sentinel</td><td class="lt-desc">Scans MT5 economic calendar every 60 seconds. High-impact events block new entries within a 30-minute window. CHF and JPY central bank events trigger a 4-hour flatten — all crosses close immediately.</td><td class="lt-status amber">±30 MIN</td></tr>
-      <tr><td class="lt-num">07</td><td class="lt-name">Velocity Halt</td><td class="lt-desc">Monitors equity drop rate over a rolling 5-minute window. Rapid drawdown beyond the profile threshold blocks all new entries for 30 minutes. Flash crash protection at the terminal level.</td><td class="lt-status amber">TOGGLEABLE</td></tr>
-    </tbody>
-  </table>
-</section>
 
-
-<!-- AUTHORITY QUOTES -->
-<section class="quotes rv" style="padding:100px 0;">
-  <div style="max-width:1400px;margin:0 auto;padding:0 48px;">
-    <div class="sp-tag blue" style="margin-bottom:40px;">The Doctrine</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);">
-      <div style="background:var(--surface);padding:40px 36px;">
-        <div style="font-family:var(--serif);font-size:22px;color:var(--white);line-height:1.4;margin-bottom:20px;font-style:italic;">&ldquo;The most important rule of trading is to play great defense, not great offense.&rdquo;</div>
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div style="width:32px;height:1px;background:var(--blue);"></div>
-          <div><div style="font-family:var(--mono);font-size:10px;color:var(--blue);letter-spacing:2px;font-weight:600;">PAUL TUDOR JONES</div><div style="font-size:9px;color:var(--muted);margin-top:2px;">Founder, Tudor Investment Corp</div></div>
-        </div>
+  <!-- INTERACTIVE: Equity Guillotine Chart -->
+  <div class="component-wrap">
+    <div class="comp-title">See it work</div>
+    <div class="eq-chart-box">
+      <div class="eq-toggle">
+        <button class="active" onclick="setChartMode(true)">With Shield</button>
+        <button onclick="setChartMode(false)">Without Shield</button>
       </div>
-      <div style="background:var(--surface);padding:40px 36px;">
-        <div style="font-family:var(--serif);font-size:22px;color:var(--white);line-height:1.4;margin-bottom:20px;font-style:italic;">&ldquo;The elements of good trading are: cutting losses, cutting losses, and cutting losses.&rdquo;</div>
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div style="width:32px;height:1px;background:var(--blue);"></div>
-          <div><div style="font-family:var(--mono);font-size:10px;color:var(--blue);letter-spacing:2px;font-weight:600;">ED SEYKOTA</div><div style="font-size:9px;color:var(--muted);margin-top:2px;">Pioneer of systematic trading</div></div>
-        </div>
-      </div>
-      <div style="background:var(--surface);padding:40px 36px;">
-        <div style="font-family:var(--serif);font-size:22px;color:var(--white);line-height:1.4;margin-bottom:20px;font-style:italic;">&ldquo;Rule No.1: Never lose money. Rule No.2: Never forget Rule No.1.&rdquo;</div>
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div style="width:32px;height:1px;background:var(--blue);"></div>
-          <div><div style="font-family:var(--mono);font-size:10px;color:var(--blue);letter-spacing:2px;font-weight:600;">WARREN BUFFETT</div><div style="font-size:9px;color:var(--muted);margin-top:2px;">Chairman, Berkshire Hathaway</div></div>
-        </div>
-      </div>
-      <div style="background:var(--surface);padding:40px 36px;">
-        <div style="font-family:var(--serif);font-size:22px;color:var(--white);line-height:1.4;margin-bottom:20px;font-style:italic;">&ldquo;It&#39;s not whether you&#39;re right or wrong, but how much you make when you&#39;re right and how much you lose when you&#39;re wrong.&rdquo;</div>
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div style="width:32px;height:1px;background:var(--blue);"></div>
-          <div><div style="font-family:var(--mono);font-size:10px;color:var(--blue);letter-spacing:2px;font-weight:600;">STANLEY DRUCKENMILLER</div><div style="font-size:9px;color:var(--muted);margin-top:2px;">Former Chairman, Duquesne Capital</div></div>
-        </div>
-      </div>
+      <canvas id="eqCanvas" style="width:100%;height:240px"></canvas>
+      <div id="eqVerdict" style="font-size:12px;color:var(--sub);margin-top:16px;font-weight:600;min-height:20px"></div>
     </div>
-    <div style="text-align:center;margin-top:32px;font-family:var(--mono);font-size:11px;color:var(--sub);letter-spacing:1px;">Shield doesn&#39;t improve your strategy. It enforces the discipline these legends built their careers on.</div>
   </div>
 </section>
+
+<!-- RISK CALCULATOR -->
 <div class="divider"></div>
-
-<!-- PROFILES / PRICING -->
-<section class="profiles rv" id="profiles">
-  <div class="profiles-top">
-    <div class="sp-tag green">Pricing</div>
-    <h2 class="sp-headline" style="font-size:clamp(28px,4vw,48px);">Three profiles. <em class="green">One mandate.</em></h2>
-    <p style="font-family:var(--mono);font-size:12px;color:var(--text);font-weight:500;letter-spacing:1px;margin-top:16px;max-width:640px;">Shield adapts to your account class. Pick the profile at deployment. All 8 enforcement layers remain mandatory within each profile &mdash; no override.</p>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:32px;max-width:900px;">
-      <div style="background:var(--surface);border:1px solid var(--border);padding:18px 20px;">
-        <div style="font-family:var(--mono);font-size:9px;color:var(--blue);letter-spacing:2px;font-weight:700;margin-bottom:6px;">PROFILE 01</div>
-        <div style="font-family:var(--sans);font-size:15px;color:var(--white);font-weight:700;margin-bottom:4px;">Prop Strict</div>
-        <div style="font-size:11px;color:var(--text);font-weight:500;line-height:1.5;">FTMO, FundedNext, day-trading challenges. Floor &minus;1%. Session close 21:55 UTC.</div>
+<section>
+  <div class="sec-tag green">The Math</div>
+  <h2 class="sec-h2">The architecture of <em>discipline.</em></h2>
+  <p class="sec-body">Set your risk per trade. Shield calculates your entire defensive perimeter automatically.</p>
+  <div class="component-wrap">
+    <div class="calc-box">
+      <div class="calc-label">Risk Per Trade</div>
+      <div class="calc-val" id="riskVal">0.50%</div>
+      <div class="calc-slider-wrap">
+        <input type="range" class="calc-slider" id="riskSlider" min="10" max="150" value="50" oninput="updateCalc(this.value)">
       </div>
-      <div style="background:var(--surface);border:1px solid var(--border);padding:18px 20px;">
-        <div style="font-family:var(--mono);font-size:9px;color:var(--green);letter-spacing:2px;font-weight:700;margin-bottom:6px;">PROFILE 02</div>
-        <div style="font-family:var(--sans);font-size:15px;color:var(--white);font-weight:700;margin-bottom:4px;">Swing</div>
-        <div style="font-size:11px;color:var(--text);font-weight:500;line-height:1.5;">Overnight holds allowed. Floor &minus;1%. Same enforcement, longer horizon.</div>
+      <div class="calc-grid">
+        <div class="calc-cell"><div class="calc-cell-val" id="calcFloor" style="color:var(--red)">-1.50%</div><div class="calc-cell-lbl">SOD Floor</div></div>
+        <div class="calc-cell"><div class="calc-cell-val" id="calcHeat" style="color:var(--amber)">3.00%</div><div class="calc-cell-lbl">Heat Cap</div></div>
+        <div class="calc-cell"><div class="calc-cell-val" id="calcVel" style="color:var(--blue)">0.50%</div><div class="calc-cell-lbl">Velocity</div></div>
       </div>
-      <div style="background:var(--surface);border:1px solid var(--border);padding:18px 20px;">
-        <div style="font-family:var(--mono);font-size:9px;color:var(--amber);letter-spacing:2px;font-weight:700;margin-bottom:6px;">PROFILE 03</div>
-        <div style="font-family:var(--sans);font-size:15px;color:var(--white);font-weight:700;margin-bottom:4px;">Personal</div>
-        <div style="font-size:11px;color:var(--text);font-weight:500;line-height:1.5;">Your own capital. Floor &minus;3%. Heat cap 5%. Relaxed thresholds.</div>
-      </div>
+      <div class="calc-sentence" id="calcSentence">At 0.50% risk per trade, Shield locks your account if you lose more than 1.50% in a day.</div>
     </div>
   </div>
-  <div id="pricing" style="max-width:840px;display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-      <div class="p-card">
-      <div class="pc-header inst"><span class="pc-name">Monthly</span><span class="pc-tier">Flexible</span></div>
-      <div class="pc-body">
-        <div class="pc-tagline">Month-to-month. Cancel anytime.</div>
-        <div class="pc-for">All 3 profiles &middot; Prop firm &middot; Swing &middot; Personal</div>
-        <table class="pc-table">
-          <tr><td>Profile Access</td><td>All 3</td></tr>
-          <tr><td>Enforcement Layers</td><td>8 of 8</td></tr>
-          <tr><td>Guillotine (Layer 8)</td><td>Active</td></tr>
-          <tr><td>Web Dashboard</td><td>Included</td></tr>
-          <tr><td>Override</td><td>None</td></tr>
-        </table>
-        <div class="pc-toggles-label">Enforcement Layer</div>
-        <div class="pc-toggle"><span class="pct-name">Ratchet Protection<small>Automatic gain lock-in tiers</small></span><span class="pct-state on">LOCKED</span></div>
-        <div class="pc-toggle"><span class="pct-name">Trail Floor<small>Dynamic floor tracks HWM</small></span><span class="pct-state on">LOCKED</span></div>
-        <div class="pc-toggle"><span class="pct-name">Velocity Halt<small>Flash crash protection</small></span><span class="pct-state on">LOCKED</span></div>
-        <div class="pc-toggle"><span class="pct-name">Web Dashboard<small>Live telemetry feed</small></span><span class="pct-state on">ON</span></div>
-        <div class="pc-toggle"><span class="pct-name">Telegram Alerts<small>Push on triggers</small></span><span class="pct-state on">ON</span></div>
-        <div class="pc-price"><span class="pc-price-val">$100</span><span class="pc-price-per">/ month / account</span></div>
-        <div style="font-size:12px;color:var(--text);margin-top:8px;line-height:1.6;font-weight:500;">Less than 1% of a $10k funded account.<br>Less than one bad decision.</div>
-        <button class="pc-cta" onclick="openCheckout('monthly')" type="button">Subscribe Monthly &rarr;</button>
-      </div>
-    </div>
+</section>
 
-    <div class="p-card" style="position:relative;">
-      <div style="position:absolute;top:-10px;right:16px;background:var(--amber);color:var(--bg);font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:1.5px;padding:4px 10px;">SAVE $200</div>
-      <div class="pc-header inst"><span class="pc-name">Annual</span><span class="pc-tier">Best Value</span></div>
-      <div class="pc-body">
-        <div class="pc-tagline">12 months. 2 months free.</div>
-        <div class="pc-for">All 3 profiles &middot; Prop firm &middot; Swing &middot; Personal</div>
-        <table class="pc-table">
-          <tr><td>Profile Access</td><td>All 3</td></tr>
-          <tr><td>Enforcement Layers</td><td>8 of 8</td></tr>
-          <tr><td>Guillotine (Layer 8)</td><td>Active</td></tr>
-          <tr><td>Web Dashboard</td><td>Included</td></tr>
-          <tr><td>Override</td><td>None</td></tr>
-        </table>
-        <div class="pc-toggles-label">Enforcement Layer</div>
-        <div class="pc-toggle"><span class="pct-name">Ratchet Protection<small>Automatic gain lock-in tiers</small></span><span class="pct-state on">LOCKED</span></div>
-        <div class="pc-toggle"><span class="pct-name">Trail Floor<small>Dynamic floor tracks HWM</small></span><span class="pct-state on">LOCKED</span></div>
-        <div class="pc-toggle"><span class="pct-name">Velocity Halt<small>Flash crash protection</small></span><span class="pct-state on">LOCKED</span></div>
-        <div class="pc-toggle"><span class="pct-name">Web Dashboard<small>Live telemetry feed</small></span><span class="pct-state on">ON</span></div>
-        <div class="pc-toggle"><span class="pct-name">Telegram Alerts<small>Push on triggers</small></span><span class="pct-state on">ON</span></div>
-        <div class="pc-price"><span class="pc-price-val">$1,000</span><span class="pc-price-per">/ year / account</span></div>
-        <div style="font-size:12px;color:var(--text);margin-top:8px;line-height:1.6;font-weight:500;">Two months free. One locked account pays for it.</div>
-        <button class="pc-cta" onclick="openCheckout('annual')" type="button">Subscribe Annual &rarr;</button>
+<!-- TELEGRAM -->
+<div class="divider"></div>
+<section id="telegram">
+  <div class="sec-tag green">Real-Time Alerts</div>
+  <h2 class="sec-h2">Shield talks to you where<br>you already <em>are.</em></h2>
+  <p class="sec-body">Every enforcement event, every threshold breach, every session sweep — pushed to Telegram in real time. No dashboard to check.</p>
+  <div class="tg-container">
+    <div class="tg-phone">
+      <div class="tg-header">
+        <div class="tg-avatar">S</div>
+        <div><div class="tg-name">Shield v2</div><div class="tg-status">bot &middot; online</div></div>
+      </div>
+      <div class="tg-msgs" id="tgMsgs"></div>
+    </div>
+    <div style="max-width:360px">
+      <div style="font-size:13px;color:var(--white);font-weight:700;margin-bottom:16px">Every event. Every device.</div>
+      <div style="font-size:12px;color:var(--sub);line-height:1.8;font-weight:500">
+        Floor armed. Guillotine fired. Session swept. Daily summary delivered. You don't open a dashboard — Shield comes to you.<br><br>
+        <strong style="color:var(--white)">Configure once.</strong> Token + Chat ID in the EA inputs. Shield handles the rest.
       </div>
     </div>
   </div>
 </section>
 
-<!-- DEPLOY -->
+<!-- PROFILES -->
 <div class="divider"></div>
-<section class="deploy rv" id="deploy">
-  <div class="deploy-panel left">
-    <div class="sp-tag blue">Deployment</div>
-    <h2 class="sp-headline" style="font-size:clamp(24px,3vw,36px);">Live in four steps.<br><em class="blue">No code required.</em></h2>
-    <p class="sp-body">Shield is a compiled MQL5 Expert Advisor. Receive the <code style="font-family:var(--mono);font-size:11px;background:var(--blue-05);color:var(--blue);padding:1px 5px;border:1px solid var(--blue-10);">.ex5</code> file, drop it in MT5, enter your key.</p>
-    <div class="steps">
-      <div class="step"><div class="step-n"></div><div class="step-inner"><div class="step-title">Subscribe</div><div class="step-desc">Pay $100/month or $1,000/year. License key generated and emailed in 60 seconds.</div></div></div>
-      <div class="step"><div class="step-n"></div><div class="step-inner"><div class="step-title">Install EA</div><div class="step-desc">Drop <code>.ex5</code> into MT5 <code>Experts</code> folder. Restart terminal.</div></div></div>
-      <div class="step"><div class="step-n"></div><div class="step-inner"><div class="step-title">Configure</div><div class="step-desc">Attach to chart. Enter license key. Shield auto-configures for your prop firm. Daily floor, exposure cap, and session sweep activate immediately.</div></div></div>
-      <div class="step"><div class="step-n"></div><div class="step-inner"><div class="step-title">Enforced</div><div class="step-desc">Floor hardcoded. Session bounded. Exposure capped. Trade normally — Shield handles the rest.</div></div></div>
+<section>
+  <div class="sec-tag blue">Three Profiles</div>
+  <h2 class="sec-h2">Three profiles. <em>One mandate.</em></h2>
+  <p class="sec-body">Pick the profile that matches your account. All 8 enforcement layers are mandatory within each profile. No individual toggles.</p>
+  <div class="profiles-grid">
+    <div class="profile-card"><div class="profile-tag" style="color:var(--blue)">PROFILE 01</div><div class="profile-name">Prop Strict</div><div class="profile-desc">FTMO, FundedNext, day-trading challenges. Session close 21:55 UTC. The hardest configuration.</div></div>
+    <div class="profile-card"><div class="profile-tag" style="color:var(--green)">PROFILE 02</div><div class="profile-name">Swing</div><div class="profile-desc">Overnight holds allowed. Same enforcement, longer horizon. For firms that permit overnight.</div></div>
+    <div class="profile-card"><div class="profile-tag" style="color:var(--amber)">PROFILE 03</div><div class="profile-name">Personal</div><div class="profile-desc">Your own capital. Relaxed thresholds. No session sweep. Same layers, your risk tolerance.</div></div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<div class="divider"></div>
+<section id="pricing">
+  <div class="sec-tag blue">Pricing</div>
+  <h2 class="sec-h2">Less than one <em>bad decision.</em></h2>
+  <p class="sec-body">Per MT5 account. Portable license — switch brokers without emailing support.</p>
+  <div class="pricing-cards">
+    <div class="price-card">
+      <div class="price-tier">Monthly</div>
+      <div class="price-val">$100</div>
+      <div class="price-per">/ month / account</div>
+      <ul class="price-features">
+        <li>All 3 profiles</li>
+        <li>8 of 8 enforcement layers</li>
+        <li>Guillotine (Layer 8) active</li>
+        <li>Telegram push alerts</li>
+        <li>Cancel anytime</li>
+      </ul>
+      <button class="price-cta" onclick="openModal('monthly')">Subscribe Monthly &rarr;</button>
+    </div>
+    <div class="price-card featured">
+      <div class="price-badge">SAVE $200</div>
+      <div class="price-tier">Annual</div>
+      <div class="price-val">$1,000</div>
+      <div class="price-per">/ year / account</div>
+      <ul class="price-features">
+        <li>All 3 profiles</li>
+        <li>8 of 8 enforcement layers</li>
+        <li>Guillotine (Layer 8) active</li>
+        <li>Telegram push alerts</li>
+        <li>2 months free</li>
+      </ul>
+      <button class="price-cta" onclick="openModal('annual')">Subscribe Annual &rarr;</button>
     </div>
   </div>
-  <div class="deploy-panel">
-    <div class="sp-tag green">Telemetry</div>
-    <h2 class="sp-headline" style="font-size:clamp(24px,3vw,36px);">Real-time <em class="green">alerts.</em></h2>
-    <p class="sp-body">Every enforcement event, threshold breach, and session sweep — logged, timestamped, visible from any device.</p>
-    <div>
-      <div class="af-item g"><div class="af-bar"></div><div><div class="af-name">Floor Enforced</div><div class="af-text">Daily loss threshold reached. All positions closed. Orders blocked until next session.</div></div></div>
-      <div class="af-item a"><div class="af-bar"></div><div><div class="af-name">Exposure Warning</div><div class="af-text">Aggregate exposure at 80% of cap. Next position evaluated against remaining headroom.</div></div></div>
-      <div class="af-item r"><div class="af-bar"></div><div><div class="af-name">Session Sweep</div><div class="af-text">21:55 UTC. All open positions closed. No overnight exposure. Session complete.</div></div></div>
-      <div class="af-item c"><div class="af-bar"></div><div><div class="af-name">Heartbeat</div><div class="af-text">Shield active. Monitoring all execution events. Four-state health: nominal.</div></div></div>
-    </div>
-    <div class="deploy-note"><strong>Note:</strong> All telemetry pushed via API to Brockway Risk Terminal. No MetaQuotes VPS required. Dashboard accessible from any browser.</div>
-        
+</section>
+
+<!-- FAQ -->
+<div class="divider"></div>
+<section id="faq">
+  <div class="sec-tag amber">FAQ</div>
+  <h2 class="sec-h2">Questions.</h2>
+  <div class="faq-list">
+    <div class="faq-item" onclick="this.classList.toggle('open')"><div class="faq-q">Does Shield place trades?</div><div class="faq-a">No. Shield has no signal engine, no strategy, no market prediction. It enforces your risk rules. You bring the strategy — Shield makes sure you follow it.</div></div>
+    <div class="faq-item" onclick="this.classList.toggle('open')"><div class="faq-q">What happens if the server goes down?</div><div class="faq-a">Shield is fail-safe, not fail-deadly. Network errors never disable protection. The EA continues enforcing all 8 layers locally for up to 24 hours without server contact. Your positions are never closed due to a network failure.</div></div>
+    <div class="faq-item" onclick="this.classList.toggle('open')"><div class="faq-q">Can I use Shield on multiple accounts?</div><div class="faq-a">One license per MT5 account. The license is portable — if you switch brokers or get a new account, just enter your existing key on the new terminal. No support ticket required.</div></div>
+    <div class="faq-item" onclick="this.classList.toggle('open')"><div class="faq-q">What is the Guillotine?</div><div class="faq-a">Layer 8. If you open a trade without a stop loss, or a trade that exceeds your risk cap, or a trade that would breach your heat cap — Shield closes it within milliseconds of entry. No negotiation.</div></div>
+    <div class="faq-item" onclick="this.classList.toggle('open')"><div class="faq-q">Will Shield close my trades on license issues?</div><div class="faq-a">Never. Shield only closes trades on legitimate risk breaches (floor, guillotine, session, velocity). If your license expires or is revoked, Shield detaches from the chart and leaves all open positions untouched. Your broker connection continues normally.</div></div>
+    <div class="faq-item" onclick="this.classList.toggle('open')"><div class="faq-q">How do I install Shield?</div><div class="faq-a">Drop the .ex5 file into your MT5 Experts folder. Attach to any chart. Enter your license key and Telegram credentials. Shield is live in under 60 seconds.</div></div>
   </div>
 </section>
 
 <!-- FINAL CTA -->
-<section class="final-cta rv">
-  <div class="fc-inner">
-    <div class="fc-tag">Risk Infrastructure</div>
-    <h2 class="fc-hed">Stop <span class="serif">overriding</span><br>your own rules.</h2>
-    <p class="fc-sub">Shield doesn't trade for you. It stops you when you shouldn't be trading. Install. Activate. Trade with enforced risk.</p>
-    <a href="#pricing" class="fc-btn">Deploy Shield &rarr;</a>
-    <div class="fc-proof">Systems operational &mdash; V2.0 Stable</div>
-  </div>
+<section class="final-cta">
+  <h2 class="final-h2">Stop <em>overriding</em><br>your own rules.</h2>
+  <p class="final-sub">You don't execute trades anymore. You define risk. Shield handles the rest.</p>
+  <a href="#" class="btn-main" onclick="openModal()" style="display:inline-flex">Deploy Shield &rarr;</a>
 </section>
 
 <!-- FOOTER -->
 <footer class="footer">
-  <div class="footer-left">&copy; 2026 Brockway Trading & Technical Analysis Ltd. .</div>
-  <div class="footer-right">
-    <a href="docs.html" class="footer-link">Documentation</a>
-    <a href="terms.html" class="footer-link">Terms</a>
-    <a href="privacy.html" class="footer-link">Privacy</a>
+  <div>&copy; 2026 Brockway Trading &amp; Technical Analysis Limited.</div>
+  <div>
+    <a href="terms.html">Terms</a>
+    <a href="privacy.html">Privacy</a>
+    <a href="mailto:support@brockwayltd.com">Contact</a>
   </div>
 </footer>
 
-<script>
-// Scroll reveal
-const obs = new IntersectionObserver(entries => {
-  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('vis'); });
-}, { threshold: 0.08 });
-document.querySelectorAll('.rv').forEach(el => obs.observe(el));
-</script>
-
 <!-- CHECKOUT MODAL -->
-<div id="checkoutModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(5,6,7,0.92);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:20px;">
-  <div style="max-width:440px;width:100%;background:var(--surface);border:1px solid var(--border);padding:0;position:relative;">
-    <button onclick="closeCheckout()" type="button" style="position:absolute;top:12px;right:12px;background:none;border:none;color:var(--sub);font-size:20px;cursor:pointer;font-family:var(--mono);padding:4px 10px;">&times;</button>
-    <div style="padding:32px 28px 24px;border-bottom:1px solid var(--border);">
-      <div style="font-family:var(--mono);font-size:9px;color:var(--blue);letter-spacing:3px;font-weight:600;margin-bottom:8px;">DEPLOY SHIELD</div>
-      <div style="font-family:var(--serif);font-size:26px;color:var(--white);font-weight:400;line-height:1.2;">Reserve your <em style="color:var(--blue);">license</em></div>
-      <div id="planSummary" style="font-family:var(--mono);font-size:11px;color:var(--text);margin-top:10px;font-weight:500;">Monthly &middot; $100 / month / MT5 account</div>
-    </div>
-    <form id="checkoutForm" style="padding:24px 28px;display:flex;flex-direction:column;gap:16px;">
-      <input type="hidden" id="planField" name="plan" value="monthly">
-      <input type="hidden" id="amountField" name="amount" value="100">
-      <div>
-        <label style="display:block;font-family:var(--mono);font-size:9px;color:var(--sub);letter-spacing:2px;margin-bottom:6px;font-weight:600;">FULL NAME</label>
-        <input type="text" name="name" id="nameField" required placeholder="First Last" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--white);font-family:var(--mono);font-size:14px;font-weight:500;padding:12px 14px;outline:none;transition:border .2s;">
-      </div>
-      <div>
-        <label style="display:block;font-family:var(--mono);font-size:9px;color:var(--sub);letter-spacing:2px;margin-bottom:6px;font-weight:600;">EMAIL</label>
-        <input type="email" name="email" id="emailField" required placeholder="you@domain.com" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--white);font-family:var(--mono);font-size:14px;font-weight:500;padding:12px 14px;outline:none;">
-      </div>
-      <button type="submit" id="checkoutBtn" style="margin-top:8px;background:var(--blue);color:var(--white);border:none;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:2px;padding:16px;cursor:pointer;transition:background .2s;">PROCEED TO PAYMENT &rarr;</button>
-      <div id="checkoutError" style="font-family:var(--mono);font-size:10px;color:var(--red);text-align:center;min-height:14px;font-weight:500;"></div>
-      <div style="font-family:var(--mono);font-size:9px;color:var(--sub);text-align:center;letter-spacing:1px;line-height:1.6;font-weight:500;">Secured by Korapay &middot; License key emailed on payment<br>Portable across MT5 accounts &middot; One active session per license</div>
+<div class="modal-overlay" id="checkoutModal">
+  <div class="modal-box">
+    <div class="modal-close" onclick="closeModal()">&times;</div>
+    <div class="modal-h">Shield Deployment</div>
+    <div class="modal-sub">Enter your details to proceed to checkout.</div>
+    <form id="checkoutForm">
+      <div class="modal-field"><label>Full Name</label><input type="text" id="nameField" required></div>
+      <div class="modal-field"><label>Email</label><input type="email" id="emailField" required></div>
+      <div class="modal-field"><label>Plan</label><select id="planField"><option value="monthly">Monthly — $100</option><option value="annual">Annual — $1,000 (Save $200)</option></select></div>
+      <input type="hidden" id="amountField" value="100">
+      <button type="submit" class="modal-submit" id="checkoutBtn">Proceed to Payment &rarr;</button>
+      <div class="modal-err" id="checkoutErr"></div>
+      <div class="modal-note">Secured by Korapay &middot; License key emailed on payment<br>Portable across MT5 accounts &middot; One active session per license</div>
     </form>
   </div>
 </div>
 
 <script>
-(function(){
-  var WEBHOOK='https://hook.eu1.make.com/8n42wpvaheqzaqp1d8flhsueo2hs6641';
-  var modal=document.getElementById('checkoutModal');
-  var form=document.getElementById('checkoutForm');
-  var btn=document.getElementById('checkoutBtn');
-  var err=document.getElementById('checkoutError');
-  var planField=document.getElementById('planField');
-  var amountField=document.getElementById('amountField');
-  var summary=document.getElementById('planSummary');
+// ========== CHECKOUT ==========
+var WEBHOOK='https://hook.eu1.make.com/8n42wpvaheqzaqp1d8flhsueo2hs6641';
+function openModal(plan){
+  var m=document.getElementById('checkoutModal');
+  if(plan){document.getElementById('planField').value=plan;document.getElementById('amountField').value=plan==='annual'?'1000':'100'}
+  m.classList.add('active');document.body.style.overflow='hidden';
+}
+function closeModal(){document.getElementById('checkoutModal').classList.remove('active');document.body.style.overflow=''}
+document.getElementById('checkoutModal').addEventListener('click',function(e){if(e.target===this)closeModal()});
+document.getElementById('planField').addEventListener('change',function(){document.getElementById('amountField').value=this.value==='annual'?'1000':'100'});
+document.getElementById('checkoutForm').addEventListener('submit',function(e){
+  e.preventDefault();var btn=document.getElementById('checkoutBtn'),err=document.getElementById('checkoutErr');
+  btn.disabled=true;btn.textContent='ROUTING...';err.textContent='';
+  var payload={name:document.getElementById('nameField').value.trim(),email:document.getElementById('emailField').value.trim(),plan:document.getElementById('planField').value,amount:document.getElementById('amountField').value};
+  fetch(WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+  .then(function(r){return r.text()}).then(function(url){url=(url||'').trim();if(url.indexOf('http')===0){window.location.href=url}else{err.textContent='Routing error. Please try again.';btn.disabled=false;btn.textContent='PROCEED TO PAYMENT \u2192'}})
+  .catch(function(){err.textContent='Connection error. Please try again.';btn.disabled=false;btn.textContent='PROCEED TO PAYMENT \u2192'});
+});
 
-  window.openCheckout=function(plan){
-    var isAnnual=plan==='annual';
-    planField.value=isAnnual?'annual':'monthly';
-    amountField.value=isAnnual?'1000':'100';
-    summary.textContent=isAnnual?'Annual \u00b7 $1,000 / year / MT5 account \u00b7 Save $200':'Monthly \u00b7 $100 / month / MT5 account';
-    err.textContent='';
-    modal.style.display='flex';
-    document.body.style.overflow='hidden';
-    setTimeout(function(){document.getElementById('nameField').focus()},50);
-  };
-  window.closeCheckout=function(){
-    modal.style.display='none';
-    document.body.style.overflow='';
-  };
-  modal.addEventListener('click',function(e){if(e.target===modal)closeCheckout()});
-  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&modal.style.display==='flex')closeCheckout()});
+// ========== RISK CALCULATOR ==========
+function updateCalc(v){
+  var r=v/100;
+  document.getElementById('riskVal').textContent=r.toFixed(2)+'%';
+  document.getElementById('calcFloor').textContent='-'+(r*3).toFixed(2)+'%';
+  document.getElementById('calcHeat').textContent=(r*6).toFixed(2)+'%';
+  document.getElementById('calcVel').textContent=r.toFixed(2)+'%';
+  document.getElementById('calcSentence').textContent='At '+r.toFixed(2)+'% risk per trade, Shield locks your account if you lose more than '+(r*3).toFixed(2)+'% in a day.';
+}
 
-  form.addEventListener('submit',function(e){
-    e.preventDefault();
-    err.textContent='';
-    btn.disabled=true;
-    btn.textContent='ROUTING...';
+// ========== EQUITY CHART ==========
+var shieldOn=true;
+function setChartMode(on){
+  shieldOn=on;
+  document.querySelectorAll('.eq-toggle button').forEach(function(b,i){b.classList.toggle('active',on?(i===0):(i===1))});
+  drawChart();
+}
+function drawChart(){
+  var c=document.getElementById('eqCanvas'),ctx=c.getContext('2d');
+  c.width=c.offsetWidth*2;c.height=480;ctx.scale(2,2);
+  var w=c.offsetWidth,h=240;
+  ctx.clearRect(0,0,w,h);
+  // Generate equity curve
+  var pts=[],v=100,seed=42;
+  function rng(){seed=(seed*16807)%2147483647;return(seed-1)/2147483646}
+  for(var i=0;i<120;i++){v+=rng()*2-0.8;if(i>60&&!shieldOn)v-=rng()*1.5;pts.push(v)}
+  var floorVal=100*0.985; // -1.5% floor
+  var floorHit=-1;
+  if(shieldOn){for(var i=0;i<pts.length;i++){if(pts[i]<floorVal){floorHit=i;break}}}
+  var mn=Math.min.apply(null,pts)-2,mx=Math.max.apply(null,pts)+2;
+  if(!shieldOn)mn=Math.min(mn,pts[pts.length-1]-5);
+  function x(i){return(i/(pts.length-1))*w}
+  function y(v){return h-((v-mn)/(mx-mn))*h*0.85-h*0.05}
+  // Floor line
+  ctx.strokeStyle='rgba(255,59,59,0.3)';ctx.lineWidth=1;ctx.setLineDash([4,4]);
+  ctx.beginPath();ctx.moveTo(0,y(floorVal));ctx.lineTo(w,y(floorVal));ctx.stroke();ctx.setLineDash([]);
+  // Floor label
+  ctx.fillStyle='rgba(255,59,59,0.5)';ctx.font='600 9px JetBrains Mono';ctx.fillText('SOD FLOOR  -1.5%',8,y(floorVal)-6);
+  // Equity curve
+  var drawTo=shieldOn&&floorHit>0?floorHit:pts.length-1;
+  ctx.strokeStyle=shieldOn?'#0094FF':'#FF3B3B';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(x(0),y(pts[0]));
+  for(var i=1;i<=drawTo;i++)ctx.lineTo(x(i),y(pts[i]));
+  ctx.stroke();
+  if(shieldOn&&floorHit>0){
+    // Shield intervention marker
+    ctx.fillStyle='rgba(0,148,255,0.15)';ctx.fillRect(x(floorHit)-1,0,w-x(floorHit),h);
+    ctx.fillStyle='#0094FF';ctx.font='700 10px JetBrains Mono';
+    ctx.fillText('SHIELD: FLOOR HIT',x(floorHit)+8,y(pts[floorHit])-12);
+    ctx.fillText('Positions closed. Day locked.',x(floorHit)+8,y(pts[floorHit])+4);
+    // Flatline after
+    ctx.strokeStyle='rgba(0,148,255,0.4)';ctx.setLineDash([4,4]);ctx.beginPath();
+    ctx.moveTo(x(floorHit),y(pts[floorHit]));ctx.lineTo(w,y(pts[floorHit]));ctx.stroke();ctx.setLineDash([]);
+    document.getElementById('eqVerdict').innerHTML='<span style="color:var(--blue)">Shield stopped the bleeding at -1.5%.</span> The day is locked. No more damage.';
+  }else if(!shieldOn){
+    var finalP=((pts[pts.length-1]-100)/100*100).toFixed(1);
+    document.getElementById('eqVerdict').innerHTML='<span style="color:var(--red)">Without Shield, equity dropped to '+finalP+'%.</span> No floor. No intervention. One bad session.';
+  }else{
+    document.getElementById('eqVerdict').innerHTML='<span style="color:var(--blue)">Shield is monitoring. Floor armed at -1.5%.</span>';
+  }
+}
+window.addEventListener('load',drawChart);window.addEventListener('resize',drawChart);
 
-    var payload={
-      name:document.getElementById('nameField').value.trim(),
-      email:document.getElementById('emailField').value.trim(),
-      plan:planField.value,
-      amount:amountField.value
-    };
+// ========== TELEGRAM MOCK ==========
+var tgMsgs=[
+  {bold:'[SHIELD v2] CLAIM OK',text:'Profile: PROP_STRICT\nAccount: 105921239\nAll 8 protection layers armed.'},
+  {bold:'[SHIELD v2] FLOOR ARMED',text:'SOD: $10,250.00\nFloor: -1.5% ($10,096.25)\nRisk/Trade: 0.50%'},
+  {bold:'[SHIELD v2] GUILLOTINE',text:'No stop loss — position closed at entry.\nSymbol: EURUSD\nSet SL before opening positions.'},
+  {bold:'[SHIELD v2] SESSION CLOSED 21:55',text:'P&L: +0.82%\nHWM: +1.24%\nAll positions swept.'},
+  {bold:'[SHIELD v2] DAILY SUMMARY',text:'Session #1 | Wins: 4 | Losses: 1\nPeak: +1.24% | Close: +0.82%\nFloor never breached. Clean day.'}
+];
+var tgIdx=0;
+function addTgMsg(){
+  if(tgIdx>=tgMsgs.length)return;
+  var m=tgMsgs[tgIdx++],el=document.createElement('div');el.className='tg-msg';
+  var t=m.text.replace(/\n/g,'<br>');
+  el.innerHTML='<span class="tg-bold">'+m.bold+'</span><br>'+t+'<span class="tg-time">'+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+'</span>';
+  document.getElementById('tgMsgs').appendChild(el);
+  el.scrollIntoView({behavior:'smooth',block:'end'});
+}
+var tgObs=new IntersectionObserver(function(e){
+  if(e[0].isIntersecting){tgObs.disconnect();addTgMsg();var iv=setInterval(function(){addTgMsg();if(tgIdx>=tgMsgs.length)clearInterval(iv)},2200)}
+},{threshold:0.3});
+window.addEventListener('load',function(){tgObs.observe(document.getElementById('tgMsgs'))});
 
-    // Make.com returns the Korapay checkout URL as raw text in the response body.
-    // We fetch it, then redirect the browser.
-    fetch(WEBHOOK,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(payload)
-    })
-    .then(function(res){return res.text()})
-    .then(function(url){
-      url=(url||'').trim();
-      if(url.indexOf('http')===0){
-        window.location.href=url;
-      }else{
-        err.textContent='Routing error. Please try again.';
-        btn.disabled=false;
-        btn.textContent='PROCEED TO PAYMENT \u2192';
-      }
-    })
-    .catch(function(e){
-      err.textContent='Connection error. Please try again.';
-      btn.disabled=false;
-      btn.textContent='PROCEED TO PAYMENT \u2192';
-      console.error('Checkout error:',e);
-    });
+// ========== SMOOTH SCROLL ==========
+document.querySelectorAll('a[href^="#"]').forEach(function(a){
+  a.addEventListener('click',function(e){
+    var t=document.querySelector(this.getAttribute('href'));
+    if(t){e.preventDefault();t.scrollIntoView({behavior:'smooth'})}
   });
-})();
+});
 </script>
-
 </body>
 </html>
