@@ -1,759 +1,509 @@
-import streamlit as st
-import requests
-import google.generativeai as genai
-from datetime import datetime, timedelta
-from concurrent.futures import ThreadPoolExecutor
-import json
-import os
-import math
-import re
-import time
-from supabase import create_client, Client
 
-# --- SECURE CREDENTIALS ---
-API_FOOTBALL_KEY = st.secrets["FOOTBALL_KEY"]
-GEMINI_KEY = st.secrets["GEMINI_KEY"]
-SUPABASE_URL = st.secrets["SUPABASE_URL"]
-SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
-
-genai.configure(api_key=GEMINI_KEY)
-model = genai.GenerativeModel("gemini-flash-lite-latest")
-headers = {"x-apisports-key": API_FOOTBALL_KEY}
-base_url = "https://v3.football.api-sports.io"
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-
-# --- THE MEMORY DRIVES ---
-RAW_DATA_FILE = "praxos_raw_data.json"
-
-# --- SMART QUARANTINE ---
-QUARANTINE_YOUTH = ["u20", "u19", "u18", "u17", "u16", "reserve", "academy", "youth", "women", "(r)"]
-QUARANTINE_CUPS = ["cup", "copa", "trophy", "shield", "champions", "europa", "conference", "friendly", "friendlies", "super", "coppa", "coupe", "taça", "taca"]
-ALLOWED_YOUTH = ["u23", "u21"]
-
-# ============================================================
-# CLOUD MEMORY MANAGEMENT (SUPABASE)
-# ============================================================
-def load_json(filepath):
-    if os.path.exists(filepath):
-        try:
-            with open(filepath, "r") as f: return json.load(f)
-        except: return {}
-    return {}
-
-def save_json(filepath, data):
-    try:
-        with open(filepath, "w") as f: json.dump(data, f)
-    except: pass
-
-praxos_raw_cache = load_json(RAW_DATA_FILE)
-
-def load_cloud_archive():
-    try:
-        response = supabase.table('praxos_vault').select("*").execute()
-        history = {}
-        for row in response.data:
-            history[row['match_id']] = row['match_data']
-        return history
-    except Exception as e:
-        st.error(f"Cloud DB Error: {e}")
-        return {}
-
-def save_to_cloud_archive(m_id, display_name, result_text, group_name, raw_prompt="", match_date=None):
-    data = {
-        "date": match_date if match_date else datetime.now().strftime("%Y-%m-%d"),
-        "display": display_name,
-        "group": group_name,
-        "result": result_text,
-        "raw_prompt": raw_prompt
-    }
-    try:
-        supabase.table('praxos_vault').upsert({"match_id": m_id, "match_data": data}).execute()
-    except Exception as e:
-        st.error(f"Failed to save to Cloud: {e}")
-
-def update_cloud_match(m_id, data):
-    try:
-        supabase.table('praxos_vault').upsert({"match_id": m_id, "match_data": data}).execute()
-    except Exception as e:
-        pass
-
-# ============================================================
-# ML MATHEMATICAL EVALUATOR & INTERNAL SCANNER
-# ============================================================
-def calculate_alpha_markets(history):
-    market_stats = {}
-    for m_id, data in history.items():
-        if 'hit_rate' in data:
-            for m in data.get('success_list', []):
-                ml = m.lower()
-                if ml not in market_stats: market_stats[ml] = {'w': 0, 'l': 0}
-                market_stats[ml]['w'] += 1
-            for m in data.get('fail_list', []):
-                ml = m.lower()
-                if ml not in market_stats: market_stats[ml] = {'w': 0, 'l': 0}
-                market_stats[ml]['l'] += 1
-    alpha = {}
-    for m, stats in market_stats.items():
-        total = stats['w'] + stats['l']
-        if total >= 5: 
-            win_rate = (stats['w'] / total) * 100
-            if win_rate >= 80.0:
-                alpha[m] = win_rate
-    return alpha
-
-def grade_ticket(raw_text, h_goals, a_goals):
-    t_goals = h_goals + a_goals
-    gd = h_goals - a_goals
-    
-    truth_map = {
-        "winning team (home)": gd > 0,
-        "winning team (away)": gd < 0,
-        "draw": gd == 0,
-        "over 1.5": t_goals > 1.5,
-        "over 2.5": t_goals > 2.5,
-        "under 3.5": t_goals < 3.5,
-        "btts (yes)": h_goals > 0 and a_goals > 0,
-        "btts (no)": h_goals == 0 or a_goals == 0,
-        "win or draw (1x)": gd >= 0,
-        "win or draw (x2)": gd <= 0,
-        "home or away to win (12)": gd != 0,
-        "draw or over 2.5": gd == 0 or t_goals > 2.5,
-        "home handicap (-1.5)": gd >= 2,
-        "away handicap (+1.5)": gd <= 1,
-        "away handicap (-1.5)": gd <= -2,
-        "home handicap (+1.5)": gd >= -1,
-        "home over 0.5": h_goals > 0.5,
-        "away over 0.5": a_goals > 0.5,
-        "home over 1.5": h_goals > 1.5,
-        "away over 1.5": a_goals > 1.5,
-        "home win to nil (yes)": gd > 0 and a_goals == 0,
-        "home win to nil (no)": not (gd > 0 and a_goals == 0),
-        "away win to nil (yes)": gd < 0 and h_goals == 0,
-        "away win to nil (no)": not (gd < 0 and h_goals == 0),
-        "home win & over 1.5": gd > 0 and t_goals > 1.5,
-        "away win & over 1.5": gd < 0 and t_goals > 1.5,
-        "home win & over 2.5": gd > 0 and t_goals > 2.5,
-        "away win & over 2.5": gd < 0 and t_goals > 2.5,
-        "win or draw (1x) & under 3.5": gd >= 0 and t_goals < 3.5,
-        "win or draw (x2) & under 3.5": gd <= 0 and t_goals < 3.5,
-        "win or draw (1x) & over 1.5": gd >= 0 and t_goals > 1.5,
-        "win or draw (x2) & over 1.5": gd <= 0 and t_goals > 1.5
-    }
-    
-    truth_map["draw no bet (home)"] = True if gd > 0 else (None if gd == 0 else False)
-    truth_map["draw no bet (away)"] = True if gd < 0 else (None if gd == 0 else False)
-
-    successes, failures = [], []
-    ordered_markets = sorted(truth_map.keys(), key=len, reverse=True)
-    
-    lines = raw_text.split('\n')
-    for line in lines:
-        if "| 🎯 Range:" in line and "]:" in line:
-            try:
-                m_name = line.split("]:")[0].replace("[", "").strip()
-                key = m_name.lower()
-                
-                found_market = None
-                for valid_market in ordered_markets:
-                    if valid_market in key:
-                        found_market = valid_market
-                        break
-                        
-                if found_market:
-                    result = truth_map[found_market]
-                    if result is True: successes.append(m_name)
-                    elif result is False: failures.append(m_name)
-            except:
-                pass
-
-    total_valid = len(successes) + len(failures)
-    if total_valid == 0: return 0, 0, [], []
-        
-    hit_rate = round((len(successes) / total_valid) * 100, 1)
-    return hit_rate, total_valid, successes, failures
-
-def sync_match_results():
-    history = load_cloud_archive()
-    updated = False
-    
-    for m_id, data in history.items():
-        if "actual_score" in data and "hit_rate" not in data:
-            try:
-                nums = re.findall(r'\d+', data['actual_score'])
-                if len(nums) >= 2:
-                    h_g = int(nums[0])
-                    a_g = int(nums[1])
-                    hit_rate, total_valid, successes, failures = grade_ticket(data['result'], h_g, a_g)
-                    if total_valid > 0:
-                        data['hit_rate'] = hit_rate
-                        data['success_list'] = successes
-                        data['fail_list'] = failures
-                        update_cloud_match(m_id, data)
-                        updated = True
-            except: pass
-
-    missing_ids = [m_id for m_id, d in history.items() if "actual_score" not in d]
-    
-    if not missing_ids and not updated: return False
-
-    for i in range(0, len(missing_ids), 20):
-        batch = missing_ids[i:i+20]
-        ids_str = "-".join(batch)
-        try:
-            resp = requests.get(f"{base_url}/fixtures", headers=headers, params={"ids": ids_str}, timeout=15).json()
-            if resp and resp.get('response'):
-                for match_info in resp['response']:
-                    m_id = str(match_info['fixture']['id'])
-                    status = match_info['fixture']['status']['short']
-                    if status in ['FT', 'AET', 'PEN']:
-                        
-                        ft_score = match_info.get('score', {}).get('fulltime', {})
-                        h_goals = ft_score.get('home')
-                        a_goals = ft_score.get('away')
-                        
-                        if h_goals is None or a_goals is None:
-                            h_goals = match_info['goals']['home']
-                            a_goals = match_info['goals']['away']
-
-                        if m_id in history and h_goals is not None and a_goals is not None:
-                            data = history[m_id]
-                            data['actual_score'] = f"{h_goals} - {a_goals}"
-                            data['status'] = status
-                            
-                            hit_rate, total_valid, successes, failures = grade_ticket(data['result'], h_goals, a_goals)
-                            if total_valid > 0:
-                                data['hit_rate'] = hit_rate
-                                data['success_list'] = successes
-                                data['fail_list'] = failures
-                                
-                            update_cloud_match(m_id, data)
-                            updated = True
-        except Exception:
-            pass
-            
-    return updated
-
-# ============================================================
-# API FETCHERS
-# ============================================================
-def fetch_dynamic_league_avg(league_id, season):
-    cache_key = f"avg_{league_id}_{season}"
-    if cache_key in praxos_raw_cache: return praxos_raw_cache[cache_key]
-    try:
-        resp = requests.get(f"{base_url}/standings", headers=headers, params={"league": league_id, "season": season}, timeout=10).json()
-        standings = resp['response'][0]['league']['standings'][0]
-        total_goals = sum(t['all']['goals']['for'] for t in standings)
-        total_matches = sum(t['all']['played'] for t in standings)
-        live_avg = total_goals / total_matches if total_matches > 0 else 1.4 
-        live_avg = round(live_avg, 3)
-        praxos_raw_cache[cache_key] = live_avg
-        save_json(RAW_DATA_FILE, praxos_raw_cache)
-        return live_avg
-    except Exception: return 1.4
-
-def fetch_match_intel(t_a_id, t_b_id, target_league_id, m_id):
-    cache_key = f"intel_{m_id}"
-    if cache_key in praxos_raw_cache:
-        f_a_res, f_b_res, f_h_res = praxos_raw_cache[cache_key]
-    else:
-        def _get(endpoint, params): return requests.get(f"{base_url}{endpoint}", headers=headers, params=params, timeout=15).json()
-        with ThreadPoolExecutor(max_workers=3) as ex:
-            f_a = ex.submit(_get, "/fixtures", {"team": t_a_id, "last": 40})
-            f_b = ex.submit(_get, "/fixtures", {"team": t_b_id, "last": 40})
-            f_h = ex.submit(_get, "/fixtures/headtohead", {"h2h": f"{t_a_id}-{t_b_id}", "last": 10})
-            f_a_res, f_b_res, f_h_res = f_a.result(), f_b.result(), f_h.result()
-            praxos_raw_cache[cache_key] = (f_a_res, f_b_res, f_h_res)
-            save_json(RAW_DATA_FILE, praxos_raw_cache)
-    clean_a, a_scored, a_conceded = filter_league_matches(f_a_res.get('response', []), target_league_id)
-    clean_b, b_scored, b_conceded = filter_league_matches(f_b_res.get('response', []), target_league_id)
-    return clean_a, a_scored, a_conceded, clean_b, b_scored, b_conceded, f_h_res.get('response', [])
-
-# ============================================================
-# MATHEMATICAL ENGINE & COMBO GENERATOR
-# ============================================================
-def filter_league_matches(matches_data, target_league_id):
-    if not matches_data: return [], 0, 0
-    league_matches = [m for m in matches_data if str(m['league']['id']) == str(target_league_id)][:15]
-    scored = sum(m['goals']['home'] for m in league_matches if m['goals']['home'] is not None)
-    conceded = sum(m['goals']['away'] for m in league_matches if m['goals']['away'] is not None)
-    return league_matches, scored, conceded
-
-def parse_matches(matches_data):
-    if not matches_data: return "No match data found."
-    parsed = [f"{m['fixture']['date'][:10]} | {m['teams']['home']['name']} {m['goals']['home'] if m['goals']['home'] is not None else '?'} - {m['goals']['away'] if m['goals']['away'] is not None else '?'} {m['teams']['away']['name']}" for m in matches_data]
-    return "\n".join(parsed)
-
-def calculate_poisson_prior(a_scored, a_conceded, b_scored, b_conceded, matches_count, live_league_avg):
-    if matches_count == 0: matches_count = 1
-    h_atk, a_def = (a_scored / matches_count) / live_league_avg, (b_conceded / matches_count) / live_league_avg
-    a_atk, h_def = (b_scored / matches_count) / live_league_avg, (a_conceded / matches_count) / live_league_avg
-    l_h, l_a = h_atk * a_def * live_league_avg, a_atk * h_def * live_league_avg
-    def p(k, l): return ((l**k) * math.exp(-l)) / math.factorial(k)
-    
-    hw = aw = d = o15 = o25 = u35 = btts = btts_no = dc_1x = dc_x2 = dc_12 = d_o25 = 0.0
-    h_m15 = a_m15 = h_p15 = a_p15 = h_o05 = a_o05 = h_o15 = a_o15 = 0.0
-    hw_nil = aw_nil = 0.0
-    hw_o15 = aw_o15 = hw_o25 = aw_o25 = 0.0
-    dc1x_u35 = dcx2_u35 = dc1x_o15 = dcx2_o15 = 0.0
-    
-    for i in range(8):
-        for j in range(8):
-            prob = p(i, l_h) * p(j, l_a)
-            
-            if i > j: 
-                hw += prob
-                if j == 0: hw_nil += prob
-                if (i+j) > 1.5: hw_o15 += prob
-                if (i+j) > 2.5: hw_o25 += prob
-            elif i < j: 
-                aw += prob
-                if i == 0: aw_nil += prob
-                if (i+j) > 1.5: aw_o15 += prob
-                if (i+j) > 2.5: aw_o25 += prob
-            else: 
-                d += prob
-            
-            if i + j > 1.5: o15 += prob
-            if i + j > 2.5: o25 += prob
-            if i + j < 3.5: u35 += prob
-            if i > 0 and j > 0: btts += prob
-            else: btts_no += prob
-            
-            if i >= j: 
-                dc_1x += prob
-                if (i+j) < 3.5: dc1x_u35 += prob
-                if (i+j) > 1.5: dc1x_o15 += prob
-            if j >= i: 
-                dc_x2 += prob
-                if (i+j) < 3.5: dcx2_u35 += prob
-                if (i+j) > 1.5: dcx2_o15 += prob
-            if i != j: dc_12 += prob
-            if i == j or (i + j > 2.5): d_o25 += prob
-            
-            if i - j >= 2: h_m15 += prob
-            if j - i >= 2: a_m15 += prob
-            if j - i <= 1: h_p15 += prob
-            if i - j <= 1: a_p15 += prob
-            
-            if i > 0: h_o05 += prob
-            if j > 0: a_o05 += prob
-            if i > 1: h_o15 += prob
-            if j > 1: a_o15 += prob
-            
-    dnb_h = (hw / (hw + aw)) if (hw + aw) > 0 else 0.0
-    dnb_a = (aw / (hw + aw)) if (hw + aw) > 0 else 0.0
-            
-    return {
-        "Winning Team (Home)": round(hw*100, 1), 
-        "Winning Team (Away)": round(aw*100, 1), 
-        "Draw": round(d*100, 1), 
-        "Over 1.5": round(o15*100, 1),
-        "Over 2.5": round(o25*100, 1), 
-        "Under 3.5": round(u35*100, 1),
-        "BTTS (Yes)": round(btts*100, 1),
-        "BTTS (No)": round(btts_no*100, 1),
-        "Draw No Bet (Home)": round(dnb_h*100, 1),
-        "Draw No Bet (Away)": round(dnb_a*100, 1),
-        "Win or Draw (1X)": round(dc_1x*100, 1),
-        "Win or Draw (X2)": round(dc_x2*100, 1),
-        "Home or Away to win (12)": round(dc_12*100, 1),
-        "Draw or Over 2.5": round(d_o25*100, 1),
-        "Home Handicap (-1.5)": round(h_m15*100, 1),
-        "Away Handicap (+1.5)": round(a_p15*100, 1),
-        "Away Handicap (-1.5)": round(a_m15*100, 1),
-        "Home Handicap (+1.5)": round(h_p15*100, 1),
-        "Home Over 0.5": round(h_o05*100, 1),
-        "Away Over 0.5": round(a_o05*100, 1),
-        "Home Over 1.5": round(h_o15*100, 1),
-        "Away Over 1.5": round(a_o15*100, 1),
-        "Home Win to Nil (Yes)": round(hw_nil*100, 1),
-        "Home Win to Nil (No)": round((1-hw_nil)*100, 1),
-        "Away Win to Nil (Yes)": round(aw_nil*100, 1),
-        "Away Win to Nil (No)": round((1-aw_nil)*100, 1),
-        "Home Win & Over 1.5": round(hw_o15*100, 1),
-        "Away Win & Over 1.5": round(aw_o15*100, 1),
-        "Home Win & Over 2.5": round(hw_o25*100, 1),
-        "Away Win & Over 2.5": round(aw_o25*100, 1),
-        "Win or Draw (1X) & Under 3.5": round(dc1x_u35*100, 1),
-        "Win or Draw (X2) & Under 3.5": round(dcx2_u35*100, 1),
-        "Win or Draw (1X) & Over 1.5": round(dc1x_o15*100, 1),
-        "Win or Draw (X2) & Over 1.5": round(dcx2_o15*100, 1)
-    }
-
-def smart_sort_and_range(raw_text, live_avg):
-    pattern = re.compile(r"\[?\*{0,2}\s*([^:\n%\[\]]+?)\s*\*{0,2}\]?\s*:\s*\*{0,2}\[?\s*(\d{1,3}(?:\.\d+)?)\s*\]?\s*%", re.IGNORECASE)
-    seen, parsed_markets, narrative_lines = set(), [], []
-    
-    raw_lower = raw_text.lower()
-    
-    high_goal_keywords = ["high-scoring", "leaky", "porous", "defensive fragility", "open play"]
-    low_goal_keywords = ["low-scoring", "tight match", "defensive", "struggle to score", "lack of goals", "sterile", "park the bus"]
-    
-    has_high_goal_narrative = any(k in raw_lower for k in high_goal_keywords)
-    has_low_goal_narrative = any(k in raw_lower for k in low_goal_keywords)
-    
-    for line in raw_text.split('\n'):
-        line_stripped = line.strip()
-        if not line_stripped: continue
-        match = pattern.search(line_stripped)
-        if match:
-            label = re.sub(r"\s+", " ", match.group(1).strip().strip("[]").strip())
-            try:
-                pct = float(match.group(2))
-                key = label.lower()
-                if key not in seen:
-                    seen.add(key)
-                    
-                    if "under 3.5" in key and pct >= 75.0:
-                        if live_avg >= 1.6:
-                            pct = 74.9
-                            narrative_lines.append(f"\n🚨 **STRUCTURAL OVERRIDE:** High League Velocity. [{label}] locked below Strike Zone.")
-                        elif has_high_goal_narrative:
-                            pct = 74.9
-                            narrative_lines.append(f"\n🚨 **NARRATIVE OVERRIDE:** High-scoring conditions detected. [{label}] locked.")
-                    
-                    if ("over 2.5" in key or "btts (yes)" in key) and pct >= 75.0:
-                        if live_avg <= 1.25:
-                            pct = 74.9
-                            narrative_lines.append(f"\n🚨 **INVERSE OVERRIDE:** Low League Velocity. [{label}] locked below Strike Zone.")
-                        elif has_low_goal_narrative:
-                            pct = 74.9
-                            narrative_lines.append(f"\n🚨 **INVERSE NARRATIVE OVERRIDE:** Defensive conditions detected. [{label}] locked.")
-                        
-                    parsed_markets.append((label, pct))
-            except ValueError: narrative_lines.append(line_stripped)
-        else: narrative_lines.append(line_stripped)
-            
-    if parsed_markets:
-        parsed_markets.sort(key=lambda x: x[1], reverse=True)
-        sorted_lines = []
-        for lbl, p in parsed_markets:
-            p_str = f"{p:.1f}".rstrip('0').rstrip('.')
-            if p >= 75.0:
-                fair_odds = round(100 / p, 2)
-                value_odds = round(100 / (p - 12.0), 2) if p > 12.5 else round(100/p * 1.5, 2)
-                sorted_lines.append(f"[{lbl}]: {p_str}% | 🎯 Range: {fair_odds} - {value_odds}")
-            
-        if not sorted_lines:
-            sorted_lines.append("\n⚠️ **NO APEX TARGETS:** All market probabilities fell below the 75% institutional threshold. The board is clear. PASS.")
-            
-        return "\n".join(narrative_lines) + "\n\n" + "\n".join(sorted_lines)
-    return raw_text
-
-def execute_match_analysis(m_id, match_data, group_name):
-    t_a_n, t_a_i = match_data["h_name"], match_data["h_id"]
-    t_b_n, t_b_i = match_data["a_name"], match_data["a_id"]
-    l_i, s = match_data["league_id"], match_data["season"]
-    d_n = match_data["display"]
-    l_avg = fetch_dynamic_league_avg(l_i, s)
-    c_a, ascore, aconcede, c_b, bscore, bconcede, h2h = fetch_match_intel(t_a_i, t_b_i, l_i, m_id)
-    math_p = calculate_poisson_prior(ascore, aconcede, bscore, bconcede, len(c_a), l_avg)
-    l_d = f"{t_a_n} Last 15:\n{parse_matches(c_a)}\n\n{t_b_n} Last 15:\n{parse_matches(c_b)}\n\nH2H:\n{parse_matches(h2h)}"
-    
-    velocity_instruction = ""
-    if l_avg >= 1.6:
-        velocity_instruction = f"CRITICAL VELOCITY PROTOCOL: The League Goal Velocity is {l_avg} (HIGH). You MUST mathematically crash the [Under 3.5] market and heavily boost [Over 2.5] and [BTTS (Yes)]."
-    elif l_avg <= 1.25:
-        velocity_instruction = f"CRITICAL INVERSE VELOCITY PROTOCOL: The League Goal Velocity is {l_avg} (EXTREMELY LOW). You MUST mathematically crash the [Over 2.5] and [BTTS (Yes)] markets. Boost [Under 3.5] and Win to Nil markets."
-        
-    prompt = f"""SYSTEM: Algorithmic Quantitative Football Engine.
-DATA: {l_d}
-POISSON PRIOR (Base Math): {math_p}
-
-{velocity_instruction}
-
-DIRECTIVE: You MUST output exact probabilities for ALL 34 markets provided in the Poisson Prior. Adjust the base math using the tactical text data (form/H2H) and the Velocity Protocol. 
-
-RULES: 
-1. Write a 1-2 sentence tactical analysis.
-2. List ALL 34 market percentages in descending order.
-3. DO NOT number the list. Format exactly as: [Market Name]: [XX]%
-
-=== FEW-SHOT BEHAVIOR CLONING EXAMPLES ===
-
-EXAMPLE 1 (Low Velocity / Tactical Deadlock):
-Tactical Analysis: Olimpia enters with strong defensive form and clean sheets, while Barracas Central’s recent stalemate against Vasco da Gama highlights a stagnant offensive output. Given the extremely low league goal velocity and the lack of H2H history, this match is mathematically projected to be a low-scoring, tactical deadlock.
-[Under 3.5]: 98.0%
-[Win or Draw (1X) & Under 3.5]: 95.0%
-[Win or Draw (X2) & Under 3.5]: 95.0%
-[Away Handicap (+1.5)]: 95.0%
-[Home Handicap (+1.5)]: 95.0%
-[BTTS (No)]: 90.0%
-[Home Win to Nil (No)]: 88.0%
-[Away Win to Nil (No)]: 88.0%
-[Win or Draw (1X)]: 85.0%
-[Win or Draw (X2)]: 85.0%
-[Draw]: 75.0%
-
-EXAMPLE 2 (Controlled Away Dominance):
-Tactical Analysis: Managua enters this fixture with superior defensive consistency and a strong historical edge in head-to-head matchups, while Matagalpa’s recent form is marred by defensive lapses and high-scoring volatility. The engine favors a controlled Managua performance, likely resulting in a low-to-medium scoring affair where the visitors maintain tactical discipline.
-[Away Handicap (+1.5)]: 98.2%
-[Home Win to Nil (No)]: 92.1%
-[Win or Draw (X2)]: 89.4%
-[Draw No Bet (Away)]: 84.8%
-[Away Over 0.5]: 81.2%
-[Home or Away to win (12)]: 76.8%
-
-EXAMPLE 3 (High Velocity Away Rout):
-Tactical Analysis: Caravel displays high defensive volatility with frequent heavy-scoring losses, while Estudiantes L.P. shows inconsistent form; the high league goal velocity necessitates a strong lean toward high-scoring outcomes and away-side dominance. The following probabilities incorporate the Critical Velocity Protocol to adjust for expected offensive output.
-[Home Win to Nil (No)]: 98.5%
-[Away Win to Nil (No)]: 98.5%
-[Draw No Bet (Away)]: 88.2%
-[Away Handicap (+1.5)]: 82.5%
-[Away Over 1.5]: 78.4%
-[Win or Draw (X2) & Over 1.5]: 75.2%
-
-EXAMPLE 4 (Defensive Home Victory):
-Tactical Analysis: El Seka El Hadid enters this fixture with superior momentum, having secured four wins in their last six matches, while Aswan SC remains winless in their last fifteen outings. Given the extremely low league goal velocity and Aswan's chronic inability to score, the match is projected to be a low-scoring, defensive-minded victory for the hosts.
-[Away Handicap (+1.5)]: 96.8%
-[Under 3.5]: 89.4%
-[Home Win to Nil (No)]: 81.2%
-[Away Over 0.5]: 76.0%
-
-EXAMPLE 5 (High-Scoring Away Edge):
-Tactical Analysis: Al Jazeera and Al Buqa'a both exhibit significant defensive vulnerabilities, with both sides frequently conceding multiple goals against top-tier opposition. Given the high frequency of BTTS and Over 2.5 outcomes in their recent form and historical H2H, this match is statistically primed for a high-scoring affair favoring the away side's offensive momentum.
-[Home Win to Nil (No)]: 95.4%
-[Away Handicap (+1.5)]: 94.2%
-[Away Over 0.5]: 93.8%
-[Over 1.5]: 93.1%
-[Win or Draw (X2)]: 88.4%
-[Home or Away to win (12)]: 83.2%
-[Win or Draw (X2) & Over 1.5]: 81.5%
-[Away Win to Nil (No)]: 80.4%
-[Winning Team (Away)]: 78.5%
-[Draw No Bet (Away)]: 77.9%
-[Home Over 0.5]: 77.2%
-[Away Over 1.5]: 76.9%
-
-==========================================
-EXECUTE LIVE MATCH NOW:
-"""
-    
-    resp = model.generate_content(prompt, generation_config=genai.types.GenerationConfig(temperature=0.0))
-    final_text = f"⚽ {d_n}\n{group_name}\n(League Goal Velocity: {l_avg})\n{'='*35}\n{smart_sort_and_range(resp.text, l_avg)}"
-    m_date = match_data.get("match_date", datetime.now().strftime("%Y-%m-%d"))
-    save_to_cloud_archive(m_id, d_n, final_text, group_name, prompt, m_date)
-
-# ============================================================
-# APP UI
-# ============================================================
-st.set_page_config(page_title="Praxos APEX", page_icon="⚡", layout="centered")
-
-st.markdown("""
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Shield — Terminal-Level Risk Governance for MT5</title>
+<meta name="description" content="Shield by Brockway — 8-layer risk enforcement for MT5. No override. No negotiation. Protect funded accounts from revenge trades, blown floors, and missing stop losses.">
+<meta property="og:title" content="Shield by Brockway — Institutional Risk Infrastructure">
+<meta property="og:description" content="Terminal-level risk governance for MT5. 8 enforcement layers. Zero override.">
+<meta property="og:type" content="website">
+<link rel="icon" href="favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 <style>
-    html, body, p, div, span, label, button, .streamlit-expanderHeader { font-size: 12px !important; }
-    .stCodeBlock code { font-size: 11px !important; }
-    h1 { font-size: 22px !important; }
-    h2 { font-size: 18px !important; }
-    h3 { font-size: 15px !important; }
-    h4 { font-size: 13px !important; }
+:root{
+--bg:#050607;--surface:#0A0B0D;--border:#1C1D20;--border-h:#2A2B30;
+--white:#E8EAEF;--sub:#B0B4BE;--muted:#6B7080;--dim:#3A3D48;
+--blue:#0094FF;--blue-10:rgba(0,148,255,.1);--blue-20:rgba(0,148,255,.2);
+--green:#00D26A;--green-10:rgba(0,210,106,.1);
+--red:#FF3B3B;--red-10:rgba(255,59,59,.1);
+--amber:#FF9500;--amber-10:rgba(255,149,0,.1);
+--mono:'JetBrains Mono',monospace;--serif:'Instrument Serif',Georgia,serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--sub);font-family:var(--mono);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+::selection{background:var(--blue);color:var(--bg)}
+
+/* NAV */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:16px 32px;display:flex;justify-content:space-between;align-items:center;background:rgba(5,6,7,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+.nav-brand{font-size:13px;font-weight:800;letter-spacing:6px;color:var(--white);text-transform:uppercase;text-decoration:none}
+.nav-links{display:flex;gap:28px;align-items:center}
+.nav-links a{font-size:9px;font-weight:600;letter-spacing:2px;color:var(--muted);text-decoration:none;text-transform:uppercase;transition:color .2s}
+.nav-links a:hover{color:var(--white)}
+.nav-cta{background:var(--blue);color:var(--white);padding:8px 20px;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-decoration:none;transition:all .2s}
+.nav-cta:hover{background:#0080E0}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:120px 48px 80px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse 60% 40% at 20% 50%,rgba(0,148,255,.04),transparent);pointer-events:none}
+.hero-kicker{font-size:10px;font-weight:600;letter-spacing:6px;text-transform:uppercase;color:var(--blue);margin-bottom:28px;display:flex;align-items:center;gap:14px}
+.hero-kicker::before{content:'';width:32px;height:2px;background:var(--blue)}
+.hero-h1{font-size:clamp(42px,7vw,96px);font-weight:800;line-height:.92;letter-spacing:-.03em;color:var(--white);margin-bottom:20px}
+.hero-h1 em{font-family:var(--serif);font-weight:400;font-style:italic;color:var(--blue)}
+.hero-sub{font-size:clamp(18px,2.5vw,36px);font-weight:500;color:var(--muted);margin-bottom:32px;letter-spacing:-.01em}
+.hero-body{max-width:560px;font-size:14px;line-height:1.9;font-weight:500;margin-bottom:36px}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap}
+.btn-main{display:inline-flex;align-items:center;gap:10px;padding:16px 40px;background:var(--blue);color:var(--white);font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;text-decoration:none;transition:all .3s;position:relative;overflow:hidden}
+.btn-main:hover{background:#0080E0;transform:translateY(-1px);box-shadow:0 4px 40px var(--blue-20)}
+.btn-ghost{display:inline-flex;align-items:center;padding:16px 40px;border:1px solid var(--border-h);color:var(--sub);font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:3px;text-transform:uppercase;text-decoration:none;transition:all .3s}
+.btn-ghost:hover{border-color:var(--blue-20);color:var(--blue)}
+
+/* SECTIONS */
+section{padding:100px 48px}
+.sec-tag{font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:16px}
+.sec-tag.blue{color:var(--blue)}.sec-tag.green{color:var(--green)}.sec-tag.red{color:var(--red)}.sec-tag.amber{color:var(--amber)}
+.sec-h2{font-size:clamp(28px,4vw,48px);font-weight:800;color:var(--white);line-height:1.05;letter-spacing:-.02em;margin-bottom:20px}
+.sec-h2 em{font-family:var(--serif);font-weight:400;font-style:italic;color:var(--blue)}
+.sec-body{max-width:600px;font-size:13px;line-height:1.8;font-weight:500}
+.divider{height:1px;background:var(--border);margin:0 48px}
+
+/* PROBLEM STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1px;background:var(--border);margin-top:48px}
+.stat-card{background:var(--surface);padding:32px 28px}
+.stat-val{font-size:36px;font-weight:800;color:var(--red);margin-bottom:8px}
+.stat-label{font-size:11px;font-weight:600;color:var(--sub);line-height:1.5}
+
+/* ARCHITECTURE LAYERS */
+.layers{display:flex;flex-direction:column;gap:1px;margin-top:40px;max-width:700px}
+.layer{display:flex;align-items:center;gap:16px;background:var(--surface);padding:16px 20px;border-left:3px solid var(--border-h);transition:all .2s;cursor:default}
+.layer:hover{border-left-color:var(--blue);background:#0D0E10}
+.layer.guil{border-left-color:var(--red)}
+.layer-num{font-size:9px;font-weight:800;color:var(--muted);letter-spacing:2px;min-width:24px}
+.layer-name{font-size:12px;font-weight:700;color:var(--white);letter-spacing:1px}
+.layer-desc{font-size:11px;color:var(--muted);font-weight:500}
+.layer.guil .layer-name{color:var(--red)}
+
+/* INTERACTIVE COMPONENTS */
+.component-wrap{margin-top:60px;max-width:800px}
+.comp-title{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--blue);margin-bottom:20px}
+
+/* EQUITY CHART */
+.eq-chart-box{background:var(--surface);border:1px solid var(--border);padding:24px;position:relative}
+.eq-toggle{display:flex;gap:0;margin-bottom:20px}
+.eq-toggle button{padding:10px 24px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;border:1px solid var(--border);background:var(--bg);color:var(--muted);cursor:pointer;transition:all .2s}
+.eq-toggle button.active{background:var(--blue);color:var(--white);border-color:var(--blue)}
+.eq-canvas{width:100%;height:240px;position:relative}
+.eq-label{position:absolute;font-size:9px;font-weight:700;letter-spacing:1px;padding:4px 8px}
+
+/* TELEGRAM MOCK */
+.tg-container{display:flex;gap:48px;align-items:flex-start;flex-wrap:wrap;margin-top:40px}
+.tg-phone{width:320px;background:#1B2836;border-radius:20px;padding:16px;box-shadow:0 20px 60px rgba(0,0,0,.4);flex-shrink:0}
+.tg-header{display:flex;align-items:center;gap:10px;padding:8px 4px 16px;border-bottom:1px solid rgba(255,255,255,.06)}
+.tg-avatar{width:36px;height:36px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:var(--white)}
+.tg-name{font-size:13px;font-weight:700;color:var(--white)}
+.tg-status{font-size:10px;color:var(--muted)}
+.tg-msgs{padding:16px 0;display:flex;flex-direction:column;gap:8px;min-height:280px}
+.tg-msg{background:#2B5278;padding:10px 14px;border-radius:0 12px 12px 12px;max-width:90%;font-size:11px;line-height:1.6;color:var(--white);animation:msgIn .3s ease}
+.tg-msg .tg-bold{font-weight:700;color:#7EB8F0}
+.tg-msg .tg-time{display:block;text-align:right;font-size:9px;color:rgba(255,255,255,.4);margin-top:4px}
+@keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* RISK CALCULATOR */
+.calc-box{background:var(--surface);border:1px solid var(--border);padding:32px}
+.calc-slider-wrap{margin:24px 0}
+.calc-slider{-webkit-appearance:none;width:100%;height:4px;background:var(--border);outline:none;border-radius:2px}
+.calc-slider::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;background:var(--blue);border-radius:50%;cursor:pointer;box-shadow:0 0 12px var(--blue-20)}
+.calc-val{font-size:48px;font-weight:800;color:var(--white);text-align:center}
+.calc-label{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:8px}
+.calc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);margin-top:24px}
+.calc-cell{background:var(--bg);padding:20px 16px;text-align:center}
+.calc-cell-val{font-size:24px;font-weight:800;margin-bottom:4px}
+.calc-cell-lbl{font-size:9px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+.calc-sentence{font-size:12px;color:var(--sub);text-align:center;margin-top:24px;line-height:1.7;font-weight:500}
+
+/* PROFILES */
+.profiles-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1px;background:var(--border);margin-top:40px}
+.profile-card{background:var(--surface);padding:28px 24px}
+.profile-tag{font-size:9px;font-weight:700;letter-spacing:2px;margin-bottom:8px}
+.profile-name{font-size:18px;font-weight:800;color:var(--white);margin-bottom:6px}
+.profile-desc{font-size:11px;color:var(--muted);line-height:1.6;font-weight:500}
+
+/* PRICING */
+.pricing-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin-top:40px;max-width:700px}
+.price-card{background:var(--surface);border:1px solid var(--border);padding:32px 28px;position:relative}
+.price-card.featured{border-color:var(--blue-20)}
+.price-badge{position:absolute;top:-10px;right:16px;background:var(--amber);color:var(--bg);font-size:9px;font-weight:700;letter-spacing:1px;padding:4px 10px}
+.price-tier{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:16px}
+.price-val{font-size:42px;font-weight:800;color:var(--white)}
+.price-per{font-size:12px;color:var(--muted);font-weight:500;margin-bottom:20px}
+.price-features{list-style:none;margin-bottom:24px}
+.price-features li{font-size:11px;color:var(--sub);padding:6px 0;border-bottom:1px solid var(--border);font-weight:500;display:flex;align-items:center;gap:8px}
+.price-features li::before{content:'';width:4px;height:4px;background:var(--blue);border-radius:50%;flex-shrink:0}
+.price-cta{display:block;width:100%;padding:14px;background:var(--blue);color:var(--white);border:none;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.price-cta:hover{background:#0080E0}
+
+/* FAQ */
+.faq-list{margin-top:40px;max-width:700px}
+.faq-item{border-bottom:1px solid var(--border);padding:20px 0}
+.faq-q{font-size:13px;font-weight:700;color:var(--white);cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.faq-q::after{content:'+';font-size:18px;color:var(--muted);transition:transform .2s}
+.faq-item.open .faq-q::after{transform:rotate(45deg);color:var(--blue)}
+.faq-a{font-size:12px;color:var(--sub);line-height:1.8;max-height:0;overflow:hidden;transition:max-height .3s;font-weight:500}
+.faq-item.open .faq-a{max-height:200px;padding-top:12px}
+
+/* FINAL CTA */
+.final-cta{text-align:center;padding:120px 48px;background:linear-gradient(180deg,var(--bg),#080A0C)}
+.final-h2{font-size:clamp(32px,5vw,56px);font-weight:800;color:var(--white);margin-bottom:16px}
+.final-h2 em{font-family:var(--serif);font-weight:400;font-style:italic}
+.final-sub{font-size:14px;color:var(--sub);margin-bottom:32px;font-weight:500}
+
+/* FOOTER */
+.footer{display:flex;justify-content:space-between;align-items:center;padding:24px 48px;border-top:1px solid var(--border);font-size:10px;color:var(--dim);font-weight:500}
+.footer a{color:var(--muted);text-decoration:none;margin-left:24px}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);align-items:center;justify-content:center}
+.modal-overlay.active{display:flex}
+.modal-box{background:var(--surface);border:1px solid var(--border);padding:40px;width:100%;max-width:420px;position:relative}
+.modal-close{position:absolute;top:16px;right:16px;font-size:20px;color:var(--muted);cursor:pointer}
+.modal-h{font-size:16px;font-weight:800;color:var(--white);letter-spacing:2px;margin-bottom:6px}
+.modal-sub{font-size:11px;color:var(--muted);margin-bottom:24px;font-weight:500}
+.modal-field{margin-bottom:16px}
+.modal-field label{display:block;font-size:9px;font-weight:700;letter-spacing:2px;color:var(--muted);margin-bottom:6px;text-transform:uppercase}
+.modal-field input,.modal-field select{width:100%;padding:12px 14px;background:var(--bg);border:1px solid var(--border);color:var(--white);font-family:var(--mono);font-size:13px;font-weight:500;outline:none}
+.modal-field input:focus,.modal-field select:focus{border-color:var(--blue)}
+.modal-submit{width:100%;padding:14px;background:var(--blue);color:var(--white);border:none;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;margin-top:8px}
+.modal-err{font-size:10px;color:var(--red);text-align:center;min-height:14px;margin-top:8px;font-weight:500}
+.modal-note{font-size:9px;color:var(--dim);text-align:center;margin-top:12px;line-height:1.6;font-weight:500}
+
+@media(max-width:768px){
+.nav{padding:12px 20px}.nav-links a{display:none}.hero{padding:100px 24px 60px}
+section{padding:60px 24px}.divider{margin:0 24px}.footer{flex-direction:column;gap:12px;padding:24px}
+.tg-container{flex-direction:column}.tg-phone{width:100%}
+}
 </style>
-""", unsafe_allow_html=True)
+</head>
+<body>
 
-st.title("⚡ PRAXOS APEX")
-st.markdown("**Autonomous Quantitative Matrix (Cloud Vault Edition)**")
+<!-- NAV -->
+<nav class="nav">
+  <a href="#" class="nav-brand">Shield</a>
+  <div class="nav-links">
+    <a href="#architecture">Architecture</a>
+    <a href="#telegram">Alerts</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#faq">FAQ</a>
+    <a href="#" class="nav-cta" onclick="openModal()">Deploy Shield</a>
+  </div>
+</nav>
 
-if 'ignition_fired' not in st.session_state: st.session_state.ignition_fired = False
-praxos_archive = load_cloud_archive()
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-kicker">Institutional Risk Infrastructure</div>
+  <h1 class="hero-h1">You don't blow accounts<br>from bad <em>trades.</em></h1>
+  <p class="hero-sub">You blow them when nothing stops you.</p>
+  <p class="hero-body">Shield is a terminal-level risk governor for MT5. It enforces your limits when discipline fails. <strong style="color:var(--white)">No override. No negotiation.</strong> One prevented mistake pays for this.</p>
+  <div class="hero-actions">
+    <a href="#pricing" class="btn-main">Deploy Shield <span>&rarr;</span></a>
+    <a href="#architecture" class="btn-ghost">View Architecture</a>
+  </div>
+</section>
 
-# --- THE TABS ARCHITECTURE ---
-tab_predict, tab_board, tab_vault = st.tabs(["🔮 PREDICT", "⚡ LIVE BOARD", "🕰️ HISTORY VAULT"])
+<!-- PROBLEM -->
+<div class="divider"></div>
+<section>
+  <div class="sec-tag red">The Problem</div>
+  <h2 class="sec-h2">Discipline has a <em>failure rate.</em></h2>
+  <p class="sec-body">Every funded trader knows their rules. The floor, the max lot, the session close. They still break them — because knowing and enforcing are not the same thing.</p>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-val">78%</div><div class="stat-label">of prop firm traders fail challenges due to risk violations — not bad strategy</div></div>
+    <div class="stat-card"><div class="stat-val">$100–500</div><div class="stat-label">average cost of one blown challenge fee. Most traders buy 3–5 before passing.</div></div>
+    <div class="stat-card"><div class="stat-val">1 trade</div><div class="stat-label">One revenge trade at 2 AM can erase a month of disciplined execution.</div></div>
+  </div>
+</section>
 
-with tab_predict:
-    st.markdown("### 💎 THE ALPHA PREDICTOR")
-    st.markdown("Automatically filters today's scanned matches for targets with an **80%+ historical win rate** and **Max Odds >= 1.20**.")
-    
-    if not praxos_archive:
-        st.info("Vault is empty. Run matches and sync results.")
-    else:
-        alpha_markets = calculate_alpha_markets(praxos_archive)
-        
-        if not alpha_markets:
-            st.info("Calculating... No markets currently meet the 80%+ historical win rate threshold with sufficient volume.")
-        else:
-            found_alpha_match = False
-            if hasattr(st.session_state, 'grouped_fixtures'):
-                for g_n, m_ids in st.session_state.grouped_fixtures.items():
-                    f_ids_with_alpha = []
-                    display_data = {}
-                    
-                    for mid in m_ids:
-                        if mid in praxos_archive:
-                            res_text = praxos_archive[mid]["result"]
-                            alpha_lines = []
-                            tactical_analysis = ""
-                            
-                            for line in res_text.split('\n'):
-                                if line.startswith("Tactical Analysis:"):
-                                    tactical_analysis = line
-                                elif "| 🎯 Range:" in line and "]:" in line:
-                                    try:
-                                        m_name = line.split("]:")[0].replace("[", "").strip().lower()
-                                        max_odds = float(line.split("-")[1].strip())
-                                        
-                                        if max_odds >= 1.20 and m_name in alpha_markets:
-                                            wr = alpha_markets[m_name]
-                                            clean_range = line.split("|")[1].strip()
-                                            alpha_lines.append(f"🔥 **{m_name.upper()}** (Edge: {wr:.1f}%) ➔ {clean_range}")
-                                    except: pass
-                            
-                            if alpha_lines:
-                                f_ids_with_alpha.append(mid)
-                                display_data[mid] = {"analysis": tactical_analysis, "lines": alpha_lines}
-                    
-                    if f_ids_with_alpha:
-                        found_alpha_match = True
-                        st.markdown(f"#### {g_n}")
-                        for mid in f_ids_with_alpha:
-                            with st.expander(f"💎 {st.session_state.fixture_dict[mid]['display']}"):
-                                if display_data[mid]["analysis"]:
-                                    st.markdown(f"*{display_data[mid]['analysis']}*")
-                                    st.markdown("---")
-                                for l in display_data[mid]["lines"]:
-                                    st.success(l)
-            
-            if not found_alpha_match:
-                st.info("No matches on today's scanned board meet the Alpha criteria. Scan more matches on the Live Board.")
+<!-- ARCHITECTURE -->
+<div class="divider"></div>
+<section id="architecture">
+  <div class="sec-tag blue">The Architecture</div>
+  <h2 class="sec-h2">Eight layers. <em>Zero gaps.</em></h2>
+  <p class="sec-body">Defence-in-depth. Each layer enforces independently. Eight independent governors, any one of which stops a breach.</p>
+  <div class="layers">
+    <div class="layer"><span class="layer-num">01</span><span class="layer-name">SOD Floor</span><span class="layer-desc">&mdash; Hard daily loss limit. Breach = day locked.</span></div>
+    <div class="layer"><span class="layer-num">02</span><span class="layer-name">Ratchet</span><span class="layer-desc">&mdash; Automatic gain lock-in tiers.</span></div>
+    <div class="layer"><span class="layer-num">03</span><span class="layer-name">Trail Floor</span><span class="layer-desc">&mdash; Dynamic floor tracks HWM.</span></div>
+    <div class="layer"><span class="layer-num">04</span><span class="layer-name">Heat Cap</span><span class="layer-desc">&mdash; Aggregate portfolio risk limit.</span></div>
+    <div class="layer"><span class="layer-num">05</span><span class="layer-name">Session Sweep</span><span class="layer-desc">&mdash; 21:55 hard close. No overnight.</span></div>
+    <div class="layer"><span class="layer-num">06</span><span class="layer-name">News Filter</span><span class="layer-desc">&mdash; Calendar-driven entry blocking.</span></div>
+    <div class="layer"><span class="layer-num">07</span><span class="layer-name">Velocity Halt</span><span class="layer-desc">&mdash; Flash crash protection.</span></div>
+    <div class="layer guil"><span class="layer-num">08</span><span class="layer-name">Guillotine</span><span class="layer-desc">&mdash; No SL? Closed in milliseconds.</span></div>
+  </div>
 
-with tab_board:
-    st.markdown("### 1. PULL DAILY SLATE")
-    col1, col2 = st.columns([2, 1])
-    target_date = col1.date_input("Target Date", datetime.today())
-    pull_btn = col2.button("PULL SLATE", use_container_width=True)
-    
-    if pull_btn or not st.session_state.ignition_fired:
-        is_auto_launch = not st.session_state.ignition_fired and not pull_btn
-        current_unix = time.time()
-        
-        resp = requests.get(f"{base_url}/fixtures", headers=headers, params={"date": target_date.strftime("%Y-%m-%d")}).json()
-        matches = sorted(resp.get('response', []), key=lambda x: x['fixture']['timestamp'])
-        st.session_state.grouped_fixtures, st.session_state.fixture_dict = {}, {}
-        
-        for m in matches:
-            l_n_l = m['league']['name'].lower()
-            c_c = f"{m['league']['name']} {m['teams']['home']['name']} {m['teams']['away']['name']}".lower()
-            
-            if (any(k in c_c for k in QUARANTINE_YOUTH) and not any(a in c_c for a in ALLOWED_YOUTH)) or any(c in l_n_l for c in QUARANTINE_CUPS): continue
-            
-            if is_auto_launch and m['fixture']['timestamp'] < current_unix:
-                continue
-                
-            g_n = f"⏰ {(datetime.utcfromtimestamp(m['fixture']['timestamp']) + timedelta(hours=1)).strftime('%H:%M')} | 🏆 {m['league']['country']}: {m['league']['name']}"
-            d_n = f"{m['teams']['home']['name']} vs {m['teams']['away']['name']}"
-            m_id = str(m['fixture']['id'])
-            if g_n not in st.session_state.grouped_fixtures: st.session_state.grouped_fixtures[g_n] = []
-            st.session_state.grouped_fixtures[g_n].append(m_id)
-            st.session_state.fixture_dict[m_id] = {"h_name": m['teams']['home']['name'], "h_id": m['teams']['home']['id'], "a_name": m['teams']['away']['name'], "a_id": m['teams']['away']['id'], "league_id": str(m['league']['id']), "season": str(m['league']['season']), "display": d_n, "group": g_n, "search_string": f"{g_n} {d_n}".lower(), "match_date": m['fixture']['date'][:10]}
-        
-        st.session_state.ignition_fired = True
-        if not pull_btn: st.rerun()
+  <!-- INTERACTIVE: Equity Guillotine Chart -->
+  <div class="component-wrap">
+    <div class="comp-title">See it work</div>
+    <div class="eq-chart-box">
+      <div class="eq-toggle">
+        <button class="active" onclick="setChartMode(true)">With Shield</button>
+        <button onclick="setChartMode(false)">Without Shield</button>
+      </div>
+      <canvas id="eqCanvas" style="width:100%;height:240px"></canvas>
+      <div id="eqVerdict" style="font-size:12px;color:var(--sub);margin-top:16px;font-weight:600;min-height:20px"></div>
+    </div>
+  </div>
+</section>
 
-    st.markdown("### 2. THE LATTICE BOARD")
-    if st.session_state.grouped_fixtures:
-        pending = [m for m in st.session_state.fixture_dict.keys() if m not in praxos_archive]
-        if pending and st.button("⚡ AUTOSCAN FULL SLATE", type="primary", use_container_width=True):
-            p_bar = st.progress(0)
-            s_text = st.empty()
-            for i, m_id in enumerate(pending):
-                s_text.text(f"Scanning: {st.session_state.fixture_dict[m_id]['display']} ({i+1}/{len(pending)})")
-                execute_match_analysis(m_id, st.session_state.fixture_dict[m_id], st.session_state.fixture_dict[m_id]['group'])
-                p_bar.progress((i + 1) / len(pending))
-            st.rerun()
-            
-        TARGET_MARKETS = sorted([
-            "Under 3.5", "Over 1.5", "Over 2.5", "Home Handicap (+1.5)", "Away Handicap (+1.5)",
-            "Home Win to Nil (No)", "Away Win to Nil (No)", "Home or Away to win (12)",
-            "Home Over 0.5", "Away Over 0.5", "Win or Draw (1X)", "Win or Draw (X2)",
-            "Winning Team (Home)", "Winning Team (Away)", "Draw"
-        ])
-        
-        col_f1, col_f2 = st.columns([1, 1])
-        with col_f1:
-            s_f = st.text_input("🔍 Search Teams/Leagues", "").lower()
-        with col_f2:
-            m_filter = st.multiselect("🎯 Filter Scanned Targets", TARGET_MARKETS)
+<!-- RISK CALCULATOR -->
+<div class="divider"></div>
+<section>
+  <div class="sec-tag green">The Math</div>
+  <h2 class="sec-h2">The architecture of <em>discipline.</em></h2>
+  <p class="sec-body">Set your risk per trade. Shield calculates your entire defensive perimeter automatically.</p>
+  <div class="component-wrap">
+    <div class="calc-box">
+      <div class="calc-label">Risk Per Trade</div>
+      <div class="calc-val" id="riskVal">0.50%</div>
+      <div class="calc-slider-wrap">
+        <input type="range" class="calc-slider" id="riskSlider" min="10" max="150" value="50" oninput="updateCalc(this.value)">
+      </div>
+      <div class="calc-grid">
+        <div class="calc-cell"><div class="calc-cell-val" id="calcFloor" style="color:var(--red)">-1.50%</div><div class="calc-cell-lbl">SOD Floor</div></div>
+        <div class="calc-cell"><div class="calc-cell-val" id="calcHeat" style="color:var(--amber)">3.00%</div><div class="calc-cell-lbl">Heat Cap</div></div>
+        <div class="calc-cell"><div class="calc-cell-val" id="calcVel" style="color:var(--blue)">0.50%</div><div class="calc-cell-lbl">Velocity</div></div>
+      </div>
+      <div class="calc-sentence" id="calcSentence">At 0.50% risk per trade, Shield locks your account if you lose more than 1.50% in a day.</div>
+    </div>
+  </div>
+</section>
 
-        for g_n, m_ids in st.session_state.grouped_fixtures.items():
-            f_ids = []
-            for mid in m_ids:
-                if s_f and s_f not in st.session_state.fixture_dict[mid]["search_string"]:
-                    continue
-                if m_filter:
-                    if mid not in praxos_archive:
-                        continue 
-                    res_lower = praxos_archive[mid]["result"].lower()
-                    if not any(f"[{m.lower()}]" in res_lower for m in m_filter):
-                        continue
-                f_ids.append(mid)
+<!-- TELEGRAM -->
+<div class="divider"></div>
+<section id="telegram">
+  <div class="sec-tag green">Real-Time Alerts</div>
+  <h2 class="sec-h2">Shield talks to you where<br>you already <em>are.</em></h2>
+  <p class="sec-body">Every enforcement event, every threshold breach, every session sweep — pushed to Telegram in real time. No dashboard to check.</p>
+  <div class="tg-container">
+    <div class="tg-phone">
+      <div class="tg-header">
+        <div class="tg-avatar">S</div>
+        <div><div class="tg-name">Shield v2</div><div class="tg-status">bot &middot; online</div></div>
+      </div>
+      <div class="tg-msgs" id="tgMsgs"></div>
+    </div>
+    <div style="max-width:360px">
+      <div style="font-size:13px;color:var(--white);font-weight:700;margin-bottom:16px">Every event. Every device.</div>
+      <div style="font-size:12px;color:var(--sub);line-height:1.8;font-weight:500">
+        Floor armed. Guillotine fired. Session swept. Daily summary delivered. You don't open a dashboard — Shield comes to you.<br><br>
+        <strong style="color:var(--white)">Configure once.</strong> Token + Chat ID in the EA inputs. Shield handles the rest.
+      </div>
+    </div>
+  </div>
+</section>
 
-            if f_ids:
-                st.markdown(f"#### {g_n}")
-                for mid in f_ids:
-                    with st.expander(st.session_state.fixture_dict[mid]["display"]):
-                        if mid in praxos_archive: 
-                            st.code(praxos_archive[mid]["result"])
-                            # --- RESCAN PATCH ---
-                            if st.button("🔄 RESCAN MATRIX", key=f"rescan_{mid}"):
-                                execute_match_analysis(mid, st.session_state.fixture_dict[mid], g_n)
-                                st.rerun()
-                        elif st.button(f"⚡ RUN MATRIX", key=f"run_{mid}"):
-                            execute_match_analysis(mid, st.session_state.fixture_dict[mid], g_n)
-                            st.rerun()
+<!-- PROFILES -->
+<div class="divider"></div>
+<section>
+  <div class="sec-tag blue">Three Profiles</div>
+  <h2 class="sec-h2">Three profiles. <em>One mandate.</em></h2>
+  <p class="sec-body">Pick the profile that matches your account. All 8 enforcement layers are mandatory within each profile. No individual toggles.</p>
+  <div class="profiles-grid">
+    <div class="profile-card"><div class="profile-tag" style="color:var(--blue)">PROFILE 01</div><div class="profile-name">Prop Strict</div><div class="profile-desc">FTMO, FundedNext, day-trading challenges. Session close 21:55 UTC. The hardest configuration.</div></div>
+    <div class="profile-card"><div class="profile-tag" style="color:var(--green)">PROFILE 02</div><div class="profile-name">Swing</div><div class="profile-desc">Overnight holds allowed. Same enforcement, longer horizon. For firms that permit overnight.</div></div>
+    <div class="profile-card"><div class="profile-tag" style="color:var(--amber)">PROFILE 03</div><div class="profile-name">Personal</div><div class="profile-desc">Your own capital. Relaxed thresholds. No session sweep. Same layers, your risk tolerance.</div></div>
+  </div>
+</section>
 
-with tab_vault:
-    st.markdown("### 3. CLOUD VAULT")
-    col_arch1, col_arch2 = st.columns([1, 1])
-    with col_arch1:
-        if st.button("🔄 SYNC RESULTS", use_container_width=True):
-            with st.spinner("Harvesting & Grading..."):
-                updated = sync_match_results()
-                if updated:
-                    st.success("Matrix Synced & Graded.")
-                    time.sleep(1)
-                    st.rerun()
-                else:
-                    st.info("No new completed matches to grade.")
-    with col_arch2:
-        with st.expander("🗑️ WIPE VAULT"):
-            st.warning("⚠️ DANGER: This will permanently delete all historical data and reset your Alpha Predictor to zero.")
-            confirm_wipe = st.text_input("Type 'DELETE' to unlock wipe:", "")
-            if st.button("🚨 EXECUTE WIPE", type="primary", disabled=(confirm_wipe != "DELETE"), use_container_width=True):
-                try:
-                    supabase.table('praxos_vault').delete().neq('match_id', 'safelock_dummy').execute()
-                    st.success("Vault completely purged. Alpha reset.")
-                    time.sleep(2)
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Wipe failed: {e}")
-    
-    # ============================================================
-    # VAULT SORTING ENGINE
-    # ============================================================
-    archive_items = list(praxos_archive.items())
-    
-    def extract_vault_sort_keys(item):
-        mid, data = item
-        date_str = data.get('date', '1970-01-01')
-        group_str = data.get('group', '')
-        time_str = "00:00"
-        if "⏰" in group_str and "|" in group_str:
-            time_str = group_str.split('|')[0].replace('⏰', '').strip()
-        country_str = "zzz"
-        if "🏆" in group_str:
-            try: country_str = group_str.split('🏆')[1].split(':')[0].strip().lower()
-            except: pass
-        return date_str, time_str, country_str
-    
-    archive_items.sort(key=lambda x: extract_vault_sort_keys(x)[2])
-    archive_items.sort(key=lambda x: (extract_vault_sort_keys(x)[0], extract_vault_sort_keys(x)[1]), reverse=True)
-    
-    for mid, data in archive_items:
-        score_badge = ""
-        if "actual_score" in data:
-            score_badge = f" | ✅ FT: {data['actual_score']}"
-            if "hit_rate" in data:
-                color = "🟢" if data['hit_rate'] >= 75.0 else "🟠" if data['hit_rate'] >= 50.0 else "🔴"
-                score_badge += f" [{color} {data['hit_rate']}%]"
-                
-        with st.expander(f"🗓️ {data.get('date', 'N/A')} | {data.get('group', 'Unknown')} | {data.get('display', 'Unknown')}{score_badge}"): 
-            st.code(data.get('result', 'No result data found.'))
+<!-- PRICING -->
+<div class="divider"></div>
+<section id="pricing">
+  <div class="sec-tag blue">Pricing</div>
+  <h2 class="sec-h2">Less than one <em>bad decision.</em></h2>
+  <p class="sec-body">Per MT5 account. Portable license — switch brokers without emailing support.</p>
+  <div class="pricing-cards">
+    <div class="price-card">
+      <div class="price-tier">Monthly</div>
+      <div class="price-val">$100</div>
+      <div class="price-per">/ month / account</div>
+      <ul class="price-features">
+        <li>All 3 profiles</li>
+        <li>8 of 8 enforcement layers</li>
+        <li>Guillotine (Layer 8) active</li>
+        <li>Telegram push alerts</li>
+        <li>Cancel anytime</li>
+      </ul>
+      <button class="price-cta" onclick="openModal('monthly')">Subscribe Monthly &rarr;</button>
+    </div>
+    <div class="price-card featured">
+      <div class="price-badge">SAVE $200</div>
+      <div class="price-tier">Annual</div>
+      <div class="price-val">$1,000</div>
+      <div class="price-per">/ year / account</div>
+      <ul class="price-features">
+        <li>All 3 profiles</li>
+        <li>8 of 8 enforcement layers</li>
+        <li>Guillotine (Layer 8) active</li>
+        <li>Telegram push alerts</li>
+        <li>2 months free</li>
+      </ul>
+      <button class="price-cta" onclick="openModal('annual')">Subscribe Annual &rarr;</button>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<div class="divider"></div>
+<section id="faq">
+  <div class="sec-tag amber">FAQ</div>
+  <h2 class="sec-h2">Questions.</h2>
+  <div class="faq-list">
+    <div class="faq-item" onclick="this.classList.toggle('open')"><div class="faq-q">Does Shield place trades?</div><div class="faq-a">No. Shield has no signal engine, no strategy, no market prediction. It enforces your risk rules. You bring the strategy — Shield makes sure you follow it.</div></div>
+    <div class="faq-item" onclick="this.classList.toggle('open')"><div class="faq-q">What happens if the server goes down?</div><div class="faq-a">Shield is fail-safe, not fail-deadly. Network errors never disable protection. The EA continues enforcing all 8 layers locally for up to 24 hours without server contact. Your positions are never closed due to a network failure.</div></div>
+    <div class="faq-item" onclick="this.classList.toggle('open')"><div class="faq-q">Can I use Shield on multiple accounts?</div><div class="faq-a">One license per MT5 account. The license is portable — if you switch brokers or get a new account, just enter your existing key on the new terminal. No support ticket required.</div></div>
+    <div class="faq-item" onclick="this.classList.toggle('open')"><div class="faq-q">What is the Guillotine?</div><div class="faq-a">Layer 8. If you open a trade without a stop loss, or a trade that exceeds your risk cap, or a trade that would breach your heat cap — Shield closes it within milliseconds of entry. No negotiation.</div></div>
+    <div class="faq-item" onclick="this.classList.toggle('open')"><div class="faq-q">Will Shield close my trades on license issues?</div><div class="faq-a">Never. Shield only closes trades on legitimate risk breaches (floor, guillotine, session, velocity). If your license expires or is revoked, Shield detaches from the chart and leaves all open positions untouched. Your broker connection continues normally.</div></div>
+    <div class="faq-item" onclick="this.classList.toggle('open')"><div class="faq-q">How do I install Shield?</div><div class="faq-a">Drop the .ex5 file into your MT5 Experts folder. Attach to any chart. Enter your license key and Telegram credentials. Shield is live in under 60 seconds.</div></div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="final-cta">
+  <h2 class="final-h2">Stop <em>overriding</em><br>your own rules.</h2>
+  <p class="final-sub">You don't execute trades anymore. You define risk. Shield handles the rest.</p>
+  <a href="#" class="btn-main" onclick="openModal()" style="display:inline-flex">Deploy Shield &rarr;</a>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div>&copy; 2026 Brockway Trading &amp; Technical Analysis Limited.</div>
+  <div>
+    <a href="terms.html">Terms</a>
+    <a href="privacy.html">Privacy</a>
+    <a href="mailto:support@brockwayltd.com">Contact</a>
+  </div>
+</footer>
+
+<!-- CHECKOUT MODAL -->
+<div class="modal-overlay" id="checkoutModal">
+  <div class="modal-box">
+    <div class="modal-close" onclick="closeModal()">&times;</div>
+    <div class="modal-h">Shield Deployment</div>
+    <div class="modal-sub">Enter your details to proceed to checkout.</div>
+    <form id="checkoutForm">
+      <div class="modal-field"><label>Full Name</label><input type="text" id="nameField" required></div>
+      <div class="modal-field"><label>Email</label><input type="email" id="emailField" required></div>
+      <div class="modal-field"><label>Plan</label><select id="planField"><option value="monthly">Monthly — $100</option><option value="annual">Annual — $1,000 (Save $200)</option></select></div>
+      <input type="hidden" id="amountField" value="100">
+      <button type="submit" class="modal-submit" id="checkoutBtn">Proceed to Payment &rarr;</button>
+      <div class="modal-err" id="checkoutErr"></div>
+      <div class="modal-note">Secured by Korapay &middot; License key emailed on payment<br>Portable across MT5 accounts &middot; One active session per license</div>
+    </form>
+  </div>
+</div>
+
+<script>
+// ========== CHECKOUT ==========
+var WEBHOOK='https://hook.eu1.make.com/8n42wpvaheqzaqp1d8flhsueo2hs6641';
+function openModal(plan){
+  var m=document.getElementById('checkoutModal');
+  if(plan){document.getElementById('planField').value=plan;document.getElementById('amountField').value=plan==='annual'?'1000':'100'}
+  m.classList.add('active');document.body.style.overflow='hidden';
+}
+function closeModal(){document.getElementById('checkoutModal').classList.remove('active');document.body.style.overflow=''}
+document.getElementById('checkoutModal').addEventListener('click',function(e){if(e.target===this)closeModal()});
+document.getElementById('planField').addEventListener('change',function(){document.getElementById('amountField').value=this.value==='annual'?'1000':'100'});
+document.getElementById('checkoutForm').addEventListener('submit',function(e){
+  e.preventDefault();var btn=document.getElementById('checkoutBtn'),err=document.getElementById('checkoutErr');
+  btn.disabled=true;btn.textContent='ROUTING...';err.textContent='';
+  var payload={name:document.getElementById('nameField').value.trim(),email:document.getElementById('emailField').value.trim(),plan:document.getElementById('planField').value,amount:document.getElementById('amountField').value};
+  fetch(WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+  .then(function(r){return r.text()}).then(function(url){url=(url||'').trim();if(url.indexOf('http')===0){window.location.href=url}else{err.textContent='Routing error. Please try again.';btn.disabled=false;btn.textContent='PROCEED TO PAYMENT \u2192'}})
+  .catch(function(){err.textContent='Connection error. Please try again.';btn.disabled=false;btn.textContent='PROCEED TO PAYMENT \u2192'});
+});
+
+// ========== RISK CALCULATOR ==========
+function updateCalc(v){
+  var r=v/100;
+  document.getElementById('riskVal').textContent=r.toFixed(2)+'%';
+  document.getElementById('calcFloor').textContent='-'+(r*3).toFixed(2)+'%';
+  document.getElementById('calcHeat').textContent=(r*6).toFixed(2)+'%';
+  document.getElementById('calcVel').textContent=r.toFixed(2)+'%';
+  document.getElementById('calcSentence').textContent='At '+r.toFixed(2)+'% risk per trade, Shield locks your account if you lose more than '+(r*3).toFixed(2)+'% in a day.';
+}
+
+// ========== EQUITY CHART ==========
+var shieldOn=true;
+function setChartMode(on){
+  shieldOn=on;
+  document.querySelectorAll('.eq-toggle button').forEach(function(b,i){b.classList.toggle('active',on?(i===0):(i===1))});
+  drawChart();
+}
+function drawChart(){
+  var c=document.getElementById('eqCanvas'),ctx=c.getContext('2d');
+  c.width=c.offsetWidth*2;c.height=480;ctx.scale(2,2);
+  var w=c.offsetWidth,h=240;
+  ctx.clearRect(0,0,w,h);
+  // Generate equity curve
+  var pts=[],v=100,seed=42;
+  function rng(){seed=(seed*16807)%2147483647;return(seed-1)/2147483646}
+  for(var i=0;i<120;i++){v+=rng()*2-0.8;if(i>60&&!shieldOn)v-=rng()*1.5;pts.push(v)}
+  var floorVal=100*0.985; // -1.5% floor
+  var floorHit=-1;
+  if(shieldOn){for(var i=0;i<pts.length;i++){if(pts[i]<floorVal){floorHit=i;break}}}
+  var mn=Math.min.apply(null,pts)-2,mx=Math.max.apply(null,pts)+2;
+  if(!shieldOn)mn=Math.min(mn,pts[pts.length-1]-5);
+  function x(i){return(i/(pts.length-1))*w}
+  function y(v){return h-((v-mn)/(mx-mn))*h*0.85-h*0.05}
+  // Floor line
+  ctx.strokeStyle='rgba(255,59,59,0.3)';ctx.lineWidth=1;ctx.setLineDash([4,4]);
+  ctx.beginPath();ctx.moveTo(0,y(floorVal));ctx.lineTo(w,y(floorVal));ctx.stroke();ctx.setLineDash([]);
+  // Floor label
+  ctx.fillStyle='rgba(255,59,59,0.5)';ctx.font='600 9px JetBrains Mono';ctx.fillText('SOD FLOOR  -1.5%',8,y(floorVal)-6);
+  // Equity curve
+  var drawTo=shieldOn&&floorHit>0?floorHit:pts.length-1;
+  ctx.strokeStyle=shieldOn?'#0094FF':'#FF3B3B';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(x(0),y(pts[0]));
+  for(var i=1;i<=drawTo;i++)ctx.lineTo(x(i),y(pts[i]));
+  ctx.stroke();
+  if(shieldOn&&floorHit>0){
+    // Shield intervention marker
+    ctx.fillStyle='rgba(0,148,255,0.15)';ctx.fillRect(x(floorHit)-1,0,w-x(floorHit),h);
+    ctx.fillStyle='#0094FF';ctx.font='700 10px JetBrains Mono';
+    ctx.fillText('SHIELD: FLOOR HIT',x(floorHit)+8,y(pts[floorHit])-12);
+    ctx.fillText('Positions closed. Day locked.',x(floorHit)+8,y(pts[floorHit])+4);
+    // Flatline after
+    ctx.strokeStyle='rgba(0,148,255,0.4)';ctx.setLineDash([4,4]);ctx.beginPath();
+    ctx.moveTo(x(floorHit),y(pts[floorHit]));ctx.lineTo(w,y(pts[floorHit]));ctx.stroke();ctx.setLineDash([]);
+    document.getElementById('eqVerdict').innerHTML='<span style="color:var(--blue)">Shield stopped the bleeding at -1.5%.</span> The day is locked. No more damage.';
+  }else if(!shieldOn){
+    var finalP=((pts[pts.length-1]-100)/100*100).toFixed(1);
+    document.getElementById('eqVerdict').innerHTML='<span style="color:var(--red)">Without Shield, equity dropped to '+finalP+'%.</span> No floor. No intervention. One bad session.';
+  }else{
+    document.getElementById('eqVerdict').innerHTML='<span style="color:var(--blue)">Shield is monitoring. Floor armed at -1.5%.</span>';
+  }
+}
+window.addEventListener('load',drawChart);window.addEventListener('resize',drawChart);
+
+// ========== TELEGRAM MOCK ==========
+var tgMsgs=[
+  {bold:'[SHIELD v2] CLAIM OK',text:'Profile: PROP_STRICT\nAccount: 105921239\nAll 8 protection layers armed.'},
+  {bold:'[SHIELD v2] FLOOR ARMED',text:'SOD: $10,250.00\nFloor: -1.5% ($10,096.25)\nRisk/Trade: 0.50%'},
+  {bold:'[SHIELD v2] GUILLOTINE',text:'No stop loss — position closed at entry.\nSymbol: EURUSD\nSet SL before opening positions.'},
+  {bold:'[SHIELD v2] SESSION CLOSED 21:55',text:'P&L: +0.82%\nHWM: +1.24%\nAll positions swept.'},
+  {bold:'[SHIELD v2] DAILY SUMMARY',text:'Session #1 | Wins: 4 | Losses: 1\nPeak: +1.24% | Close: +0.82%\nFloor never breached. Clean day.'}
+];
+var tgIdx=0;
+function addTgMsg(){
+  if(tgIdx>=tgMsgs.length)return;
+  var m=tgMsgs[tgIdx++],el=document.createElement('div');el.className='tg-msg';
+  var t=m.text.replace(/\n/g,'<br>');
+  el.innerHTML='<span class="tg-bold">'+m.bold+'</span><br>'+t+'<span class="tg-time">'+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+'</span>';
+  document.getElementById('tgMsgs').appendChild(el);
+  el.scrollIntoView({behavior:'smooth',block:'end'});
+}
+var tgObs=new IntersectionObserver(function(e){
+  if(e[0].isIntersecting){tgObs.disconnect();addTgMsg();var iv=setInterval(function(){addTgMsg();if(tgIdx>=tgMsgs.length)clearInterval(iv)},2200)}
+},{threshold:0.3});
+window.addEventListener('load',function(){tgObs.observe(document.getElementById('tgMsgs'))});
+
+// ========== SMOOTH SCROLL ==========
+document.querySelectorAll('a[href^="#"]').forEach(function(a){
+  a.addEventListener('click',function(e){
+    var t=document.querySelector(this.getAttribute('href'));
+    if(t){e.preventDefault();t.scrollIntoView({behavior:'smooth'})}
+  });
+});
+</script>
+</body>
+</html>
+
