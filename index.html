@@ -692,6 +692,10 @@ with tab_board:
                     with st.expander(st.session_state.fixture_dict[mid]["display"]):
                         if mid in praxos_archive: 
                             st.code(praxos_archive[mid]["result"])
+                            # --- RESCAN PATCH ---
+                            if st.button("🔄 RESCAN MATRIX", key=f"rescan_{mid}"):
+                                execute_match_analysis(mid, st.session_state.fixture_dict[mid], g_n)
+                                st.rerun()
                         elif st.button(f"⚡ RUN MATRIX", key=f"run_{mid}"):
                             execute_match_analysis(mid, st.session_state.fixture_dict[mid], g_n)
                             st.rerun()
