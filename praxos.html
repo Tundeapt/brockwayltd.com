@@ -3,155 +3,357 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Praxos Apex | Terminal v2.6</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <title>Praxos Acca Builder</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap');
-    body { background:#03070b; color:#e2e8f0; font-family: 'JetBrains+Mono', monospace; }
-    .glass { background:rgba(10, 15, 20, 0.95); border:1px solid rgba(16, 185, 129, 0.2); }
-    .term-border { border-left: 4px solid #ef4444; } /* Red accent for Risk Mitigation */
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-thumb { background: #ef4444; border-radius: 4px; }
+    :root{
+      --bg:#050816;
+      --panel:#0c1124;
+      --panel2:#11172d;
+      --text:#eef2ff;
+      --muted:#9aa4c7;
+      --line:rgba(255,255,255,.10);
+      --accent:#ff4d57;
+      --good:#22c55e;
+      --warn:#f59e0b;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background:linear-gradient(180deg,#050816 0%,#070b18 100%);
+      color:var(--text);
+      font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
+    }
+    .wrap{max-width:980px;margin:0 auto;padding:20px}
+    .card{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:18px;
+      margin-bottom:16px;
+      box-shadow:0 10px 24px rgba(0,0,0,.18);
+    }
+    h1,h2,h3,p{margin:0 0 10px}
+    h1{font-size:26px}
+    h2{font-size:18px}
+    .muted{color:var(--muted)}
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    .col{flex:1 1 220px}
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    input, textarea, button, select{
+      width:100%;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:var(--panel2);
+      color:var(--text);
+      padding:12px 14px;
+      font:inherit;
+    }
+    textarea{min-height:180px;resize:vertical}
+    button{
+      cursor:pointer;
+      background:linear-gradient(180deg,#ff5a63 0%,#ff4d57 100%);
+      border:none;
+      font-weight:700;
+    }
+    button.secondary{
+      background:var(--panel2);
+      border:1px solid var(--line);
+      font-weight:600;
+    }
+    .pill{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:12px;
+      margin-right:8px;
+      border:1px solid var(--line);
+      background:var(--panel2);
+    }
+    .good{color:#86efac}
+    .warn{color:#fcd34d}
+    .ticket{
+      border:1px solid var(--line);
+      border-radius:16px;
+      overflow:hidden;
+    }
+    .ticket-head{
+      padding:14px 16px;
+      background:rgba(255,255,255,.03);
+      border-bottom:1px solid var(--line);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .ticket-item{
+      padding:16px;
+      border-bottom:1px solid var(--line);
+    }
+    .ticket-item:last-child{border-bottom:none}
+    .fixture{font-size:18px;font-weight:700;margin-bottom:6px}
+    .meta{font-size:13px;color:var(--muted);margin-bottom:8px}
+    .pick{font-size:16px;font-weight:700}
+    .empty{
+      padding:26px;
+      border:1px dashed var(--line);
+      border-radius:16px;
+      color:var(--muted);
+      text-align:center;
+    }
+    .small{font-size:12px}
+    .success{color:var(--good)}
   </style>
 </head>
-<body class="min-h-screen p-4 md:p-8">
-  <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
-    <div class="lg:col-span-4 space-y-6">
-      <header class="mb-8 border-b border-red-500/20 pb-4">
-        <h1 class="text-3xl font-black tracking-tighter text-white">PRAXOS <span class="text-red-500">APEX</span></h1>
-        <p class="text-[10px] text-red-500/70 uppercase tracking-[0.2em] mt-1">v2.6 [THREAT MATRIX ENABLED]</p>
-      </header>
-      <div class="glass rounded-xl p-5">
-        <input id="files" type="file" accept="image/*" multiple class="block w-full text-xs text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-red-500/10 file:text-red-500 cursor-pointer mb-6" />
-        <button id="runBtn" class="w-full py-4 rounded-lg bg-red-600 hover:bg-red-500 text-black font-black uppercase text-[12px] tracking-[0.2em] transition-all mb-4 shadow-[0_0_15px_rgba(239,68,68,0.3)]">Scan Lattice Threats</button>
-        <div class="h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden"><div id="progressBar" class="h-full bg-red-500 w-0 transition-all shadow-[0_0_10px_#ef4444]"></div></div>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Praxos Acca Builder</h1>
+      <p class="muted">Builds <strong>one accumulator slip at a time</strong> from Praxos data. No remaining-day grouping. It only returns the next slip with exactly the number of upcoming matches you choose.</p>
+    </div>
+
+    <div class="card">
+      <h2>1) Load Praxos data</h2>
+      <p class="muted small">Use either a JSON file export or paste JSON directly. Expected shape can be either:
+        <br>• <code>{ "fixture_dict": {...}, "archive": {...} }</code>
+        <br>• or <code>[{fixture,pick,time,league,grade,status,timestamp,...}]</code>
+      </p>
+      <div class="row">
+        <div class="col">
+          <label>Upload JSON</label>
+          <input id="fileInput" type="file" accept=".json,application/json">
+        </div>
+        <div class="col">
+          <label>Matches per ticket</label>
+          <input id="ticketSize" type="number" min="2" max="20" value="4">
+        </div>
+        <div class="col">
+          <label>Optional start-time filter</label>
+          <input id="timeFilter" type="text" placeholder="e.g. 06:00 or 15:">
+        </div>
+      </div>
+      <div style="height:12px"></div>
+      <label>Or paste Praxos JSON</label>
+      <textarea id="jsonInput" placeholder='Paste Praxos export here...'></textarea>
+      <div style="height:12px"></div>
+      <div class="row">
+        <div class="col"><button id="buildBtn">Build Ticket 1</button></div>
+        <div class="col"><button id="nextBtn" class="secondary">Next Ticket</button></div>
+        <div class="col"><button id="resetBtn" class="secondary">Reset Sequence</button></div>
       </div>
     </div>
-    <div class="lg:col-span-8 flex flex-col h-full">
-      <div class="glass rounded-xl p-6 flex flex-col h-full term-border relative">
-        <textarea id="terminal" readonly class="flex-grow w-full min-h-[550px] bg-transparent text-[13px] text-red-400 font-medium leading-relaxed resize-none" placeholder="AWAITING DATA TENSORS..."></textarea>
+
+    <div class="card">
+      <div class="ticket-head">
+        <div>
+          <h2 id="ticketTitle">Accumulator Slip</h2>
+          <div class="muted" id="ticketMeta">Waiting for data…</div>
+        </div>
+        <div>
+          <span class="pill" id="eligibleCount">Eligible: 0</span>
+          <span class="pill" id="cursorInfo">Cursor: 0</span>
+        </div>
       </div>
+      <div id="output" class="empty">Load Praxos data, choose ticket size, then build a slip.</div>
     </div>
   </div>
 
-<script>
-const els = { files: document.getElementById("files"), runBtn: document.getElementById("runBtn"), terminal: document.getElementById("terminal"), progressBar: document.getElementById("progressBar") };
+  <script>
+    let sourceRows = [];
+    let eligibleRows = [];
+    let cursor = 0;
 
-els.runBtn.onclick = async () => {
-  const files = [...els.files.files];
-  if (files.length !== 3) return alert("Upload exactly 3 images.");
-  els.terminal.value = ">> INITIALIZING V2.6 THREAT MATRIX...";
-  const texts = [];
-  for (let i = 0; i < files.length; i++) {
-    const res = await Tesseract.recognize(files[i], "eng");
-    texts.push(res.data.text.replace(/\r/g, "\n").trim());
-    els.progressBar.style.width = ((i+1)/3*100) + "%";
-  }
-  const sorted = autoSort(texts);
-  const h2h = extract(truncate(sorted.h2hText));
-  const home = extract(sorted.homeText);
-  const away = extract(sorted.awayText);
-  els.terminal.value = runLogic(sorted.homeName, sorted.awayName, h2h, home, away);
-};
+    const fileInput = document.getElementById('fileInput');
+    const jsonInput = document.getElementById('jsonInput');
+    const ticketSize = document.getElementById('ticketSize');
+    const timeFilter = document.getElementById('timeFilter');
+    const output = document.getElementById('output');
+    const ticketTitle = document.getElementById('ticketTitle');
+    const ticketMeta = document.getElementById('ticketMeta');
+    const eligibleCount = document.getElementById('eligibleCount');
+    const cursorInfo = document.getElementById('cursorInfo');
 
-function truncate(t) { return t.split(/\b(20\d{2})\b/).filter((c,i)=>i===0||parseInt(c)>=2023).join(" "); }
-function extract(t) { 
-  let r=[]; 
-  const lines = t.split("\n");
-  lines.forEach(l => {
-    let m = l.match(/(\d)\s*[-: ]\s*(\d)/);
-    if(m) r.push({h:parseInt(m[1]), a:parseInt(m[2]), t:parseInt(m[1])+parseInt(m[2])});
-  });
-  return r.slice(0,10);
-}
-
-function autoSort(texts) {
-  const blacklist = /SUMMARY|ODDS|H2H|NEWS|LINEUPS|STANDINGS|COMMENTARY|STATS|ADVERTISEMENT|RELOAD|FOOTBALL|PEN|ADCHOICES|MACHINESEEKER/;
-  let entityPool = [];
-  texts.forEach(t => {
-    t.split('\n').forEach(line => {
-      let clean = line.replace(/^[^\w\s]+/, "").replace(/[^a-zA-Z\s]/g, "").trim();
-      if(clean.length > 3 && !blacklist.test(clean.toUpperCase())) entityPool.push(clean.toUpperCase());
+    fileInput.addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const text = await file.text();
+      jsonInput.value = text;
     });
-  });
-  let counts = {}; entityPool.forEach(e => counts[e] = (counts[e] || 0) + 1);
-  let sorted = Object.keys(counts).sort((a,b) => counts[b] - counts[a]);
-  let tA = sorted[0] || "TEAM_A", tB = sorted[1] || "TEAM_B";
-  let h2hIdx = texts.findIndex(t => t.toUpperCase().includes(tA) && t.toUpperCase().includes(tB));
-  if(h2hIdx === -1) h2hIdx = 0;
-  let h2hText = texts[h2hIdx], rem = texts.filter((_,i)=>i!==h2hIdx);
-  let isAHome = rem[0].toUpperCase().includes(tA);
-  return (h2hText.toUpperCase().indexOf(tA) < h2hText.toUpperCase().indexOf(tB)) 
-    ? {h2hText, homeText:isAHome?rem[0]:rem[1], awayText:isAHome?rem[1]:rem[0], homeName:tA, awayName:tB}
-    : {h2hText, homeText:isAHome?rem[1]:rem[0], awayText:isAHome?rem[0]:rem[1], homeName:tB, awayName:tA};
-}
 
-function runLogic(hN, aN, h2h, home, away) {
-  if(h2h.length === 0) return ">> ERROR: DATA TENSOR FAILURE.";
-  
-  let h2hW = h2h.filter(r=>r.h>r.a).length;
-  let h2hL = h2h.filter(r=>r.a>r.h).length;
-  let draws = h2h.filter(r=>r.h===r.a).length / h2h.length;
-  let h2hAvg = h2h.reduce((s,r)=>s+r.t,0)/h2h.length;
-  
-  let hMacroG = home.length ? home.reduce((s,r)=>s+r.t,0)/home.length : 2.0;
-  let aMacroG = away.length ? away.reduce((s,r)=>s+r.t,0)/away.length : 2.0;
-  let macroAvg = (hMacroG + aMacroG) / 2;
+    function parseResultBlock(text, startKey, endKey){
+      try{
+        if(!text.includes(startKey)) return "";
+        return text.split(startKey)[1].split(endKey)[0];
+      }catch{
+        return "";
+      }
+    }
 
-  let awayIsBoogeyman = (h2hL > 0 && h2hW === 0);
-  let homeIsBoogeyman = (h2hW > 0 && h2hL === 0);
-  let burnout = (macroAvg >= 3.0 && h2hAvg >= 2.8);
-  let absoluteFriction = (h2hAvg <= 1.8);
-  let momentumOverride = (hMacroG >= 3.5 || aMacroG >= 3.5) && !absoluteFriction;
+    function parseLineValue(block, label){
+      const lines = block.split(/\r?\n/);
+      for(const line of lines){
+        if(line.includes(label)){
+          return line.split(label)[1].trim();
+        }
+      }
+      return "";
+    }
 
-  let threats = [];
-  
-  // Lean Logic
-  let leanLabel = "1X (Home) or X2 (Away)";
-  let leanConf = 75;
-  if (awayIsBoogeyman) {
-    leanLabel = `X2 (Away Protection) / Boogeyman Lock`;
-    leanConf = Math.min(99, Math.floor(82 + ((h2hL/h2h.length) * 10)));
-    threats.push(`🚨 BOOGEYMAN EXCEPTION: ${aN} holds absolute structural dominance.`);
-  } else if (homeIsBoogeyman) {
-    leanLabel = `1X (Home Protection) / Boogeyman Lock`;
-    leanConf = Math.min(99, Math.floor(82 + ((h2hW/h2h.length) * 10)));
-    threats.push(`🚨 BOOGEYMAN EXCEPTION: ${hN} holds absolute structural dominance.`);
-  } else if (draws >= 0.35) {
-    leanLabel = "Draw (X) Risk / Home 1X Protection";
-    leanConf = Math.min(99, Math.floor(78 + (draws * 15)));
-  } else {
-    leanLabel = (h2hW > h2hL) ? `${hN} Moneyline (1)` : `${aN} Moneyline (2)`;
-    leanConf = Math.min(99, Math.floor(75 + (Math.abs(h2hW - h2hL) * 5)));
-  }
+    function extractMarketRange(fullText, marketName){
+      if(!fullText || !marketName) return "";
+      const pattern = new RegExp("^\\[" + marketName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + "\\]:\\s*([\\d.]+)%\\s*\\|\\s*🎯\\s*Range:\\s*([\\d.]+)\\s*-\\s*([\\d.]+)\\s*$", "m");
+      const match = fullText.match(pattern);
+      if(!match) return "";
+      return `${match[1]}% | 🎯 Range: ${match[2]} - ${match[3]}`;
+    }
 
-  // Anchor Logic
-  let anchorLabel = "Under 3.5 Goals";
-  let anchorConf = 80;
-  if (absoluteFriction) {
-    anchorLabel = "Under 3.5 Goals / BTTS NO Risk";
-    anchorConf = 92;
-    threats.push(`🚨 ABSOLUTE FRICTION VETO: Derby lock detected. Momentum neutralized.`);
-  } else if (momentumOverride) {
-    anchorLabel = "Over 2.5 Goals / BTTS YES";
-    anchorConf = Math.min(99, Math.floor(80 + (Math.max(hMacroG, aMacroG) * 3)));
-    threats.push(`🚨 VELOCITY MOMENTUM OVERRIDE: Macro-velocity exceeds chaos threshold.`);
-  } else if (burnout) {
-    anchorLabel = "Under 3.5 Goals / BTTS NO";
-    anchorConf = 88;
-    threats.push(`🚨 LATTICE BURNOUT: Tactical regression is mathematically probable.`);
-  } else if (macroAvg <= 2.3) {
-    anchorLabel = "Under 3.5 Goals";
-    anchorConf = 85;
-    threats.push(`⚠️ STANDARD FRICTION: Defensive stabilization expected.`);
-  } else {
-    anchorLabel = macroAvg >= 2.6 ? "Over 1.5 Goals / Risk Over 2.5" : "Under 3.5 Goals";
-    if (threats.length === 0) threats.push(`✅ NODE STABILIZED: No extreme structural anomalies detected.`);
-  }
+    function leagueNameFromGroup(group){
+      if(!group) return "Unknown";
+      const idx = group.indexOf("🏆");
+      return idx >= 0 ? group.slice(idx + 2).trim() : group;
+    }
 
-  return `**NODE: ${hN} VS ${aN}**\n\n========================================\n>> THREAT MATRIX <<\n${threats.join('\n')}\n========================================\n\n>> PRIMARY STRUCTURAL ANCHOR <<\nTARGET: ${anchorLabel}\nCONFIDENCE: ${anchorConf}%\n\n========================================\n\n>> DIRECTIONAL LEAN (HIGH VARIANCE) <<\nTARGET: ${leanLabel}\nCONFIDENCE: ${leanConf}%`;
-}
-</script>
+    function normalizeFromMapPayload(payload){
+      const fixtureDict = payload.fixture_dict || {};
+      const archive = payload.archive || payload.praxos_archive || {};
+      const rows = [];
+
+      for(const [mid, data] of Object.entries(fixtureDict)){
+        const resultText = archive[mid]?.result || "";
+        const accaBlock = parseResultBlock(resultText, "Accumulator Pool:", "Correct Score Pool:");
+        const verdict = parseLineValue(accaBlock, "Verdict:");
+        const pick = parseLineValue(accaBlock, "Best Tip:");
+        if(!verdict || !/eligible/i.test(verdict) || /not/i.test(verdict)) continue;
+        if(!pick || /no accumulator pick|no bet/i.test(pick)) continue;
+
+        const gradeMatch = resultText.match(/Grade:\s*([A-Z]+)/i);
+        const time = data.fixture_time || ((data.group || "").split("|")[0] || "").replace("⏰", "").trim() || "--:--";
+        const ts = Number(data.fixture_timestamp || 0);
+        rows.push({
+          mid,
+          fixture: data.display || "Unknown Match",
+          league: leagueNameFromGroup(data.group || ""),
+          time,
+          timestamp: ts,
+          status: data.status_short || "",
+          pick,
+          oddsRange: extractMarketRange(resultText, pick),
+          grade: gradeMatch ? gradeMatch[1].toUpperCase() : "",
+        });
+      }
+      return rows;
+    }
+
+    function normalizeFromArrayPayload(payload){
+      return payload.map((row, idx) => ({
+        mid: row.mid || String(idx + 1),
+        fixture: row.fixture || row.display || "Unknown Match",
+        league: row.league || row.group || "Unknown",
+        time: row.time || row.fixture_time || "--:--",
+        timestamp: Number(row.timestamp || row.fixture_timestamp || 0),
+        status: row.status || row.status_short || "",
+        pick: row.pick || row.best_tip || "",
+        oddsRange: row.oddsRange || row.odds_range || "",
+        grade: (row.grade || "").toUpperCase(),
+      })).filter(r => r.pick);
+    }
+
+    function loadRows(){
+      const raw = jsonInput.value.trim();
+      if(!raw) throw new Error("No JSON provided.");
+      const payload = JSON.parse(raw);
+
+      if(Array.isArray(payload)){
+        sourceRows = normalizeFromArrayPayload(payload);
+      } else if(payload && typeof payload === "object"){
+        sourceRows = normalizeFromMapPayload(payload);
+      } else {
+        throw new Error("Unsupported JSON format.");
+      }
+    }
+
+    function filterEligible(){
+      const now = Date.now() / 1000;
+      const size = Math.max(2, Math.min(20, Number(ticketSize.value || 4)));
+      const tf = timeFilter.value.trim();
+
+      eligibleRows = sourceRows
+        .filter(r => r.pick)
+        .filter(r => !r.status || !["1H","2H","HT","LIVE","ET","BT","P","INT","FT"].includes(String(r.status).toUpperCase()))
+        .filter(r => !r.timestamp || r.timestamp >= now)
+        .filter(r => !tf || String(r.time).includes(tf))
+        .sort((a,b) => (a.timestamp || 0) - (b.timestamp || 0) || a.fixture.localeCompare(b.fixture));
+
+      eligibleCount.textContent = `Eligible: ${eligibleRows.length}`;
+      return size;
+    }
+
+    function renderTicket(startAt = 0){
+      const size = filterEligible();
+      cursor = startAt;
+      cursorInfo.textContent = `Cursor: ${cursor}`;
+
+      if(!eligibleRows.length){
+        output.className = "empty";
+        output.innerHTML = "No eligible upcoming accumulator rows were found.";
+        ticketTitle.textContent = "Accumulator Slip";
+        ticketMeta.textContent = "Nothing matched the current filters.";
+        return;
+      }
+
+      const ticket = eligibleRows.slice(cursor, cursor + size);
+      if(!ticket.length){
+        output.className = "empty";
+        output.innerHTML = "No more slips remain for the current filtered set.";
+        ticketTitle.textContent = "Accumulator Slip";
+        ticketMeta.textContent = "Reached the end of the eligible list.";
+        return;
+      }
+
+      output.className = "ticket";
+      ticketTitle.textContent = `Accumulator Slip ${Math.floor(cursor / size) + 1}`;
+      ticketMeta.textContent = `Exactly ${ticket.length} upcoming match(es). No remaining-day grouping.`;
+
+      output.innerHTML = ticket.map((row, i) => `
+        <div class="ticket-item">
+          <div class="fixture">${i + 1}. ${row.fixture}</div>
+          <div class="meta">${row.time} • ${row.league}</div>
+          <div class="pick">Pick: ${row.pick}</div>
+          ${row.grade ? `<div class="meta success">Grade: ${row.grade}</div>` : ``}
+          ${row.oddsRange ? `<div class="meta">Odds guide: ${row.oddsRange}</div>` : ``}
+        </div>
+      `).join("");
+    }
+
+    document.getElementById('buildBtn').addEventListener('click', () => {
+      try{
+        loadRows();
+        renderTicket(0);
+      }catch(err){
+        output.className = "empty";
+        output.innerHTML = err.message;
+      }
+    });
+
+    document.getElementById('nextBtn').addEventListener('click', () => {
+      try{
+        if(!sourceRows.length) loadRows();
+        const size = Math.max(2, Math.min(20, Number(ticketSize.value || 4)));
+        renderTicket(cursor + size);
+      }catch(err){
+        output.className = "empty";
+        output.innerHTML = err.message;
+      }
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      cursor = 0;
+      cursorInfo.textContent = "Cursor: 0";
+      output.className = "empty";
+      output.innerHTML = "Sequence reset. Build Ticket 1 again.";
+      ticketTitle.textContent = "Accumulator Slip";
+      ticketMeta.textContent = "Waiting for build.";
+    });
+  </script>
 </body>
 </html>
