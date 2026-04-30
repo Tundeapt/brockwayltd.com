@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Praxos Quantitative Board Simulator</title>
+    <title>Quantitative Match Simulator</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -23,7 +23,7 @@
         h1 { text-align: center; color: #38bdf8; border-bottom: 1px solid #334155; padding-bottom: 15px; }
         .controls {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 20px;
             margin-bottom: 30px;
             background: #0f172a;
@@ -31,9 +31,25 @@
             border-radius: 8px;
         }
         .control-group { display: flex; flex-direction: column; }
-        label { font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #94a3b8; }
-        input[type=range] { width: 100%; cursor: pointer; }
-        .val-display { font-size: 18px; font-weight: bold; color: #e2e8f0; margin-top: 5px;}
+        label { font-size: 13px; font-weight: 600; margin-bottom: 4px; color: #94a3b8; }
+        .sub-label { font-size: 11px; color: #64748b; margin-bottom: 8px; font-style: italic; }
+        
+        input[type=number] { 
+            width: 100%; 
+            padding: 10px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: #f8fafc;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            box-sizing: border-box;
+        }
+        input[type=number]:focus {
+            outline: none;
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+        }
         
         .dashboard-header {
             display: flex;
@@ -79,33 +95,33 @@
 <body>
 
 <div class="container">
-    <h1>🧬 PRAXOS QUANTITATIVE SIMULATOR</h1>
+    <h1>🧬 QUANTITATIVE MATCH SIMULATOR</h1>
     
     <div class="controls">
         <div class="control-group">
             <label>League Goal Velocity</label>
-            <input type="range" id="league_avg" min="1.0" max="2.0" step="0.01" value="1.4">
-            <span class="val-display" id="val_league_avg">1.40</span>
+            <div class="sub-label">Base average per team</div>
+            <input type="number" id="league_avg" min="0.5" max="3.0" step="0.05" value="1.40">
         </div>
         <div class="control-group">
-            <label>Home Attack (h_atk)</label>
-            <input type="range" id="h_atk" min="0.5" max="2.5" step="0.01" value="1.1">
-            <span class="val-display" id="val_h_atk">1.10</span>
+            <label>Home Avg Scored</label>
+            <div class="sub-label">Higher = Lethal Attack</div>
+            <input type="number" id="h_scored" min="0.1" max="4.0" step="0.05" value="1.10">
         </div>
         <div class="control-group">
-            <label>Away Defense (a_def)</label>
-            <input type="range" id="a_def" min="0.5" max="2.5" step="0.01" value="1.4">
-            <span class="val-display" id="val_a_def">1.40</span>
+            <label>Away Avg Conceded</label>
+            <div class="sub-label">Lower = Elite Defense</div>
+            <input type="number" id="a_conceded" min="0.1" max="4.0" step="0.05" value="1.40">
         </div>
         <div class="control-group">
-            <label>Away Attack (a_atk)</label>
-            <input type="range" id="a_atk" min="0.5" max="2.5" step="0.01" value="1.2">
-            <span class="val-display" id="val_a_atk">1.20</span>
+            <label>Away Avg Scored</label>
+            <div class="sub-label">Higher = Lethal Attack</div>
+            <input type="number" id="a_scored" min="0.1" max="4.0" step="0.05" value="1.20">
         </div>
         <div class="control-group">
-            <label>Home Defense (h_def)</label>
-            <input type="range" id="h_def" min="0.5" max="2.5" step="0.01" value="0.8">
-            <span class="val-display" id="val_h_def">0.80</span>
+            <label>Home Avg Conceded</label>
+            <div class="sub-label">Lower = Elite Defense</div>
+            <input type="number" id="h_conceded" min="0.1" max="4.0" step="0.05" value="0.80">
         </div>
     </div>
 
@@ -134,28 +150,26 @@
     }
 
     // 2. DOM Elements
-    const inputs = ['league_avg', 'h_atk', 'a_def', 'a_atk', 'h_def'];
+    const inputs = ['league_avg', 'h_scored', 'a_conceded', 'a_scored', 'h_conceded'];
     const resultsContainer = document.getElementById('results_container');
 
     // Attach listeners
     inputs.forEach(id => {
-        document.getElementById(id).addEventListener('input', (e) => {
-            document.getElementById(`val_${id}`).innerText = parseFloat(e.target.value).toFixed(2);
-            calculateEngine();
-        });
+        document.getElementById(id).addEventListener('input', calculateEngine);
     });
 
-    // 3. The Core Praxos Engine
+    // 3. The Core Quantitative Engine
     function calculateEngine() {
-        const v = parseFloat(document.getElementById('league_avg').value);
-        const ha = parseFloat(document.getElementById('h_atk').value);
-        const ad = parseFloat(document.getElementById('a_def').value);
-        const aa = parseFloat(document.getElementById('a_atk').value);
-        const hd = parseFloat(document.getElementById('h_def').value);
+        // Prevent empty inputs from breaking the math
+        const v = parseFloat(document.getElementById('league_avg').value) || 0;
+        const h_s = parseFloat(document.getElementById('h_scored').value) || 0;
+        const a_c = parseFloat(document.getElementById('a_conceded').value) || 0;
+        const a_s = parseFloat(document.getElementById('a_scored').value) || 0;
+        const h_c = parseFloat(document.getElementById('h_conceded').value) || 0;
 
         // Expected Goals (Lambdas)
-        const lambda_h = ha * ad * v;
-        const lambda_a = aa * hd * v;
+        const lambda_h = h_s * a_c * v;
+        const lambda_a = a_s * h_c * v;
 
         document.getElementById('home_xg').innerText = lambda_h.toFixed(2);
         document.getElementById('away_xg').innerText = lambda_a.toFixed(2);
@@ -173,7 +187,7 @@
             for(let j=0; j<=7; j++) {
                 let prob = poisson(i, lambda_h) * poisson(j, lambda_a);
                 
-                // Compass
+                // Compass Mode Capture
                 if(prob > best_score_prob) {
                     best_score_prob = prob;
                     best_score = `${i}-${j}`;
@@ -234,7 +248,7 @@
         // Sort Highest to Lowest
         markets.sort((a, b) => b.pct - a.pct);
 
-        // Render
+        // Render Bars
         resultsContainer.innerHTML = '';
         markets.forEach(m => {
             let color = m.pct >= 75 ? 'linear-gradient(90deg, #059669, #10b981)' : 
