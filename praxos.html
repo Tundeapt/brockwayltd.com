@@ -267,6 +267,16 @@
     letter-spacing: 0.06em;
     font-size: 12px;
     color: var(--ink);
+    white-space: pre-line;
+    line-height: 1.7;
+  }
+  td.market .tip-line {
+    display: block;
+  }
+  td.market .tip-line + .tip-line {
+    margin-top: 4px;
+    padding-top: 4px;
+    border-top: 1px dashed var(--line);
   }
   td.date {
     color: var(--ink-mute);
@@ -356,6 +366,13 @@
 
 <section class="controls">
   <div class="ctl">
+    <label for="view">View</label>
+    <select id="view">
+      <option value="delta_theory_proven">Delta · Theory Proven (Apex)</option>
+      <option value="praxos_regime_proven">Praxos · Regime Proven</option>
+    </select>
+  </div>
+  <div class="ctl">
     <label for="date">Match Date</label>
     <input type="date" id="date" />
   </div>
@@ -401,9 +418,10 @@
   /* ===== Supabase config (read-only, anon key) ===== */
   const SUPABASE_URL = "https://bgymxvpjssnexztpkbfc.supabase.co";
   const SUPABASE_KEY = "sb_publishable_4IhlE7C-URixujv1yvUbhw_7mRmPQdp";
-  const VIEW = "delta_theory_proven";
+  /* View is selected by user from the dropdown */
 
   /* ===== Elements ===== */
+  const $view     = document.getElementById('view');
   const $date     = document.getElementById('date');
   const $kickoff  = document.getElementById('kickoff');
   const $sort     = document.getElementById('sort');
@@ -469,6 +487,13 @@
 
     const fixtures = new Set(rows.map(r => r.fixture));
 
+    /* Market cell renderer — splits newlines into stacked tip-lines */
+    function renderMarket(m) {
+      if (!m) return '';
+      const lines = String(m).split(/\r?\n/).filter(Boolean);
+      return lines.map(l => `<span class="tip-line">${esc(l)}</span>`).join('');
+    }
+
     const html = `
       <div class="tbl-wrap">
         <table>
@@ -488,19 +513,25 @@
                 <td class="kickoff">${esc(r.kickoff || '—')}</td>
                 <td class="fixture">${esc(r.fixture || '')}</td>
                 <td class="competition">${esc(cleanCompetition(r.competition))}</td>
-                <td class="market">${esc(r.market || '')}</td>
+                <td class="market">${renderMarket(r.market)}</td>
               </tr>`).join('')}
           </tbody>
         </table>
       </div>
     `;
     $result.innerHTML = html;
+    /* Count fixtures and total individual tips inside the multi-line markets */
+    const totalTips = rows.reduce((acc, r) => {
+      if (!r.market) return acc;
+      return acc + String(r.market).split(/\r?\n/).filter(Boolean).length;
+    }, 0);
     $statFx.textContent = fixtures.size;
-    $statTip.textContent = rows.length;
+    $statTip.textContent = totalTips;
   }
 
   /* Fetch */
   async function loadFixtures() {
+    const view = $view.value;
     const date = $date.value;
     const kickoffFrom = $kickoff.value || '00:00';
 
@@ -510,19 +541,19 @@
     }
 
     $load.disabled = true;
-    $status.innerHTML = `<span class="loader"></span> Querying`;
+    $status.innerHTML = `<span class="loader"></span> Querying ${view}`;
     $result.innerHTML = `
       <div class="state">
         <div class="big"><span class="loader"></span> Fetching ${date}</div>
-        <div class="sm">delta_theory_proven · view</div>
+        <div class="sm">${view} · view</div>
       </div>`;
     $statFx.textContent = '—';
     $statTip.textContent = '—';
 
-    /* Only the columns asked for */
+    /* Only the columns surfaced by the dashboard */
     const cols = 'match_date,kickoff,fixture,competition,market';
     const url =
-      `${SUPABASE_URL}/rest/v1/${VIEW}` +
+      `${SUPABASE_URL}/rest/v1/${view}` +
       `?select=${encodeURIComponent(cols)}` +
       `&match_date=eq.${encodeURIComponent(date)}` +
       `&kickoff=gte.${encodeURIComponent(kickoffFrom)}` +
@@ -542,7 +573,7 @@
       }
       const rows = await res.json();
       render(rows);
-      $status.textContent = `OK · ${rows.length} rows · ${new Date().toLocaleTimeString('en-GB')}`;
+      $status.textContent = `${view} · ${rows.length} rows · ${new Date().toLocaleTimeString('en-GB')}`;
     } catch (err) {
       $result.innerHTML = `<div class="err">Query failed: ${esc(err.message || String(err))}</div>`;
       $status.textContent = `Error`;
@@ -552,6 +583,7 @@
   }
 
   $load.addEventListener('click', loadFixtures);
+  $view.addEventListener('change', loadFixtures);
   $date.addEventListener('change', loadFixtures);
   $kickoff.addEventListener('change', loadFixtures);
   $sort.addEventListener('change', () => {
