@@ -254,39 +254,28 @@ $form.addEventListener('submit', async (e) => {
       const { data, error } = await sb.auth.signUp({
         email,
         password,
-        options: { data: { full_name: fullName || null } }
+        options: {
+          data: { full_name: fullName || null },
+          emailRedirectTo: `${location.origin}/signin`
+        }
       });
       if (error) throw error;
 
-      // Create row in praxos_users
-      if (data.user) {
-        const { error: insErr } = await sb.from('praxos_users').upsert({
-          clerk_id:   data.user.id,
-          email:      email,
-          full_name:  fullName || null,
-          sub_status: 'inactive'
-        }, { onConflict: 'clerk_id' });
-        if (insErr) console.warn('praxos_users upsert error:', insErr);
-      }
+      // Note: praxos_users row is created automatically by a DB trigger
+      // when the auth.users row is inserted. No client-side insert needed.
 
       if (data.session) {
+        // Email confirmation off — user is signed in immediately
         location.href = '/subscribe';
       } else {
-        showAlert('ok', 'Account created. Check your email to confirm, then sign in.');
+        // Email confirmation on — show check-email message
+        showAlert('ok', `Account created. Check ${email} to confirm your email, then come back and sign in.`);
         $submit.disabled = false;
         $submit.textContent = original;
       }
     } else {
       const { data, error } = await sb.auth.signInWithPassword({ email, password });
       if (error) throw error;
-
-      // Ensure row exists (idempotent)
-      if (data.user) {
-        await sb.from('praxos_users').upsert({
-          clerk_id: data.user.id,
-          email:    data.user.email,
-        }, { onConflict: 'clerk_id', ignoreDuplicates: true });
-      }
 
       // Route by subscription state
       const { data: row } = await sb
