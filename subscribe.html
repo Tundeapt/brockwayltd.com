@@ -204,9 +204,10 @@ $pay.addEventListener('click', () => {
     },
     onSuccess: async (data) => {
       showAlert('ok', '<span class="loader"></span>Payment received. Activating your access…');
-      // Poll for webhook activation (typically <5s)
+      // Poll for webhook activation. Korapay webhook usually fires in 2-10s
+      // but the upsert path means even orphan payments will activate eventually.
       let tries = 0;
-      const maxTries = 12; // ~24s total
+      const maxTries = 30; // ~60s total
       const poll = setInterval(async () => {
         tries++;
         const { data: row } = await sb
@@ -220,8 +221,19 @@ $pay.addEventListener('click', () => {
           setTimeout(() => location.href = '/praxos', 800);
         } else if (tries >= maxTries) {
           clearInterval(poll);
-          showAlert('info', 'Payment recorded but activation is delayed. Refresh in a minute or contact support@brockwayltd.com.');
-          $pay.disabled = false;
+          // One last fallback: try to find a row keyed by email (in case webhook upserted under email)
+          const { data: byEmail } = await sb
+            .from('praxos_user_status')
+            .select('is_active, clerk_id')
+            .eq('email', user.email)
+            .maybeSingle();
+          if (byEmail && byEmail.is_active) {
+            showAlert('ok', 'Activated. Redirecting…');
+            setTimeout(() => location.href = '/praxos', 800);
+          } else {
+            showAlert('info', `Payment confirmed but activation is delayed.<br>Wait 1 minute and refresh this page, or email support@brockwayltd.com with your reference: <b>${data.reference || 'unknown'}</b>`);
+            $pay.disabled = false;
+          }
         }
       }, 2000);
     },
