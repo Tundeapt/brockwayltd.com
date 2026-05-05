@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Praxos · Sign in</title>
+<meta name="robots" content="noindex,nofollow" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,700;9..144,900&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg:#0b0d10;--bg-soft:#11151a;--panel:#141a21;--line:#232c36;--line-2:#2c3744;
+    --ink:#e8ecf1;--ink-dim:#8a96a4;--ink-mute:#5b6776;--amber:#ffb000;--green:#2cd075;--red:#ff4d54;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin:0;padding:0;background:var(--bg);color:var(--ink);
+    font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:13px;line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  body {
+    background-image:
+      radial-gradient(1200px 600px at 80% -10%, rgba(255,176,0,0.06), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(78,161,255,0.04), transparent 60%);
+    display:flex;flex-direction:column;
+  }
+  body::before {
+    content:'';position:fixed;inset:0;pointer-events:none;
+    background-image:repeating-linear-gradient(0deg,rgba(255,255,255,0.012) 0 1px,transparent 1px 3px);
+    z-index:1;
+  }
+
+  header {
+    position:relative;z-index:2;
+    padding:24px 36px;
+    border-bottom:1px solid var(--line);
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .brand {
+    font-family:'Fraunces',Georgia,serif;font-weight:900;font-size:24px;
+    letter-spacing:-0.02em;color:var(--ink);text-decoration:none;
+  }
+  .brand em { font-style:italic; color: var(--amber); }
+  header .back {
+    font-size:11px;letter-spacing:0.16em;text-transform:uppercase;
+    color:var(--ink-dim);text-decoration:none;
+  }
+  header .back:hover { color: var(--amber); }
+
+  main {
+    position:relative;z-index:2;flex:1;
+    display:flex;align-items:center;justify-content:center;padding:40px 24px;
+  }
+  .card {
+    width:100%;max-width:420px;
+    background:var(--panel);border:1px solid var(--line);
+    padding:38px 34px;
+  }
+  h1 {
+    font-family:'Fraunces',serif;font-weight:500;font-style:italic;
+    font-size:28px;line-height:1.2;letter-spacing:-0.01em;
+    margin:0 0 8px;
+  }
+  h1 em { color: var(--amber); font-style: italic; }
+  .subtitle {
+    color:var(--ink-dim);font-size:12px;margin-bottom:28px;
+  }
+  .tab-row {
+    display:flex;gap:0;margin-bottom:24px;border-bottom:1px solid var(--line);
+  }
+  .tab {
+    flex:1;padding:11px 0;background:none;border:none;cursor:pointer;
+    font-family:inherit;font-size:11px;letter-spacing:0.16em;text-transform:uppercase;
+    color:var(--ink-mute);border-bottom:2px solid transparent;transition:0.15s;
+  }
+  .tab.active { color:var(--ink); border-bottom-color: var(--amber); }
+  .tab:hover { color: var(--ink); }
+
+  .field { margin-bottom:16px; }
+  .field label {
+    display:block;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;
+    color:var(--ink-mute);margin-bottom:6px;
+  }
+  .field input {
+    width:100%;background:var(--bg-soft);border:1px solid var(--line-2);
+    color:var(--ink);font-family:inherit;font-size:13px;
+    padding:11px 14px;outline:none;
+  }
+  .field input:focus { border-color: var(--amber); }
+
+  .submit {
+    width:100%;background:var(--amber);color:#1a1306;
+    border:none;font-family:inherit;font-weight:700;font-size:12px;
+    letter-spacing:0.12em;text-transform:uppercase;padding:13px 0;cursor:pointer;
+    margin-top:6px;transition:background 0.12s;
+  }
+  .submit:hover { background:#ffc333; }
+  .submit:disabled { opacity:0.55; cursor:wait; }
+
+  .hint {
+    margin-top:18px;font-size:11px;color:var(--ink-mute);text-align:center;
+    letter-spacing:0.04em;
+  }
+  .hint a { color: var(--amber); text-decoration:none; }
+
+  .alert {
+    margin-top:14px;padding:12px 14px;font-size:12px;line-height:1.5;border:1px solid;
+  }
+  .alert.ok    { color:var(--green); border-color:#1f4a2c; background:#0d1f14; }
+  .alert.err   { color:var(--red);   border-color:#4a1f24; background:#1f0c0f; }
+
+  .loader {
+    display:inline-block;width:12px;height:12px;
+    border:2px solid #3a2d0d;border-top-color:#1a1306;border-radius:50%;
+    animation:spin 0.8s linear infinite;vertical-align:middle;margin-right:8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  footer {
+    position:relative;z-index:2;
+    padding:18px 36px;border-top:1px solid var(--line);
+    color:var(--ink-mute);font-size:10px;
+    letter-spacing:0.16em;text-transform:uppercase;text-align:center;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="/" class="brand">Pra<em>x</em>os</a>
+  <a href="/" class="back">← Back</a>
+</header>
+
+<main>
+  <div class="card">
+    <h1 id="title">Welcome <em>back</em>.</h1>
+    <div class="subtitle" id="subtitle">Sign in to access the terminal.</div>
+
+    <div class="tab-row">
+      <button class="tab active" id="tab-signin" type="button">Sign in</button>
+      <button class="tab"        id="tab-signup" type="button">Sign up</button>
+    </div>
+
+    <form id="auth-form">
+      <div class="field" id="name-field" style="display:none">
+        <label for="full_name">Full name</label>
+        <input type="text" id="full_name" autocomplete="name" />
+      </div>
+      <div class="field">
+        <label for="email">Email</label>
+        <input type="email" id="email" autocomplete="email" required />
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" id="password" autocomplete="current-password" required minlength="8" />
+      </div>
+      <button class="submit" type="submit" id="submit-btn">Sign in</button>
+    </form>
+
+    <div id="alert"></div>
+    <div class="hint" id="hint">No account yet? Click "Sign up" above.</div>
+  </div>
+</main>
+
+<footer>Praxos · A Brockway product</footer>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+const SUPABASE_URL = "https://bgymxvpjssnexztpkbfc.supabase.co";
+const SUPABASE_KEY = "sb_publishable_4IhlE7C-URixujv1yvUbhw_7mRmPQdp";
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const $title    = document.getElementById('title');
+const $subtitle = document.getElementById('subtitle');
+const $tabIn    = document.getElementById('tab-signin');
+const $tabUp    = document.getElementById('tab-signup');
+const $nameField= document.getElementById('name-field');
+const $name     = document.getElementById('full_name');
+const $email    = document.getElementById('email');
+const $password = document.getElementById('password');
+const $submit   = document.getElementById('submit-btn');
+const $alert    = document.getElementById('alert');
+const $hint     = document.getElementById('hint');
+const $form     = document.getElementById('auth-form');
+
+let mode = 'signin';
+
+function setMode(m) {
+  mode = m;
+  if (m === 'signin') {
+    $title.innerHTML = 'Welcome <em>back</em>.';
+    $subtitle.textContent = 'Sign in to access the terminal.';
+    $tabIn.classList.add('active');
+    $tabUp.classList.remove('active');
+    $nameField.style.display = 'none';
+    $submit.textContent = 'Sign in';
+    $password.autocomplete = 'current-password';
+    $hint.innerHTML = 'No account yet? Click "Sign up" above.';
+  } else {
+    $title.innerHTML = 'Get <em>access</em>.';
+    $subtitle.textContent = 'Create your account to subscribe.';
+    $tabUp.classList.add('active');
+    $tabIn.classList.remove('active');
+    $nameField.style.display = 'block';
+    $submit.textContent = 'Create account';
+    $password.autocomplete = 'new-password';
+    $hint.innerHTML = 'Already have an account? Click "Sign in" above.';
+  }
+  $alert.innerHTML = '';
+}
+
+$tabIn.addEventListener('click', () => setMode('signin'));
+$tabUp.addEventListener('click', () => setMode('signup'));
+
+function showAlert(type, msg) {
+  $alert.innerHTML = `<div class="alert ${type}">${msg}</div>`;
+}
+
+// If user is already signed in, route them
+async function routeAuthenticated() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return;
+  const { data: row } = await sb
+    .from('praxos_user_status')
+    .select('is_active, days_remaining')
+    .eq('clerk_id', session.user.id)
+    .maybeSingle();
+  if (row && row.is_active) {
+    location.href = '/praxos';
+  } else {
+    location.href = '/subscribe';
+  }
+}
+routeAuthenticated();
+
+$form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  $submit.disabled = true;
+  $alert.innerHTML = '';
+  const original = $submit.textContent;
+  $submit.innerHTML = `<span class="loader"></span>${mode === 'signin' ? 'Signing in…' : 'Creating account…'}`;
+
+  const email = $email.value.trim();
+  const password = $password.value;
+  const fullName = $name.value.trim();
+
+  try {
+    if (mode === 'signup') {
+      const { data, error } = await sb.auth.signUp({
+        email,
+        password,
+        options: { data: { full_name: fullName || null } }
+      });
+      if (error) throw error;
+
+      // Create row in praxos_users
+      if (data.user) {
+        const { error: insErr } = await sb.from('praxos_users').upsert({
+          clerk_id:   data.user.id,
+          email:      email,
+          full_name:  fullName || null,
+          sub_status: 'inactive'
+        }, { onConflict: 'clerk_id' });
+        if (insErr) console.warn('praxos_users upsert error:', insErr);
+      }
+
+      if (data.session) {
+        location.href = '/subscribe';
+      } else {
+        showAlert('ok', 'Account created. Check your email to confirm, then sign in.');
+        $submit.disabled = false;
+        $submit.textContent = original;
+      }
+    } else {
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+
+      // Ensure row exists (idempotent)
+      if (data.user) {
+        await sb.from('praxos_users').upsert({
+          clerk_id: data.user.id,
+          email:    data.user.email,
+        }, { onConflict: 'clerk_id', ignoreDuplicates: true });
+      }
+
+      // Route by subscription state
+      const { data: row } = await sb
+        .from('praxos_user_status')
+        .select('is_active')
+        .eq('clerk_id', data.user.id)
+        .maybeSingle();
+      location.href = (row && row.is_active) ? '/praxos' : '/subscribe';
+    }
+  } catch (err) {
+    showAlert('err', err.message || 'Something went wrong. Try again.');
+    $submit.disabled = false;
+    $submit.textContent = original;
+  }
+});
+</script>
+
+</body>
+</html>
