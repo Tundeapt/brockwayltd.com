@@ -8,421 +8,111 @@
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,700;9..144,900&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,700;9..144,900&display=swap" rel="stylesheet" />
 <style>
   :root {
-    --bg:        #0b0d10;
-    --bg-soft:   #11151a;
-    --panel:     #141a21;
-    --line:      #232c36;
-    --line-2:    #2c3744;
-    --ink:       #e8ecf1;
-    --ink-dim:   #8a96a4;
-    --ink-mute:  #5b6776;
-    --amber:     #ffb000;
-    --green:     #2cd075;
+    --bg:#0b0d10;--bg-soft:#11151a;--panel:#141a21;--line:#232c36;--line-2:#2c3744;
+    --ink:#e8ecf1;--ink-dim:#8a96a4;--ink-mute:#5b6776;--amber:#ffb000;--green:#2cd075;
+    --fs-base: 15px;
   }
   * { box-sizing: border-box; }
   html, body {
-    margin: 0; padding: 0;
-    background: var(--bg);
-    color: var(--ink);
-    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 14px;
-    line-height: 1.55;
-    -webkit-font-smoothing: antialiased;
-    text-rendering: geometricPrecision;
+    margin:0;padding:0;background:var(--bg);color:var(--ink);
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    font-size:var(--fs-base);line-height:1.6;
+    -webkit-font-smoothing:antialiased;text-rendering:geometricPrecision;
   }
   body {
     background-image:
       radial-gradient(1400px 700px at 80% -10%, rgba(255,176,0,0.06), transparent 60%),
       radial-gradient(1000px 600px at -10% 110%, rgba(78,161,255,0.04), transparent 60%);
-    min-height: 100vh;
+    min-height:100vh;
   }
-  body::before {
-    content: '';
-    position: fixed; inset: 0;
-    pointer-events: none;
-    background-image: repeating-linear-gradient(0deg, rgba(255,255,255,0.012) 0 1px, transparent 1px 3px);
-    z-index: 1;
-  }
-  .wrap { position: relative; z-index: 2; max-width: 980px; margin: 0 auto; padding: 0 28px; }
+  body::before { content:'';position:fixed;inset:0;pointer-events:none;background-image:repeating-linear-gradient(0deg,rgba(255,255,255,0.012) 0 1px,transparent 1px 3px);z-index:1; }
+  .wrap { position:relative;z-index:2;max-width:980px;margin:0 auto;padding:0 28px; }
 
-  /* Nav */
-  nav {
-    padding: 24px 0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--line);
-  }
-  .brand {
-    font-family: 'Fraunces', Georgia, serif;
-    font-weight: 900;
-    font-size: 26px;
-    letter-spacing: -0.02em;
-    color: var(--ink);
-    text-decoration: none;
-  }
-  .brand em { font-style: italic; color: var(--amber); }
-  .brand-sub {
-    font-size: 10px;
-    color: var(--ink-mute);
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    margin-left: 12px;
-    border-left: 1px solid var(--line-2);
-    padding-left: 12px;
-  }
-  nav .links {
-    display: flex; gap: 24px; align-items: center;
-    font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
-  }
-  nav .links a { color: var(--ink-dim); text-decoration: none; transition: color 0.15s; }
-  nav .links a:hover { color: var(--amber); }
-  nav .links .cta {
-    background: var(--amber);
-    color: #1a1306;
-    padding: 9px 18px;
-    font-weight: 700;
-  }
-  nav .links .cta:hover { background: #ffc333; color: #1a1306; }
+  nav { padding:24px 0;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line); }
+  .brand { font-family:'Fraunces',Georgia,serif;font-weight:900;font-size:26px;letter-spacing:-0.02em;color:var(--ink);text-decoration:none; }
+  .brand em { font-style:italic;color:var(--amber); }
+  .brand-sub { font-size:11px;color:var(--ink-mute);letter-spacing:0.18em;text-transform:uppercase;margin-left:12px;border-left:1px solid var(--line-2);padding-left:12px;font-weight:500; }
+  nav .links { display:flex;gap:24px;align-items:center;font-size:13px;font-weight:500; }
+  nav .links a { color:var(--ink-dim);text-decoration:none;transition:color 0.15s; }
+  nav .links a:hover { color:var(--amber); }
+  nav .links .cta { background:var(--amber);color:#1a1306;padding:9px 18px;font-weight:600; }
+  nav .links .cta:hover { background:#ffc333;color:#1a1306; }
 
-  /* Hero */
-  .hero {
-    padding: 90px 0 70px;
-    text-align: left;
-  }
-  .ticker {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.18em;
-    color: var(--green);
-    margin-bottom: 28px;
-  }
-  .ticker::before {
-    content: '';
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    background: var(--green);
-    box-shadow: 0 0 8px var(--green);
-    animation: blink 1.6s ease-in-out infinite;
-  }
-  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+  .hero { padding:90px 0 70px; }
+  .ticker { display:inline-flex;align-items:center;gap:10px;font-size:12px;text-transform:uppercase;letter-spacing:0.16em;color:var(--green);margin-bottom:28px;font-weight:500; }
+  .ticker::before { content:'';width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 1.6s ease-in-out infinite; }
+  @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.35;} }
 
-  h1 {
-    font-family: 'Fraunces', Georgia, serif;
-    font-weight: 500;
-    font-size: clamp(40px, 6vw, 68px);
-    line-height: 1.05;
-    letter-spacing: -0.02em;
-    margin: 0 0 24px;
-    color: var(--ink);
-  }
-  h1 em { font-style: italic; color: var(--amber); font-weight: 500; }
-  .lede {
-    font-size: 17px;
-    color: var(--ink-dim);
-    max-width: 620px;
-    margin: 0 0 38px;
-    line-height: 1.55;
-  }
-  .lede b { color: var(--ink); font-weight: 500; }
+  h1 { font-family:'Fraunces',Georgia,serif;font-weight:500;font-size:clamp(40px,6vw,68px);line-height:1.05;letter-spacing:-0.02em;margin:0 0 24px;color:var(--ink); }
+  h1 em { font-style:italic;color:var(--amber);font-weight:500; }
+  .lede { font-size:18px;color:var(--ink-dim);max-width:620px;margin:0 0 38px;line-height:1.55; }
+  .lede b { color:var(--ink);font-weight:500; }
 
-  .cta-row { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
-  .btn-primary {
-    background: var(--amber);
-    color: #1a1306;
-    border: none;
-    font-family: inherit;
-    font-weight: 700;
-    font-size: 12px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    padding: 14px 26px;
-    cursor: pointer;
-    text-decoration: none;
-    display: inline-block;
-    transition: background 0.12s ease;
-  }
-  .btn-primary:hover { background: #ffc333; }
-  .btn-ghost {
-    background: transparent;
-    color: var(--ink-dim);
-    border: 1px solid var(--line-2);
-    font-family: inherit;
-    font-size: 12px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    padding: 13px 22px;
-    cursor: pointer;
-    text-decoration: none;
-    display: inline-block;
-    transition: border-color 0.12s, color 0.12s;
-  }
-  .btn-ghost:hover { border-color: var(--amber); color: var(--ink); }
+  .cta-row { display:flex;gap:14px;align-items:center;flex-wrap:wrap; }
+  .btn-primary { background:var(--amber);color:#1a1306;border:none;font-family:inherit;font-weight:700;font-size:14px;letter-spacing:0.04em;padding:14px 26px;cursor:pointer;text-decoration:none;display:inline-block;transition:background 0.12s; }
+  .btn-primary:hover { background:#ffc333; }
+  .btn-ghost { background:transparent;color:var(--ink-dim);border:1px solid var(--line-2);font-family:inherit;font-size:14px;padding:13px 22px;cursor:pointer;text-decoration:none;display:inline-block;transition:all 0.12s;font-weight:500; }
+  .btn-ghost:hover { border-color:var(--amber);color:var(--ink); }
 
-  /* Hero metric strip */
-  .strip {
-    margin-top: 70px;
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0;
-    border: 1px solid var(--line);
-    background: var(--panel);
-  }
-  .strip .cell {
-    padding: 22px 22px;
-    border-right: 1px solid var(--line);
-  }
-  .strip .cell:last-child { border-right: none; }
-  .strip .v {
-    font-family: 'Fraunces', serif;
-    font-weight: 700;
-    font-size: 30px;
-    letter-spacing: -0.01em;
-    color: var(--amber);
-  }
-  .strip .l {
-    font-size: 10px;
-    color: var(--ink-mute);
-    text-transform: uppercase;
-    letter-spacing: 0.16em;
-    margin-top: 4px;
-  }
-  @media (max-width: 720px) {
-    .strip { grid-template-columns: repeat(2, 1fr); }
-    .strip .cell:nth-child(2) { border-right: none; }
-    .strip .cell:nth-child(1), .strip .cell:nth-child(2) { border-bottom: 1px solid var(--line); }
-  }
+  .strip { margin-top:70px;display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--line);background:var(--panel); }
+  .strip .cell { padding:22px 22px;border-right:1px solid var(--line); }
+  .strip .cell:last-child { border-right:none; }
+  .strip .v { font-family:'Fraunces',serif;font-weight:700;font-size:30px;letter-spacing:-0.01em;color:var(--amber); }
+  .strip .l { font-size:11px;color:var(--ink-mute);text-transform:uppercase;letter-spacing:0.16em;margin-top:4px;font-weight:500; }
+  @media (max-width:720px){.strip{grid-template-columns:repeat(2,1fr);}.strip .cell:nth-child(2){border-right:none;}.strip .cell:nth-child(1),.strip .cell:nth-child(2){border-bottom:1px solid var(--line);}}
 
-  /* Section template */
-  section {
-    padding: 80px 0;
-    border-top: 1px solid var(--line);
-  }
-  .eyebrow {
-    font-size: 10px;
-    color: var(--amber);
-    text-transform: uppercase;
-    letter-spacing: 0.22em;
-    margin-bottom: 14px;
-  }
-  h2 {
-    font-family: 'Fraunces', serif;
-    font-weight: 500;
-    font-size: clamp(28px, 4vw, 40px);
-    line-height: 1.1;
-    letter-spacing: -0.01em;
-    margin: 0 0 22px;
-    color: var(--ink);
-  }
-  h2 em { font-style: italic; color: var(--amber); font-weight: 500; }
-  .body { color: var(--ink-dim); font-size: 15px; max-width: 680px; }
-  .body b { color: var(--ink); font-weight: 500; }
+  section { padding:80px 0;border-top:1px solid var(--line); }
+  .eyebrow { font-size:11px;color:var(--amber);text-transform:uppercase;letter-spacing:0.22em;margin-bottom:14px;font-weight:600; }
+  h2 { font-family:'Fraunces',serif;font-weight:500;font-size:clamp(28px,4vw,40px);line-height:1.1;letter-spacing:-0.01em;margin:0 0 22px;color:var(--ink); }
+  h2 em { font-style:italic;color:var(--amber);font-weight:500; }
+  .body { color:var(--ink-dim);font-size:15px;max-width:680px;line-height:1.65; }
+  .body b { color:var(--ink);font-weight:500; }
 
-  /* How it works grid */
-  .grid-3 {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1px;
-    background: var(--line);
-    margin-top: 40px;
-    border: 1px solid var(--line);
-  }
-  .grid-3 .card {
-    padding: 28px 24px;
-    background: var(--panel);
-    min-height: 200px;
-  }
-  .grid-3 .num {
-    font-family: 'Fraunces', serif;
-    font-style: italic;
-    font-weight: 700;
-    font-size: 32px;
-    color: var(--amber);
-    margin-bottom: 14px;
-    line-height: 1;
-  }
-  .grid-3 .ttl {
-    font-size: 13px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: var(--ink);
-    margin-bottom: 10px;
-  }
-  .grid-3 .desc { color: var(--ink-dim); font-size: 13px; line-height: 1.55; }
-  @media (max-width: 720px) { .grid-3 { grid-template-columns: 1fr; } }
+  .grid-3 { display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);margin-top:40px;border:1px solid var(--line); }
+  .grid-3 .card { padding:28px 24px;background:var(--panel);min-height:200px; }
+  .grid-3 .num { font-family:'Fraunces',serif;font-style:italic;font-weight:700;font-size:32px;color:var(--amber);margin-bottom:14px;line-height:1; }
+  .grid-3 .ttl { font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink);margin-bottom:10px; }
+  .grid-3 .desc { color:var(--ink-dim);font-size:14px;line-height:1.6; }
+  @media (max-width:720px){.grid-3{grid-template-columns:1fr;}}
 
-  /* Pricing card */
-  .pricing-row {
-    display: grid;
-    grid-template-columns: 1.2fr 1fr;
-    gap: 30px;
-    margin-top: 40px;
-    align-items: stretch;
-  }
-  @media (max-width: 760px) { .pricing-row { grid-template-columns: 1fr; } }
-  .pricing-card {
-    border: 1px solid var(--amber);
-    background: var(--panel);
-    padding: 38px 34px;
-    position: relative;
-  }
-  .pricing-card::before {
-    content: 'CURRENT';
-    position: absolute;
-    top: 14px; right: 18px;
-    font-size: 9px;
-    color: var(--amber);
-    letter-spacing: 0.22em;
-  }
-  .price-eyebrow {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.2em;
-    color: var(--ink-mute);
-    margin-bottom: 12px;
-  }
-  .price-amount {
-    font-family: 'Fraunces', serif;
-    font-weight: 700;
-    font-size: 56px;
-    line-height: 1;
-    color: var(--ink);
-    letter-spacing: -0.02em;
-  }
-  .price-amount sup {
-    font-size: 26px;
-    vertical-align: top;
-    margin-right: 4px;
-    color: var(--amber);
-  }
-  .price-period {
-    color: var(--ink-dim);
-    font-size: 13px;
-    margin-top: 8px;
-  }
-  .price-features {
-    list-style: none;
-    padding: 0;
-    margin: 28px 0;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-  .price-features li {
-    color: var(--ink);
-    font-size: 13px;
-    padding-left: 22px;
-    position: relative;
-  }
-  .price-features li::before {
-    content: '✓';
-    position: absolute;
-    left: 0;
-    color: var(--amber);
-    font-weight: 700;
-  }
-  .pricing-card .btn-primary {
-    width: 100%;
-    text-align: center;
-  }
+  .pricing-row { display:grid;grid-template-columns:1.2fr 1fr;gap:30px;margin-top:40px;align-items:stretch; }
+  @media (max-width:760px){.pricing-row{grid-template-columns:1fr;}}
+  .pricing-card { border:1px solid var(--amber);background:var(--panel);padding:38px 34px;position:relative; }
+  .pricing-card::before { content:'CURRENT';position:absolute;top:14px;right:18px;font-size:10px;color:var(--amber);letter-spacing:0.22em;font-weight:600; }
+  .price-eyebrow { font-size:12px;text-transform:uppercase;letter-spacing:0.18em;color:var(--ink-mute);margin-bottom:12px;font-weight:600; }
+  .price-amount { font-family:'Fraunces',serif;font-weight:700;font-size:56px;line-height:1;color:var(--ink);margin-bottom:6px;letter-spacing:-0.02em; }
+  .price-amount sup { font-size:26px;vertical-align:top;margin-right:4px;color:var(--amber); }
+  .price-period { color:var(--ink-dim);font-size:14px;margin-top:8px; }
+  ul.feat { list-style:none;padding:0;margin:28px 0;display:flex;flex-direction:column;gap:12px; }
+  ul.feat li { color:var(--ink);font-size:14px;padding-left:22px;position:relative;line-height:1.5; }
+  ul.feat li::before { content:'✓';position:absolute;left:0;color:var(--amber);font-weight:700; }
+  .pricing-card .btn-primary { width:100%;text-align:center; }
+  .pricing-side { border:1px solid var(--line);background:var(--bg-soft);padding:32px 30px;display:flex;flex-direction:column;justify-content:space-between; }
+  .pricing-side h3 { font-family:'Fraunces',serif;font-weight:500;font-size:22px;margin:0 0 16px;color:var(--ink);line-height:1.25; }
+  .pricing-side h3 em { font-style:italic;color:var(--amber);font-weight:500; }
+  .pricing-side p { color:var(--ink-dim);font-size:14px;line-height:1.6;margin:0 0 16px; }
+  .verifier { margin-top:30px;padding:24px 26px;background:var(--bg-soft);border:1px solid var(--line);font-size:13px;color:var(--ink-dim);line-height:1.6; }
+  .verifier b { color:var(--ink);font-weight:500; }
 
-  .pricing-side {
-    border: 1px solid var(--line);
-    background: var(--bg-soft);
-    padding: 32px 30px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
-  .pricing-side h3 {
-    font-family: 'Fraunces', serif;
-    font-weight: 500;
-    font-size: 22px;
-    margin: 0 0 16px;
-    color: var(--ink);
-    line-height: 1.25;
-  }
-  .pricing-side h3 em { font-style: italic; color: var(--amber); font-weight: 500; }
-  .pricing-side p { color: var(--ink-dim); font-size: 13px; line-height: 1.6; margin: 0 0 16px; }
+  .faq { margin-top:36px;border-top:1px solid var(--line); }
+  .faq details { border-bottom:1px solid var(--line);padding:22px 0;cursor:pointer; }
+  .faq summary { list-style:none;font-size:15px;font-weight:500;color:var(--ink);display:flex;justify-content:space-between;align-items:center; }
+  .faq summary::-webkit-details-marker { display:none; }
+  .faq summary::after { content:'+';color:var(--amber);font-size:22px;font-weight:400; }
+  .faq details[open] summary::after { content:'−'; }
+  .faq .answer { color:var(--ink-dim);font-size:14px;line-height:1.65;padding-top:14px;max-width:700px; }
 
-  /* Quote / verifier strip */
-  .verifier {
-    margin-top: 30px;
-    padding: 24px 26px;
-    background: var(--bg-soft);
-    border: 1px solid var(--line);
-    font-size: 12px;
-    color: var(--ink-dim);
-    line-height: 1.6;
-  }
-  .verifier b { color: var(--ink); font-weight: 500; }
-
-  /* FAQ */
-  .faq {
-    margin-top: 36px;
-    border-top: 1px solid var(--line);
-  }
-  .faq details {
-    border-bottom: 1px solid var(--line);
-    padding: 22px 0;
-    cursor: pointer;
-  }
-  .faq summary {
-    list-style: none;
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--ink);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .faq summary::-webkit-details-marker { display: none; }
-  .faq summary::after {
-    content: '+';
-    color: var(--amber);
-    font-size: 22px;
-    font-weight: 400;
-    transition: transform 0.2s;
-  }
-  .faq details[open] summary::after { content: '−'; }
-  .faq .answer {
-    color: var(--ink-dim);
-    font-size: 13px;
-    line-height: 1.65;
-    padding-top: 14px;
-    max-width: 700px;
-  }
-
-  /* Footer */
-  footer {
-    padding: 40px 0 60px;
-    border-top: 1px solid var(--line);
-    color: var(--ink-mute);
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.16em;
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 16px;
-    margin-top: 80px;
-  }
-  footer a { color: var(--ink-mute); text-decoration: none; }
-  footer a:hover { color: var(--amber); }
+  footer { padding:40px 0 60px;border-top:1px solid var(--line);color:var(--ink-mute);font-size:12px;text-transform:uppercase;letter-spacing:0.16em;display:flex;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-top:80px;font-weight:500; }
+  footer a { color:var(--ink-mute);text-decoration:none; }
+  footer a:hover { color:var(--amber); }
 </style>
 </head>
 <body>
 
 <div class="wrap">
-
-  <!-- NAV -->
   <nav>
     <div>
       <a href="/" class="brand">Pra<em>x</em>os</a>
@@ -432,13 +122,12 @@
       <a href="#how">How it works</a>
       <a href="#pricing">Pricing</a>
       <a href="#faq">FAQ</a>
-      <a href="/signin" class="cta">Sign up</a>
+      <a href="/signin" class="cta">Sign in</a>
     </div>
   </nav>
 
-  <!-- HERO -->
   <header class="hero">
-    <div class="ticker">Live · 1,282 graded matches · 8 markets · 7-day forward window</div>
+    <div class="ticker">Live · graded daily · markets verified against history</div>
     <h1>Football tips with a <em>track record</em>, not a hot take.</h1>
     <p class="lede">
       Praxos is a <b>quantitative engine</b> that grades every market it suggests against thousands of historical matches. You see the tip, the regime, and the proven hit rate before you bet.
@@ -447,42 +136,26 @@
       <a href="/signin" class="btn-primary">Get access · ₦33,500/mo</a>
       <a href="#how" class="btn-ghost">See how it works</a>
     </div>
-
-    <!-- Trust strip -->
     <div class="strip">
-      <div class="cell"><div class="v">1,282</div><div class="l">Matches Graded</div></div>
+      <div class="cell"><div class="v">1,282+</div><div class="l">Matches Graded</div></div>
       <div class="cell"><div class="v">82%+</div><div class="l">Avg Tip Hit Rate</div></div>
-      <div class="cell"><div class="v">21</div><div class="l">Elite Conditions</div></div>
+      <div class="cell"><div class="v">2×2</div><div class="l">Quadrant Filter</div></div>
       <div class="cell"><div class="v">Daily</div><div class="l">Fresh Picks</div></div>
     </div>
   </header>
 
-  <!-- HOW -->
   <section id="how">
     <div class="eyebrow">How it works</div>
     <h2>The system in <em>three lines</em>.</h2>
     <p class="body">No commentary. No "feel". Every tip is measured against its historical performance under the same match conditions, and only the proven ones surface.</p>
 
     <div class="grid-3">
-      <div class="card">
-        <div class="num">01</div>
-        <div class="ttl">Classify the match</div>
-        <div class="desc">Each fixture is tagged by pace and pressure balance, producing one of nine quantitative regimes.</div>
-      </div>
-      <div class="card">
-        <div class="num">02</div>
-        <div class="ttl">Match against history</div>
-        <div class="desc">Every market is checked against thousands of past games in that exact regime. Hit rate and sample size are stored.</div>
-      </div>
-      <div class="card">
-        <div class="num">03</div>
-        <div class="ttl">Surface only proven</div>
-        <div class="desc">Only markets with proven precision and meaningful sample size make today's list. You see the number behind every pick.</div>
-      </div>
+      <div class="card"><div class="num">01</div><div class="ttl">Classify the match</div><div class="desc">Each fixture is tagged by pace and pressure balance, defining its quadrant in the engine.</div></div>
+      <div class="card"><div class="num">02</div><div class="ttl">Match against history</div><div class="desc">Every market is checked against thousands of past games in the same quadrant. Hit rate is stored.</div></div>
+      <div class="card"><div class="num">03</div><div class="ttl">Surface only the top tip</div><div class="desc">Only the highest-scoring market per fixture surfaces — and only if it beats the dynamic global floor.</div></div>
     </div>
   </section>
 
-  <!-- PRICING -->
   <section id="pricing">
     <div class="eyebrow">Pricing</div>
     <h2>One plan. <em>One number</em>. Cancel any month.</h2>
@@ -492,79 +165,50 @@
       <div class="pricing-card">
         <div class="price-eyebrow">Praxos · Monthly</div>
         <div class="price-amount"><sup>₦</sup>33,500</div>
-        <div class="price-period">per month · billed monthly · ₦/USD shown at checkout</div>
-
-        <ul class="price-features">
-          <li>Full access to daily proven fixtures</li>
-          <li>Volume regime + density classification per match</li>
-          <li>Hit rate and sample size on every tip</li>
-          <li>Multi-tip convergence highlights</li>
+        <div class="price-period">per month · billed monthly · cancel any time</div>
+        <ul class="feat">
+          <li>Full daily proven fixtures list</li>
+          <li>Decimal odds floor on every tip</li>
+          <li>Quadrant + density classification per match</li>
+          <li>Auto-rejected toxic and ambiguous fixtures</li>
           <li>Unlimited queries · 30-day rolling expiry</li>
         </ul>
-
         <a href="/signin" class="btn-primary">Sign up &amp; pay with Korapay</a>
       </div>
-
       <aside class="pricing-side">
         <div>
           <h3>Why <em>one</em> price?</h3>
           <p>Tier-gating breaks signal quality. Every subscriber sees the same proven list — no hidden "premium" picks, no upsell loops.</p>
-          <p>If a fixture isn't in the proven list, it's because the data doesn't support it.</p>
+          <p>If a fixture isn't in the list, it's because the data doesn't support it.</p>
         </div>
-        <div class="verifier">
-          <b>Payments</b> are processed by Korapay. Your subscription auto-renews until you cancel. Access is gated by an active subscription state on our backend.
-        </div>
+        <div class="verifier"><b>Payments</b> are processed by Korapay. Your subscription auto-renews until you cancel.</div>
       </aside>
     </div>
   </section>
 
-  <!-- FAQ -->
   <section id="faq">
     <div class="eyebrow">FAQ</div>
     <h2>The honest answers.</h2>
-
     <div class="faq">
-      <details>
-        <summary>Is this a tipster service?</summary>
-        <div class="answer">No. Praxos is a quantitative engine. It doesn't issue opinions — it issues markets that have demonstrated proven historical performance under the current match's regime. You see the data behind every pick.</div>
-      </details>
-      <details>
-        <summary>Are the hit rates guaranteed?</summary>
-        <div class="answer">No. Hit rates are historical. The highest proven cells sit around 91% over 80–200+ samples. We never claim 100%. Every pick has a real probability of losing — what we eliminate is selecting markets without a track record.</div>
-      </details>
-      <details>
-        <summary>How is this different from other tip services?</summary>
-        <div class="answer">Most services don't show you the success rate of their picks under current match conditions. Praxos surfaces only markets that have a verifiable historical edge in the same regime — and shows you the sample size and hit rate inline.</div>
-      </details>
-      <details>
-        <summary>What happens after I subscribe?</summary>
-        <div class="answer">You sign up, pay via Korapay, and your subscription is activated for 30 days. You then get full access to the Praxos terminal at <b>brockwayltd.com/praxos</b>. The terminal updates as new fixtures land in the engine.</div>
-      </details>
-      <details>
-        <summary>Can I cancel?</summary>
-        <div class="answer">Yes. Subscriptions are monthly. Cancel any month. No long-term commitment.</div>
-      </details>
-      <details>
-        <summary>What sports are covered?</summary>
-        <div class="answer">Football only. Pre-match markets across major and tier-2 leagues globally — currently La Liga, Premier League, Serie A, Bundesliga, Ligue 1, plus Eredivisie, Liga Portugal, Allsvenskan, Eliteserien, MLS, and 30+ others.</div>
-      </details>
+      <details><summary>Is this a tipster service?</summary><div class="answer">No. Praxos is a quantitative engine. It doesn't issue opinions — it issues markets that have demonstrated proven historical performance under the current match's regime. You see the data behind every pick.</div></details>
+      <details><summary>Are the hit rates guaranteed?</summary><div class="answer">No. Hit rates are historical. We never claim 100%. Every pick has a real probability of losing — what we eliminate is selecting markets without a track record.</div></details>
+      <details><summary>How is this different from other tip services?</summary><div class="answer">Most services don't show you the success rate of their picks under current match conditions. Praxos surfaces only the top-scoring market per fixture, and shows you the implied minimum odds inline.</div></details>
+      <details><summary>What happens after I subscribe?</summary><div class="answer">You sign up, pay via Korapay, and your subscription is activated for 30 days. You then get full access to the Praxos terminal at <b>brockwayltd.com/praxos</b>.</div></details>
+      <details><summary>Can I cancel?</summary><div class="answer">Yes. Subscriptions are monthly. Cancel any month. No long-term commitment.</div></details>
+      <details><summary>What sports are covered?</summary><div class="answer">Football only. Pre-match markets across major and tier-2 leagues globally.</div></details>
     </div>
   </section>
 
-  <!-- FINAL CTA -->
-  <section style="text-align: center; padding: 100px 0;">
+  <section style="text-align:center;padding:100px 0;">
     <h2>Ready to bet on <em>numbers</em>?</h2>
-    <p class="body" style="margin: 0 auto 30px;">Get into the terminal in under two minutes.</p>
+    <p class="body" style="margin:0 auto 30px;">Get into the terminal in under two minutes.</p>
     <a href="/signin" class="btn-primary">Sign up · ₦33,500/mo</a>
   </section>
 
   <footer>
     <span>© Brockway Ltd · Praxos is a Brockway product</span>
-    <span>
-      <a href="mailto:support@brockwayltd.com">support@brockwayltd.com</a>
-    </span>
+    <span><a href="mailto:support@brockwayltd.com">support@brockwayltd.com</a></span>
   </footer>
-
 </div>
 
 </body>
