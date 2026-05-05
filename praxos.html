@@ -4,533 +4,286 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <meta name="robots" content="noindex,nofollow" />
-<title>Praxos · Proven Fixture Terminal</title>
+<title>Praxos · Terminal</title>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,700;9..144,900&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,700;9..144,900&display=swap" rel="stylesheet" />
 <style>
   :root {
-    --bg:        #0b0d10;
-    --bg-soft:   #11151a;
-    --panel:     #141a21;
-    --panel-2:   #1a2129;
-    --line:      #232c36;
-    --line-2:    #2c3744;
-    --ink:       #e8ecf1;
-    --ink-dim:   #8a96a4;
-    --ink-mute:  #5b6776;
-    --amber:     #ffb000;
-    --amber-soft:#7a5300;
-    --green:     #2cd075;
-    --red:       #ff4d54;
-    --blue:      #4ea1ff;
-    --t1:        #ffb000;
-    --t2:        #4ea1ff;
-    --t3:        #8a96a4;
+    --bg:#0b0d10;--bg-soft:#11151a;--panel:#141a21;--panel-2:#1a2129;
+    --line:#232c36;--line-2:#2c3744;
+    --ink:#e8ecf1;--ink-dim:#8a96a4;--ink-mute:#5b6776;
+    --amber:#ffb000;--green:#2cd075;--red:#ff4d54;
   }
-  * { box-sizing: border-box; }
+  * { box-sizing:border-box; }
   html, body {
-    margin: 0;
-    padding: 0;
-    background: var(--bg);
-    color: var(--ink);
-    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 13px;
-    line-height: 1.45;
-    letter-spacing: 0.01em;
-    -webkit-font-smoothing: antialiased;
-    text-rendering: geometricPrecision;
+    margin:0;padding:0;background:var(--bg);color:var(--ink);
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    font-size:14px;line-height:1.55;
+    -webkit-font-smoothing:antialiased;text-rendering:geometricPrecision;
   }
   body {
     background-image:
       radial-gradient(1200px 600px at 80% -10%, rgba(255,176,0,0.06), transparent 60%),
-      radial-gradient(900px 500px at -10% 110%, rgba(78,161,255,0.04), transparent 60%),
-      linear-gradient(180deg, #0b0d10 0%, #0a0c0f 100%);
-    min-height: 100vh;
+      radial-gradient(900px 500px at -10% 110%, rgba(78,161,255,0.04), transparent 60%);
+    min-height:100vh;
   }
-  /* Subtle scanline grain */
-  body::before {
-    content: '';
-    position: fixed; inset: 0;
-    pointer-events: none;
-    background-image: repeating-linear-gradient(
-      0deg,
-      rgba(255,255,255,0.012) 0 1px,
-      transparent 1px 3px
-    );
-    z-index: 1;
-  }
+  body::before { content:'';position:fixed;inset:0;pointer-events:none;background-image:repeating-linear-gradient(0deg,rgba(255,255,255,0.012) 0 1px,transparent 1px 3px);z-index:1; }
 
-  /* Header */
   header {
-    position: relative;
-    z-index: 2;
-    padding: 28px 36px 22px;
-    border-bottom: 1px solid var(--line);
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 24px;
-    flex-wrap: wrap;
+    position:relative;z-index:2;padding:22px 36px 18px;border-bottom:1px solid var(--line);
+    display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;
   }
-  .brand {
-    display: flex;
-    align-items: baseline;
-    gap: 14px;
-  }
-  .brand .mark {
-    font-family: 'Fraunces', Georgia, serif;
-    font-weight: 900;
-    font-size: 32px;
-    letter-spacing: -0.02em;
-    color: var(--ink);
-  }
-  .brand .mark em {
-    font-style: italic;
-    color: var(--amber);
-  }
-  .brand .sub {
-    font-size: 11px;
-    color: var(--ink-mute);
-    text-transform: uppercase;
-    letter-spacing: 0.18em;
-    border-left: 1px solid var(--line-2);
-    padding-left: 14px;
-  }
-  .meta {
-    display: flex;
-    gap: 28px;
-    align-items: baseline;
-    font-size: 11px;
-    color: var(--ink-dim);
-    text-transform: uppercase;
-    letter-spacing: 0.16em;
-  }
-  .meta .pulse {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--green);
-  }
-  .meta .pulse::before {
-    content: '';
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    background: var(--green);
-    box-shadow: 0 0 8px var(--green);
-    animation: blink 1.6s ease-in-out infinite;
-  }
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.35; }
-  }
+  .brand { font-family:'Fraunces',Georgia,serif;font-weight:900;font-size:28px;letter-spacing:-0.02em;color:var(--ink);text-decoration:none; }
+  .brand em { font-style:italic;color:var(--amber); }
+  .meta { display:flex;gap:18px;align-items:center;font-size:12px;color:var(--ink-dim);font-weight:500; }
+  .meta .pulse { display:inline-flex;align-items:center;gap:8px;color:var(--green); }
+  .meta .pulse::before { content:'';width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 1.6s ease-in-out infinite; }
+  .meta .signout { background:transparent;color:var(--ink-mute);border:1px solid var(--line-2);padding:7px 14px;font-family:inherit;font-size:12px;cursor:pointer;font-weight:500;transition:0.12s; }
+  .meta .signout:hover { color:var(--amber);border-color:var(--amber); }
+  @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.35;} }
 
-  /* Controls */
   .controls {
-    position: relative;
-    z-index: 2;
-    padding: 22px 36px;
-    display: flex;
-    gap: 22px;
-    align-items: center;
-    flex-wrap: wrap;
-    border-bottom: 1px solid var(--line);
+    position:relative;z-index:2;padding:20px 36px;display:flex;gap:20px;align-items:flex-end;
+    flex-wrap:wrap;border-bottom:1px solid var(--line);
   }
-  .ctl {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+  .ctl { display:flex;flex-direction:column;gap:6px; }
+  .ctl label { font-size:11px;color:var(--ink-mute);font-weight:500;letter-spacing:0.04em; }
+  .ctl input[type="date"], .ctl select {
+    background:var(--panel);border:1px solid var(--line-2);color:var(--ink);
+    font-family:inherit;font-size:14px;padding:9px 12px;border-radius:0;outline:none;
+    min-width:200px;color-scheme:dark;
   }
-  .ctl label {
-    font-size: 10px;
-    color: var(--ink-mute);
-    text-transform: uppercase;
-    letter-spacing: 0.18em;
-  }
-  .ctl input[type="date"],
-  .ctl input[type="time"],
-  .ctl select {
-    background: var(--panel);
-    border: 1px solid var(--line-2);
-    color: var(--ink);
-    font-family: inherit;
-    font-size: 13px;
-    padding: 9px 12px;
-    border-radius: 0;
-    outline: none;
-    min-width: 170px;
-    color-scheme: dark;
-  }
-  .ctl input:focus, .ctl select:focus {
-    border-color: var(--amber);
-  }
-  .ctl button {
-    background: var(--amber);
-    color: #1a1306;
-    border: none;
-    font-family: inherit;
-    font-weight: 700;
-    font-size: 12px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    padding: 11px 22px;
-    cursor: pointer;
-    align-self: flex-end;
-    transition: background 0.12s ease;
-  }
-  .ctl button:hover { background: #ffc333; }
-  .ctl button:active { background: #e09a00; }
+  .ctl input:focus, .ctl select:focus { border-color:var(--amber); }
 
-  .stats {
-    margin-left: auto;
-    display: flex;
-    gap: 24px;
-    align-items: flex-end;
-  }
-  .stat {
-    text-align: right;
-  }
-  .stat .v {
-    font-family: 'Fraunces', serif;
-    font-weight: 700;
-    font-size: 26px;
-    color: var(--ink);
-    letter-spacing: -0.01em;
-  }
-  .stat .v.amber { color: var(--amber); }
-  .stat .l {
-    font-size: 10px;
-    color: var(--ink-mute);
-    text-transform: uppercase;
-    letter-spacing: 0.18em;
-    margin-top: 2px;
-  }
+  .stats { margin-left:auto;display:flex;gap:22px;align-items:flex-end; }
+  .stat { text-align:right; }
+  .stat .v { font-family:'Fraunces',serif;font-weight:700;font-size:24px;color:var(--ink);letter-spacing:-0.01em; }
+  .stat .v.amber { color:var(--amber); }
+  .stat .l { font-size:11px;color:var(--ink-mute);font-weight:500;margin-top:2px; }
 
-  /* Table area */
-  main {
-    position: relative;
-    z-index: 2;
-    padding: 0 36px 60px;
+  .advisory {
+    position:relative;z-index:2;padding:14px 36px;background:var(--bg-soft);
+    border-bottom:1px solid var(--line);color:var(--amber);font-size:13px;line-height:1.55;font-weight:500;
   }
-  .tbl-wrap {
-    margin-top: 24px;
-    border: 1px solid var(--line);
-    background: var(--panel);
-    overflow: hidden;
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-variant-numeric: tabular-nums;
-  }
+  .advisory b { color:var(--ink);font-weight:600; }
+  .advisory::before { content:'⚠  ';color:var(--amber);font-weight:700; }
+
+  main { position:relative;z-index:2;padding:0 36px 60px; }
+  .tbl-wrap { margin-top:22px;border:1px solid var(--line);background:var(--panel);overflow:hidden; }
+  table { width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums; }
   thead th {
-    text-align: left;
-    font-size: 10px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--ink-mute);
-    padding: 14px 16px;
-    background: var(--panel-2);
-    border-bottom: 1px solid var(--line-2);
-    font-weight: 500;
-    white-space: nowrap;
+    text-align:left;font-size:11px;letter-spacing:0.06em;color:var(--ink-mute);
+    padding:13px 16px;background:var(--panel-2);border-bottom:1px solid var(--line-2);
+    font-weight:600;white-space:nowrap;
   }
-  tbody tr {
-    border-bottom: 1px solid var(--line);
-    transition: background 0.08s ease;
+  tbody tr { border-bottom:1px solid var(--line);transition:background 0.08s ease; }
+  tbody tr:hover { background:rgba(255,176,0,0.04); }
+  tbody td { padding:14px 16px;color:var(--ink);vertical-align:top;font-size:14px;line-height:1.55; }
+  td.kickoff { font-weight:700;color:var(--amber);white-space:nowrap; }
+  td.competition { color:var(--ink-dim); }
+  td.fixture { font-weight:500;color:var(--ink); }
+  td.market .market-name {
+    color:var(--ink);font-weight:600;letter-spacing:0.01em;
   }
-  tbody tr:hover {
-    background: rgba(255,176,0,0.04);
-  }
-  tbody td {
-    padding: 13px 16px;
-    color: var(--ink);
-    vertical-align: top;
-  }
-  td.kickoff {
-    font-weight: 700;
-    color: var(--amber);
-    font-size: 13px;
-    white-space: nowrap;
-  }
-  td.fixture {
-    font-weight: 500;
-    color: var(--ink);
-  }
-  td.competition {
-    color: var(--ink-dim);
-    font-size: 12px;
-  }
-  td.market {
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    font-size: 12px;
-    color: var(--ink);
-    white-space: pre-line;
-    line-height: 1.7;
-  }
-  td.market .tip-line {
-    display: block;
-  }
-  td.market .tip-line + .tip-line {
-    margin-top: 4px;
-    padding-top: 4px;
-    border-top: 1px dashed var(--line);
-  }
-  td.date {
-    color: var(--ink-mute);
-    font-size: 12px;
-    white-space: nowrap;
+  td.market .market-odds {
+    color:var(--amber);font-weight:700;margin-left:8px;font-variant-numeric:tabular-nums;
   }
 
-  /* States */
-  .state {
-    padding: 80px 24px;
-    text-align: center;
-    color: var(--ink-mute);
-  }
-  .state .big {
-    font-family: 'Fraunces', serif;
-    font-weight: 500;
-    font-style: italic;
-    font-size: 22px;
-    color: var(--ink-dim);
-    margin-bottom: 8px;
-  }
-  .state .sm {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.18em;
-  }
-  .err {
-    border: 1px solid #4a1f24;
-    background: #1f0c0f;
-    color: var(--red);
-    padding: 18px 22px;
-    margin-top: 24px;
-    font-size: 12px;
-  }
+  .state { padding:80px 24px;text-align:center;color:var(--ink-mute); }
+  .state .big { font-family:'Fraunces',serif;font-weight:500;font-style:italic;font-size:22px;color:var(--ink-dim);margin-bottom:8px; }
+  .state .sm { font-size:13px;font-weight:500; }
+  .err { border:1px solid #4a1f24;background:#1f0c0f;color:var(--red);padding:18px 22px;margin-top:22px;font-size:13px; }
 
-  /* Loader */
   .loader {
-    display: inline-block;
-    width: 14px; height: 14px;
-    border: 2px solid var(--line-2);
-    border-top-color: var(--amber);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    vertical-align: middle;
-    margin-right: 10px;
+    display:inline-block;width:12px;height:12px;border:2px solid var(--line-2);
+    border-top-color:var(--amber);border-radius:50%;animation:spin 0.8s linear infinite;
+    vertical-align:middle;margin-right:10px;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* Footer */
   footer {
-    position: relative;
-    z-index: 2;
-    padding: 22px 36px 30px;
-    border-top: 1px solid var(--line);
-    color: var(--ink-mute);
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.18em;
-    text-align: right;
+    position:relative;z-index:2;padding:22px 36px 30px;border-top:1px solid var(--line);
+    color:var(--ink-mute);font-size:11px;letter-spacing:0.04em;text-align:right;font-weight:500;
   }
 
-  /* Responsive */
-  @media (max-width: 760px) {
-    header, .controls, main, footer { padding-left: 18px; padding-right: 18px; }
-    .stats { width: 100%; justify-content: space-between; margin-left: 0; }
-    .brand .mark { font-size: 26px; }
-    thead th, tbody td { padding: 10px 10px; }
-    td.competition { display: none; }
-    th.competition { display: none; }
-    td.date { display: none; }
-    th.date { display: none; }
+  @media (max-width:760px) {
+    header, .controls, .advisory, main, footer { padding-left:18px;padding-right:18px; }
+    .stats { width:100%;justify-content:space-between;margin-left:0; }
+    .brand { font-size:24px; }
+    thead th, tbody td { padding:10px 10px; }
+    td.competition, th.competition { display:none; }
   }
 </style>
 </head>
 <body>
 
-<!-- Auth gate overlay — visible until session + active subscription confirmed -->
-<div id="gate" style="position:fixed;inset:0;background:#0b0d10;z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:18px;color:#8a96a4;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:0.18em;text-transform:uppercase;">
-  <div style="font-family:'Fraunces',serif;font-weight:900;font-size:38px;letter-spacing:-0.02em;color:#e8ecf1;text-transform:none;">Pra<em style="font-style:italic;color:#ffb000;">x</em>os</div>
-  <div id="gate-msg"><span class="gate-loader"></span> Verifying access…</div>
+<!-- Auth gate -->
+<div id="gate" style="position:fixed;inset:0;background:#0b0d10;z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:18px;color:#8a96a4;font-family:'Inter',sans-serif;font-size:13px;">
+  <div style="font-family:'Fraunces',serif;font-weight:900;font-size:38px;letter-spacing:-0.02em;color:#e8ecf1;">Pra<em style="font-style:italic;color:#ffb000;">x</em>os</div>
+  <div id="gate-msg"><span class="loader"></span> Verifying access…</div>
 </div>
-<style>
-  .gate-loader {
-    display:inline-block;width:11px;height:11px;
-    border:2px solid #232c36;border-top-color:#ffb000;border-radius:50%;
-    animation:gate-spin 0.8s linear infinite;vertical-align:middle;margin-right:10px;
-  }
-  @keyframes gate-spin { to { transform: rotate(360deg); } }
-</style>
 
-<!-- Terminal body wrapped in #app, hidden until access confirmed -->
 <div id="app" style="display:none;">
 
-<header>
-  <div class="brand">
-    <div class="mark">Pra<em>x</em>os</div>
-    <div class="sub">Theory&nbsp;·&nbsp;Proven Fixture Terminal</div>
-  </div>
-  <div class="meta">
-    <span class="pulse">Live</span>
-    <span id="now-label">—</span>
-  </div>
-</header>
-
-<section class="controls">
-  <div class="ctl">
-    <label for="view">View</label>
-    <select id="view">
-      <option value="delta_theory_proven">Delta · Theory Proven (Apex)</option>
-      <option value="praxos_regime_proven">Praxos · Regime Proven</option>
-    </select>
-  </div>
-  <div class="ctl">
-    <label for="date">Match Date</label>
-    <input type="date" id="date" />
-  </div>
-  <div class="ctl">
-    <label for="kickoff">Kickoff From</label>
-    <input type="time" id="kickoff" value="00:00" />
-  </div>
-  <div class="ctl">
-    <label for="sort">Sort</label>
-    <select id="sort">
-      <option value="kickoff">Kickoff Time</option>
-      <option value="competition">Competition</option>
-      <option value="fixture">Fixture</option>
-      <option value="market">Market</option>
-    </select>
-  </div>
-  <div class="ctl">
-    <label>&nbsp;</label>
-    <button id="load">Load Fixtures</button>
-  </div>
-
-  <div class="stats">
-    <div class="stat">
-      <div class="v" id="stat-fixtures">—</div>
-      <div class="l">Fixtures</div>
+  <header>
+    <a href="/" class="brand">Pra<em>x</em>os</a>
+    <div class="meta">
+      <span class="pulse">Live</span>
+      <span id="now-label">—</span>
+      <span id="user-email">—</span>
+      <span id="days-left"></span>
+      <button class="signout" id="signout-btn">Sign out</button>
     </div>
-    <div class="stat">
-      <div class="v amber" id="stat-tips">—</div>
-      <div class="l">Proven Tips</div>
+  </header>
+
+  <section class="controls">
+    <div class="ctl">
+      <label for="date">Match Date</label>
+      <input type="date" id="date" />
     </div>
+    <div class="ctl">
+      <label for="sort">Sort</label>
+      <select id="sort">
+        <option value="kickoff">Kickoff Time</option>
+        <option value="competition">Competition</option>
+        <option value="fixture">Fixture</option>
+      </select>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="v" id="stat-fixtures">—</div><div class="l">Fixtures</div></div>
+      <div class="stat"><div class="v amber" id="stat-tips">—</div><div class="l">Top Tips</div></div>
+    </div>
+  </section>
+
+  <div class="advisory">
+    If your <b>bookmaker odds are lower than the odds shown by Praxos</b>, it is not a value bet. Praxos odds are the implied break-even derived from the historical hit rate — bookmaker prices below this should be skipped.
   </div>
-</section>
 
-<main>
-  <div id="result"></div>
-</main>
+  <main>
+    <div id="result"></div>
+  </main>
 
-<footer>
-  <span id="status">Idle</span>
-</footer>
+  <footer>
+    <span id="status">Idle</span>
+  </footer>
 
-<script>
-  /* ===== Supabase config (read-only, anon key) ===== */
+</div>
+
+<script type="module">
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
   const SUPABASE_URL = "https://bgymxvpjssnexztpkbfc.supabase.co";
   const SUPABASE_KEY = "sb_publishable_4IhlE7C-URixujv1yvUbhw_7mRmPQdp";
-  /* View is selected by user from the dropdown */
+  const VIEW         = "delta_dynamic_top";
+  const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  /* ===== Elements ===== */
-  const $view     = document.getElementById('view');
-  const $date     = document.getElementById('date');
-  const $kickoff  = document.getElementById('kickoff');
-  const $sort     = document.getElementById('sort');
-  const $load     = document.getElementById('load');
-  const $result   = document.getElementById('result');
-  const $statFx   = document.getElementById('stat-fixtures');
-  const $statTip  = document.getElementById('stat-tips');
-  const $status   = document.getElementById('status');
-  const $now      = document.getElementById('now-label');
+  const $gate    = document.getElementById('gate');
+  const $gateMsg = document.getElementById('gate-msg');
+  const $app     = document.getElementById('app');
+  const $date    = document.getElementById('date');
+  const $sort    = document.getElementById('sort');
+  const $result  = document.getElementById('result');
+  const $statFx  = document.getElementById('stat-fixtures');
+  const $statTip = document.getElementById('stat-tips');
+  const $status  = document.getElementById('status');
+  const $now     = document.getElementById('now-label');
+  const $email   = document.getElementById('user-email');
+  const $days    = document.getElementById('days-left');
+  const $signout = document.getElementById('signout-btn');
 
-  /* Default date = today (UTC-safe local) */
   function todayLocal() {
     const d = new Date();
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth()+1).padStart(2,'0');
-    const dd = String(d.getDate()).padStart(2,'0');
-    return `${yyyy}-${mm}-${dd}`;
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   }
   $date.value = todayLocal();
 
-  /* Live clock */
   function tickClock() {
-    const d = new Date();
-    const t = d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
-    $now.textContent = t + ' LOC';
+    const t = new Date().toLocaleTimeString(undefined, { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    $now.textContent = t;
   }
   tickClock();
   setInterval(tickClock, 1000);
 
-  /* Format helpers */
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({
     '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
   }[c]));
 
+  /* Strip kickoff prefix and the trophy emoji */
   function cleanCompetition(s) {
     if (!s) return '';
-    /* Remove the leading "⏰ HH:MM | " portion if present. */
-    return s.replace(/^⏰\s*\d{1,2}:\d{2}\s*\|\s*/, '').trim();
+    return s.replace(/^⏰\s*\d{1,2}:\d{2}\s*\|\s*/, '').replace(/🏆\s*/g, '').trim();
   }
 
-  /* Render */
+  /* Convert percentage to decimal odds (1 / probability) */
+  function pctToOdds(pct) {
+    const p = parseFloat(pct);
+    if (!p || p <= 0) return null;
+    return (100 / p).toFixed(2);
+  }
+
+  /* Convert "HH:MM" UTC kickoff string + match_date to user's local time */
+  function kickoffLocal(matchDate, kickoffStr) {
+    if (!kickoffStr || !matchDate) return kickoffStr || '—';
+    const [H, M] = kickoffStr.split(':').map(Number);
+    if (Number.isNaN(H) || Number.isNaN(M)) return kickoffStr;
+    const dt = new Date(`${matchDate}T${String(H).padStart(2,'0')}:${String(M).padStart(2,'0')}:00Z`);
+    if (isNaN(dt.getTime())) return kickoffStr;
+    return dt.toLocaleTimeString(undefined, { hour:'2-digit', minute:'2-digit', hour12:false });
+  }
+
+  /* Render the market column. Single tip per fixture (top-only). */
+  function renderMarket(raw) {
+    if (!raw) return '';
+    const m = String(raw).match(/^(.+?)\s*·\s*([\d.]+)%\s*\(\d+\s*plays\)\s*$/);
+    let name = String(raw), odds = null;
+    if (m) {
+      name = m[1].trim();
+      odds = pctToOdds(m[2]);
+    }
+    const oddsHtml = odds ? `<span class="market-odds">@ ${odds}</span>` : '';
+    return `<span class="market-name">${esc(name)}</span>${oddsHtml}`;
+  }
+
   function render(rows) {
     if (!rows.length) {
       $result.innerHTML = `
         <div class="state">
           <div class="big">No proven fixtures.</div>
-          <div class="sm">Try a different date or earlier kickoff window.</div>
+          <div class="sm">Try a different date.</div>
         </div>`;
       $statFx.textContent = '0';
       $statTip.textContent = '0';
       return;
     }
 
-    /* Sort */
     const sortKey = $sort.value;
     rows.sort((a,b) => {
-      if (sortKey === 'kickoff') return (a.kickoff || '').localeCompare(b.kickoff || '');
+      if (sortKey === 'kickoff')     return (a.kickoff || '').localeCompare(b.kickoff || '');
       if (sortKey === 'competition') return cleanCompetition(a.competition).localeCompare(cleanCompetition(b.competition));
-      if (sortKey === 'fixture') return (a.fixture || '').localeCompare(b.fixture || '');
-      if (sortKey === 'market') return (a.market || '').localeCompare(b.market || '');
+      if (sortKey === 'fixture')     return (a.fixture || '').localeCompare(b.fixture || '');
       return 0;
     });
-
-    const fixtures = new Set(rows.map(r => r.fixture));
-
-    /* Market cell renderer — splits newlines into stacked tip-lines */
-    function renderMarket(m) {
-      if (!m) return '';
-      const lines = String(m).split(/\r?\n/).filter(Boolean);
-      return lines.map(l => `<span class="tip-line">${esc(l)}</span>`).join('');
-    }
 
     const html = `
       <div class="tbl-wrap">
         <table>
           <thead>
             <tr>
-              <th class="date">Date</th>
               <th>Kickoff</th>
-              <th>Fixture</th>
               <th class="competition">Competition</th>
-              <th>Market</th>
+              <th>Fixture</th>
+              <th>Market &amp; Min Odds</th>
             </tr>
           </thead>
           <tbody>
             ${rows.map(r => `
               <tr>
-                <td class="date">${esc(r.match_date || '')}</td>
-                <td class="kickoff">${esc(r.kickoff || '—')}</td>
-                <td class="fixture">${esc(r.fixture || '')}</td>
+                <td class="kickoff">${esc(kickoffLocal(r.match_date, r.kickoff))}</td>
                 <td class="competition">${esc(cleanCompetition(r.competition))}</td>
+                <td class="fixture">${esc(r.fixture || '')}</td>
                 <td class="market">${renderMarket(r.market)}</td>
               </tr>`).join('')}
           </tbody>
@@ -538,43 +291,28 @@
       </div>
     `;
     $result.innerHTML = html;
-    /* Count fixtures and total individual tips inside the multi-line markets */
-    const totalTips = rows.reduce((acc, r) => {
-      if (!r.market) return acc;
-      return acc + String(r.market).split(/\r?\n/).filter(Boolean).length;
-    }, 0);
-    $statFx.textContent = fixtures.size;
-    $statTip.textContent = totalTips;
+    $statFx.textContent  = rows.length;
+    $statTip.textContent = rows.length;
   }
 
-  /* Fetch */
   async function loadFixtures() {
-    const view = $view.value;
     const date = $date.value;
-    const kickoffFrom = $kickoff.value || '00:00';
+    if (!date) { $result.innerHTML = `<div class="err">Pick a date first.</div>`; return; }
 
-    if (!date) {
-      $result.innerHTML = `<div class="err">Pick a date first.</div>`;
-      return;
-    }
-
-    $load.disabled = true;
-    $status.innerHTML = `<span class="loader"></span> Querying ${view}`;
+    $status.innerHTML = `<span class="loader"></span> Querying`;
     $result.innerHTML = `
       <div class="state">
         <div class="big"><span class="loader"></span> Fetching ${date}</div>
-        <div class="sm">${view} · view</div>
+        <div class="sm">delta_dynamic_top</div>
       </div>`;
     $statFx.textContent = '—';
     $statTip.textContent = '—';
 
-    /* Only the columns surfaced by the dashboard */
     const cols = 'match_date,kickoff,fixture,competition,market';
     const url =
-      `${SUPABASE_URL}/rest/v1/${view}` +
+      `${SUPABASE_URL}/rest/v1/${VIEW}` +
       `?select=${encodeURIComponent(cols)}` +
       `&match_date=eq.${encodeURIComponent(date)}` +
-      `&kickoff=gte.${encodeURIComponent(kickoffFrom)}` +
       `&order=kickoff.asc`;
 
     try {
@@ -591,44 +329,20 @@
       }
       const rows = await res.json();
       render(rows);
-      $status.textContent = `${view} · ${rows.length} rows · ${new Date().toLocaleTimeString('en-GB')}`;
+      $status.textContent = `${rows.length} fixtures · ${new Date().toLocaleTimeString(undefined, { hour12: false })}`;
     } catch (err) {
       $result.innerHTML = `<div class="err">Query failed: ${esc(err.message || String(err))}</div>`;
       $status.textContent = `Error`;
-    } finally {
-      $load.disabled = false;
     }
   }
 
-  $load.addEventListener('click', loadFixtures);
-  $view.addEventListener('change', loadFixtures);
   $date.addEventListener('change', loadFixtures);
-  $kickoff.addEventListener('change', loadFixtures);
-  $sort.addEventListener('change', () => {
-    /* re-render without refetch by triggering load */
-    loadFixtures();
+  $sort.addEventListener('change', loadFixtures);
+
+  $signout.addEventListener('click', async () => {
+    await sb.auth.signOut();
+    location.href = '/';
   });
-
-  /* Auto-load on page open */
-  loadFixtures();
-</script>
-
-</div><!-- /#app -->
-
-<script type="module">
-  /* ===== Auth & subscription gate =====
-     Verifies Supabase session AND active subscription before revealing the terminal.
-     Falls back to /signin or /subscribe based on state.
-  */
-  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-  const SUPABASE_URL = "https://bgymxvpjssnexztpkbfc.supabase.co";
-  const SUPABASE_KEY = "sb_publishable_4IhlE7C-URixujv1yvUbhw_7mRmPQdp";
-  const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-  const $gate    = document.getElementById('gate');
-  const $gateMsg = document.getElementById('gate-msg');
-  const $app     = document.getElementById('app');
 
   function gateRedirect(href, msg) {
     $gateMsg.innerHTML = msg;
@@ -637,38 +351,26 @@
 
   (async () => {
     const { data: { session } } = await sb.auth.getSession();
-    if (!session) {
-      gateRedirect('/signin', 'No session — redirecting to sign in…');
-      return;
-    }
+    if (!session) { gateRedirect('/signin', 'No session — redirecting to sign in…'); return; }
 
     const { data: status, error } = await sb
-      .from('praxos_user_status')
-      .select('is_active, days_remaining')
-      .eq('clerk_id', session.user.id)
-      .maybeSingle();
+      .from('praxos_user_status').select('is_active, days_remaining').eq('clerk_id', session.user.id).maybeSingle();
 
-    if (error) {
-      $gateMsg.innerHTML = `Access check failed: ${error.message}`;
-      return;
-    }
+    if (error) { $gateMsg.innerHTML = `Access check failed: ${error.message}`; return; }
     if (!status || !status.is_active) {
       gateRedirect('/subscribe', 'Subscription required — redirecting…');
       return;
     }
 
-    // Access granted — reveal app
+    $email.textContent = session.user.email;
+    if (status.days_remaining != null) {
+      $days.textContent = `${status.days_remaining} day${status.days_remaining === 1 ? '' : 's'} left`;
+    }
+
     $gate.style.display = 'none';
     $app.style.display  = 'block';
 
-    /* Add a subtle "X days remaining" badge in the header meta strip if we can */
-    const meta = document.querySelector('header .meta');
-    if (meta && status.days_remaining != null) {
-      const tag = document.createElement('span');
-      tag.style.cssText = 'color:#8a96a4;';
-      tag.textContent = `${status.days_remaining} day${status.days_remaining === 1 ? '' : 's'} left`;
-      meta.appendChild(tag);
-    }
+    loadFixtures();
   })();
 </script>
 
