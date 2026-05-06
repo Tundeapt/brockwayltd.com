@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="robots" content="noindex,nofollow" />
+<title>Praxos · Terminal</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,700;9..144,900&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg:#0b0d10;--bg-soft:#11151a;--panel:#141a21;--panel-2:#1a2129;
+    --line:#232c36;--line-2:#2c3744;
+    --ink:#e8ecf1;--ink-dim:#8a96a4;--ink-mute:#5b6776;
+    --amber:#ffb000;--green:#2cd075;--red:#ff4d54;--blue:#4ea1ff;
+  }
+  * { box-sizing:border-box; }
+  html, body { margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased; }
+  body { background-image:radial-gradient(1200px 600px at 80% -10%, rgba(255,176,0,0.06), transparent 60%);min-height:100vh; }
+  body::before { content:'';position:fixed;inset:0;pointer-events:none;background-image:repeating-linear-gradient(0deg,rgba(255,255,255,0.012) 0 1px,transparent 1px 3px);z-index:1; }
+
+  header { position:relative;z-index:2;padding:18px 28px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap; }
+  .brand { font-family:'Fraunces',serif;font-weight:900;font-size:26px;letter-spacing:-0.02em;color:var(--ink);text-decoration:none; }
+  .brand em { font-style:italic;color:var(--amber); }
+  .meta { display:flex;gap:14px;align-items:center;font-size:12px;color:var(--ink-dim);font-weight:500;flex-wrap:wrap; }
+  .meta .pulse { display:inline-flex;align-items:center;gap:8px;color:var(--green); }
+  .meta .pulse::before { content:'';width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 1.6s ease-in-out infinite; }
+  .signout, .acca-toggle { background:transparent;color:var(--ink-mute);border:1px solid var(--line-2);padding:7px 13px;font-family:inherit;font-size:12px;cursor:pointer;font-weight:500;transition:0.12s; }
+  .signout:hover, .acca-toggle:hover { color:var(--amber);border-color:var(--amber); }
+  .acca-toggle { background:var(--amber);color:#1a1306;border-color:var(--amber); }
+  .acca-toggle:hover { background:#ffc333;color:#1a1306; }
+  @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.35;} }
+
+  .controls { padding:18px 28px;display:flex;gap:18px;align-items:flex-end;flex-wrap:wrap;border-bottom:1px solid var(--line);position:relative;z-index:2; }
+  .ctl { display:flex;flex-direction:column;gap:6px; }
+  .ctl label { font-size:11px;color:var(--ink-mute);font-weight:500; }
+  .ctl input[type="date"] { background:var(--panel);border:1px solid var(--line-2);color:var(--ink);font-family:inherit;font-size:14px;padding:9px 12px;outline:none;color-scheme:dark; }
+  .ctl input:focus { border-color:var(--amber); }
+
+  main { position:relative;z-index:2;padding:24px 28px 60px;max-width:1100px;margin:0 auto;transition:margin-right 0.3s ease; }
+  main.sidebar-open { margin-right:380px; }
+
+  /* Country/league/fixture accordions */
+  .acc { border:1px solid var(--line);background:var(--panel);margin-bottom:8px; }
+  .acc summary { list-style:none;cursor:pointer;padding:14px 18px;display:flex;align-items:center;gap:14px;font-weight:600; }
+  .acc summary::-webkit-details-marker { display:none; }
+  .acc summary::before { content:'▸';color:var(--ink-mute);transition:transform 0.15s;font-size:14px; }
+  .acc[open] > summary::before { transform:rotate(90deg);color:var(--amber); }
+  .acc summary:hover { background:rgba(255,176,0,0.04); }
+  .acc-title { flex:1;font-size:15px;color:var(--ink); }
+  .badge { background:var(--bg-soft);color:var(--ink-dim);font-size:11px;font-weight:600;padding:3px 9px;border-radius:10px;border:1px solid var(--line-2); }
+
+  .acc.country { border-left:3px solid var(--amber); }
+  .acc.league  { margin:6px 12px 0 32px;border-left:2px solid var(--blue); }
+  .acc.league summary { padding:10px 14px;font-size:13px; }
+
+  .fixture-row {
+    margin:4px 12px 0 56px;padding:10px 14px;background:var(--bg-soft);border:1px solid var(--line);
+    display:flex;align-items:center;gap:14px;cursor:pointer;transition:background 0.08s;
+    font-size:13px;
+  }
+  .fixture-row:hover { background:rgba(255,176,0,0.06);border-color:var(--line-2); }
+  .fixture-row .ko { color:var(--amber);font-weight:700;min-width:48px; }
+  .fixture-row .name { flex:1;color:var(--ink);font-weight:500; }
+  .fixture-row .score { color:var(--ink-dim);font-size:12px;font-weight:600;min-width:80px;text-align:right; }
+  .fixture-row .score.pending { color:var(--ink-mute);font-weight:500;font-style:italic; }
+  .fixture-row .score.graded { color:var(--green); }
+
+  /* Fixture modal */
+  .modal-back {
+    position:fixed;inset:0;background:rgba(11,13,16,0.86);z-index:9000;
+    display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto;
+  }
+  .modal {
+    background:var(--panel);border:1px solid var(--line-2);max-width:560px;width:100%;
+    padding:28px;position:relative;
+  }
+  .modal-close { position:absolute;top:14px;right:14px;background:transparent;border:1px solid var(--line-2);color:var(--ink-mute);width:32px;height:32px;cursor:pointer;font-size:18px;line-height:1; }
+  .modal-close:hover { color:var(--amber);border-color:var(--amber); }
+  .modal h2 {
+    font-family:'Fraunces',serif;font-weight:500;font-size:22px;line-height:1.25;letter-spacing:-0.01em;
+    margin:0 0 4px;padding-right:38px;color:var(--ink);
+  }
+  .modal .league-tag { font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:var(--amber);font-weight:600;margin-bottom:14px; }
+  .modal .scoreline { display:flex;gap:10px;align-items:center;margin:14px 0 22px; }
+  .modal .ko-pill { background:var(--bg-soft);border:1px solid var(--line-2);padding:7px 14px;font-size:13px;color:var(--ink-dim);font-weight:500; }
+  .modal .final-pill { background:rgba(44,208,117,0.08);border:1px solid var(--green);color:var(--green);padding:7px 14px;font-size:14px;font-weight:700; }
+  .modal .target-row { display:flex;justify-content:space-between;align-items:center;background:var(--bg-soft);border:1px solid var(--line);padding:14px 18px;margin-bottom:18px; }
+  .modal .target-row .label { color:var(--ink-dim);font-size:13px; }
+  .modal .target-row .val { color:var(--green);font-size:18px;font-weight:700;border:1px solid var(--green);padding:5px 12px;background:rgba(44,208,117,0.06); }
+  .modal .qb-title { font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:var(--ink-mute);font-weight:600;margin-bottom:10px; }
+  .qb-list { display:flex;flex-direction:column;gap:8px; }
+  .qb-pill {
+    border:1px solid #1f3d2e;background:rgba(44,208,117,0.04);color:var(--green);
+    padding:13px 16px;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:space-between;
+  }
+  .qb-pill.win  { border-color:var(--green);background:rgba(44,208,117,0.1); }
+  .qb-pill.loss { border-color:var(--red);background:rgba(255,77,84,0.06);color:var(--red);text-decoration:line-through;text-decoration-thickness:2px; }
+  .qb-pill .check { color:inherit;opacity:0.85;font-size:16px;font-weight:700; }
+
+  /* Acca sidebar */
+  .acca-side {
+    position:fixed;top:0;right:0;height:100vh;width:380px;background:var(--panel);
+    border-left:1px solid var(--line);z-index:8500;transform:translateX(100%);
+    transition:transform 0.3s ease;display:flex;flex-direction:column;
+  }
+  .acca-side.open { transform:translateX(0); }
+  .acca-head { padding:18px 22px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between; }
+  .acca-head h3 { font-family:'Fraunces',serif;font-weight:500;font-size:20px;margin:0;color:var(--ink); }
+  .acca-head h3 em { color:var(--amber);font-style:italic; }
+  .acca-head .x { background:transparent;border:none;color:var(--ink-mute);font-size:22px;cursor:pointer;line-height:1;padding:4px 8px; }
+  .acca-head .x:hover { color:var(--amber); }
+  .acca-body { flex:1;overflow-y:auto;padding:18px 22px;display:flex;flex-direction:column;gap:14px; }
+  .acca-form { background:var(--bg-soft);border:1px solid var(--line);padding:16px;display:flex;flex-direction:column;gap:12px; }
+  .acca-form .row { display:flex;flex-direction:column;gap:6px; }
+  .acca-form .row label { font-size:11px;color:var(--ink-mute);font-weight:500;letter-spacing:0.04em; }
+  .acca-form select, .acca-form input[type="number"] {
+    background:var(--panel);border:1px solid var(--line-2);color:var(--ink);font-family:inherit;font-size:13px;
+    padding:8px 11px;outline:none;color-scheme:dark;
+  }
+  .acca-form select:focus, .acca-form input:focus { border-color:var(--amber); }
+  .acca-form button { background:var(--amber);color:#1a1306;border:none;font-family:inherit;font-weight:700;font-size:13px;padding:11px 0;cursor:pointer;margin-top:4px; }
+  .acca-form button:hover { background:#ffc333; }
+  .acca-form button:disabled { opacity:0.55;cursor:wait; }
+
+  .ticket {
+    background:var(--bg-soft);border:1px solid var(--amber);padding:14px;
+  }
+  .ticket-head { display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;font-size:11px;color:var(--ink-mute);font-weight:500;letter-spacing:0.06em; }
+  .ticket-head .code { color:var(--amber);font-weight:700;font-size:13px; }
+  .ticket-head .odds { color:var(--green);font-weight:700;font-size:14px; }
+  .leg { padding:9px 0;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:3px;font-size:12px; }
+  .leg:first-of-type { border-top:none; }
+  .leg .leg-fix { color:var(--ink);font-weight:600; }
+  .leg .leg-meta { color:var(--ink-dim);font-size:11px; }
+  .leg .leg-mkt { color:var(--amber);font-weight:600;display:flex;justify-content:space-between; }
+
+  .alert { padding:11px 14px;font-size:12px;border:1px solid;line-height:1.5; }
+  .alert.ok { color:var(--green);border-color:#1f4a2c;background:#0d1f14; }
+  .alert.err { color:var(--red);border-color:#4a1f24;background:#1f0c0f; }
+  .alert.info { color:var(--ink-dim);border-color:var(--line-2);background:var(--bg-soft); }
+
+  .loader { display:inline-block;width:12px;height:12px;border:2px solid var(--line-2);border-top-color:var(--amber);border-radius:50%;animation:spin 0.8s linear infinite;vertical-align:middle;margin-right:8px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .state { padding:60px 24px;text-align:center;color:var(--ink-mute); }
+  .state .big { font-family:'Fraunces',serif;font-style:italic;font-size:20px;color:var(--ink-dim);margin-bottom:8px; }
+  .state .sm { font-size:13px;font-weight:500; }
+
+  footer { padding:18px 28px;border-top:1px solid var(--line);color:var(--ink-mute);font-size:11px;text-align:right;font-weight:500;position:relative;z-index:2; }
+
+  @media (max-width:760px) {
+    main.sidebar-open { margin-right:0; }
+    .acca-side { width:100%; }
+    .fixture-row { margin-left:32px; }
+    .acc.league { margin-left:14px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Auth gate -->
+<div id="gate" style="position:fixed;inset:0;background:#0b0d10;z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:18px;color:#8a96a4;font-family:'Inter',sans-serif;font-size:13px;">
+  <div style="font-family:'Fraunces',serif;font-weight:900;font-size:38px;letter-spacing:-0.02em;color:#e8ecf1;">Pra<em style="font-style:italic;color:#ffb000;">x</em>os</div>
+  <div id="gate-msg"><span class="loader"></span> Verifying access…</div>
+</div>
+
+<div id="app" style="display:none;">
+
+  <header>
+    <a href="/" class="brand">Pra<em>x</em>os</a>
+    <div class="meta">
+      <span class="pulse">Live</span>
+      <span id="now-label">—</span>
+      <span id="user-email">—</span>
+      <span id="days-left"></span>
+      <button class="acca-toggle" id="acca-toggle">Build acca</button>
+      <button class="signout" id="signout-btn">Sign out</button>
+    </div>
+  </header>
+
+  <section class="controls">
+    <div class="ctl">
+      <label for="date">Match Date</label>
+      <input type="date" id="date" />
+    </div>
+  </section>
+
+  <main id="main">
+    <div id="result"></div>
+  </main>
+
+  <footer><span id="status">Idle</span></footer>
+
+</div>
+
+<!-- Fixture modal -->
+<div id="modal-back" class="modal-back" style="display:none;">
+  <div class="modal" id="modal-content"></div>
+</div>
+
+<!-- Acca sidebar -->
+<aside class="acca-side" id="acca-side">
+  <div class="acca-head">
+    <h3>Acca <em>Builder</em></h3>
+    <button class="x" id="acca-close">×</button>
+  </div>
+  <div class="acca-body" id="acca-body">
+    <div class="acca-form">
+      <div class="row">
+        <label for="acca-days">Days span</label>
+        <input type="number" id="acca-days" min="1" max="7" value="1" />
+      </div>
+      <div class="row">
+        <label for="acca-legs">Legs</label>
+        <input type="number" id="acca-legs" min="2" max="20" value="6" />
+      </div>
+      <button id="acca-build">Generate ticket</button>
+      <div id="acca-alert"></div>
+    </div>
+    <div id="acca-tickets"></div>
+  </div>
+</aside>
+
+<script type="module">
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+  const SUPABASE_URL = "https://bgymxvpjssnexztpkbfc.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_4IhlE7C-URixujv1yvUbhw_7mRmPQdp";
+  const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  /* ====== Refs ====== */
+  const $gate = document.getElementById('gate');
+  const $gateMsg = document.getElementById('gate-msg');
+  const $app = document.getElementById('app');
+  const $main = document.getElementById('main');
+  const $date = document.getElementById('date');
+  const $result = document.getElementById('result');
+  const $now = document.getElementById('now-label');
+  const $email = document.getElementById('user-email');
+  const $days = document.getElementById('days-left');
+  const $signout = document.getElementById('signout-btn');
+  const $status = document.getElementById('status');
+  const $modalBack = document.getElementById('modal-back');
+  const $modal = document.getElementById('modal-content');
+  const $accaToggle = document.getElementById('acca-toggle');
+  const $accaSide = document.getElementById('acca-side');
+  const $accaClose = document.getElementById('acca-close');
+  const $accaBuild = document.getElementById('acca-build');
+  const $accaDays = document.getElementById('acca-days');
+  const $accaLegs = document.getElementById('acca-legs');
+  const $accaAlert = document.getElementById('acca-alert');
+  const $accaTickets = document.getElementById('acca-tickets');
+
+  /* ====== Helpers ====== */
+  function todayLocal() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+  $date.value = todayLocal();
+
+  function tickClock() {
+    $now.textContent = new Date().toLocaleTimeString(undefined, { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  }
+  tickClock(); setInterval(tickClock, 1000);
+
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  function kickoffLocal(matchDate, kickoffStr) {
+    if (!kickoffStr || !matchDate) return kickoffStr || '—';
+    const [H, M] = kickoffStr.split(':').map(Number);
+    if (Number.isNaN(H) || Number.isNaN(M)) return kickoffStr;
+    const dt = new Date(`${matchDate}T${String(H).padStart(2,'0')}:${String(M).padStart(2,'0')}:00Z`);
+    if (isNaN(dt.getTime())) return kickoffStr;
+    return dt.toLocaleTimeString(undefined, { hour:'2-digit', minute:'2-digit', hour12:false });
+  }
+
+  function pctToOdds(pct) { const p = parseFloat(pct); return p > 0 ? (100/p).toFixed(2) : '—'; }
+
+  /* ====== Render fixtures grouped by country/league ====== */
+  function buildHierarchy(rows) {
+    const countries = new Map();
+    for (const r of rows) {
+      const ckey = r.country || 'Other';
+      const lkey = r.league || 'League';
+      if (!countries.has(ckey)) countries.set(ckey, new Map());
+      const lmap = countries.get(ckey);
+      if (!lmap.has(lkey)) lmap.set(lkey, []);
+      lmap.get(lkey).push(r);
+    }
+    return countries;
+  }
+
+  function renderFixtures(rows) {
+    if (!rows.length) {
+      $result.innerHTML = `<div class="state"><div class="big">No fixtures.</div><div class="sm">Try another date.</div></div>`;
+      return;
+    }
+    const tree = buildHierarchy(rows);
+    const sortedCountries = [...tree.keys()].sort((a,b) => a.localeCompare(b));
+
+    let html = '';
+    for (const country of sortedCountries) {
+      const lmap = tree.get(country);
+      const fixtureCount = [...lmap.values()].reduce((acc, arr) => acc + arr.length, 0);
+      html += `<details class="acc country"><summary><span class="acc-title">${esc(country)}</span><span class="badge">${fixtureCount}</span></summary>`;
+      const sortedLeagues = [...lmap.keys()].sort((a,b) => a.localeCompare(b));
+      for (const league of sortedLeagues) {
+        const fxs = lmap.get(league).slice().sort((a,b) => (a.kickoff || '').localeCompare(b.kickoff || ''));
+        html += `<details class="acc league"><summary><span class="acc-title">${esc(league)}</span><span class="badge">${fxs.length}</span></summary>`;
+        for (const f of fxs) {
+          const ko = kickoffLocal(f.match_date, f.kickoff);
+          let scoreHtml;
+          if (f.grade_status === 'graded' && f.final_score) {
+            scoreHtml = `<span class="score graded">${esc(f.final_score)}</span>`;
+          } else if (f.grade_status === 'graded') {
+            scoreHtml = `<span class="score graded">FT</span>`;
+          } else {
+            scoreHtml = `<span class="score pending">pending</span>`;
+          }
+          html += `
+            <div class="fixture-row" data-mid="${esc(f.match_id)}">
+              <span class="ko">${esc(ko)}</span>
+              <span class="name">${esc(f.fixture)}</span>
+              ${scoreHtml}
+            </div>`;
+        }
+        html += `</details>`;
+      }
+      html += `</details>`;
+    }
+    $result.innerHTML = html;
+
+    /* Wire up click handlers for fixture rows */
+    $result.querySelectorAll('.fixture-row').forEach(el => {
+      el.addEventListener('click', () => {
+        const mid = el.getAttribute('data-mid');
+        const fixture = rows.find(r => r.match_id === mid);
+        if (fixture) openFixtureModal(fixture);
+      });
+    });
+  }
+
+  /* ====== Fixture modal ====== */
+  function openFixtureModal(f) {
+    const ko = kickoffLocal(f.match_date, f.kickoff);
+    const tips = Array.isArray(f.quant_tips) ? f.quant_tips : [];
+    const successList = Array.isArray(f.quant_grade?.success_list) ? f.quant_grade.success_list : null;
+    const failList    = Array.isArray(f.quant_grade?.fail_list) ? f.quant_grade.fail_list : null;
+    const isGraded = f.grade_status === 'graded';
+
+    /* Tips formatted Title Case for display */
+    function titleCase(s) {
+      return String(s).split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    }
+
+    let qbHtml = '';
+    for (const t of tips) {
+      let cls = '', icon = '';
+      if (isGraded && successList && successList.includes(t)) { cls = 'win';  icon = '✓'; }
+      else if (isGraded && failList && failList.includes(t))  { cls = 'loss'; icon = '✕'; }
+      qbHtml += `<div class="qb-pill ${cls}"><span>${esc(titleCase(t))}</span><span class="check">${icon}</span></div>`;
+    }
+    if (!qbHtml) qbHtml = `<div class="state"><div class="sm">No quantitative targets on this fixture.</div></div>`;
+
+    const finalPill = (isGraded && f.final_score)
+      ? `<span class="final-pill">${esc(f.final_score)}</span>`
+      : '';
+
+    $modal.innerHTML = `
+      <button class="modal-close" id="modal-x">×</button>
+      <div class="league-tag">${esc(f.country || '')} · ${esc(f.league || '')}</div>
+      <h2>${esc(f.fixture)}</h2>
+      <div class="scoreline">
+        <span class="ko-pill">${esc(ko)}</span>
+        ${finalPill}
+      </div>
+      ${f.target_score ? `
+        <div class="target-row">
+          <span class="label">Target Score</span>
+          <span class="val">${esc(f.target_score)}</span>
+        </div>` : ''}
+      <div class="qb-title">Quantitative Targets</div>
+      <div class="qb-list">${qbHtml}</div>
+    `;
+    $modalBack.style.display = 'flex';
+    document.getElementById('modal-x').addEventListener('click', closeModal);
+  }
+  function closeModal() { $modalBack.style.display = 'none'; }
+  $modalBack.addEventListener('click', (e) => { if (e.target === $modalBack) closeModal(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+  /* ====== Fetch ====== */
+  async function loadFixtures() {
+    const date = $date.value;
+    if (!date) return;
+    $status.innerHTML = `<span class="loader"></span> Loading ${date}`;
+    $result.innerHTML = `<div class="state"><div class="big"><span class="loader"></span> Fetching fixtures…</div><div class="sm">${date}</div></div>`;
+
+    const cols = 'match_id,match_date,kickoff,fixture,country,league,grade_status,home_goals,away_goals,final_score,target_score,quant_tips,quant_grade,competition_raw,match_velocity,hpi,api';
+    const url = `${SUPABASE_URL}/rest/v1/praxos_gamma_day?select=${encodeURIComponent(cols)}&match_date=eq.${encodeURIComponent(date)}&order=kickoff.asc`;
+    try {
+      const res = await fetch(url, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Accept': 'application/json' }});
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const rows = await res.json();
+      renderFixtures(rows);
+      $status.textContent = `${rows.length} fixtures · ${new Date().toLocaleTimeString(undefined, { hour12: false })}`;
+    } catch (err) {
+      $result.innerHTML = `<div class="alert err">Query failed: ${esc(err.message)}</div>`;
+      $status.textContent = `Error`;
+    }
+  }
+  $date.addEventListener('change', loadFixtures);
+
+  /* ====== Acca builder ====== */
+  $accaToggle.addEventListener('click', () => {
+    $accaSide.classList.add('open');
+    $main.classList.add('sidebar-open');
+    loadTicketHistory();
+  });
+  $accaClose.addEventListener('click', () => {
+    $accaSide.classList.remove('open');
+    $main.classList.remove('sidebar-open');
+  });
+
+  function showAccaAlert(type, msg) { $accaAlert.innerHTML = `<div class="alert ${type}">${msg}</div>`; }
+
+  $accaBuild.addEventListener('click', async () => {
+    const days = parseInt($accaDays.value || '1', 10);
+    const legs = parseInt($accaLegs.value || '6', 10);
+    if (days < 1 || days > 7) { showAccaAlert('err', 'Days must be between 1 and 7.'); return; }
+    if (legs < 2 || legs > 20) { showAccaAlert('err', 'Legs must be between 2 and 20.'); return; }
+    if (days > 1 && legs < days) { showAccaAlert('err', `Legs (${legs}) must be at least ${days} so each date appears at least once.`); return; }
+
+    $accaBuild.disabled = true;
+    showAccaAlert('info', '<span class="loader"></span>Building ticket…');
+
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) throw new Error('Session expired. Refresh and sign in.');
+
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/build-acca`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_KEY,
+        },
+        body: JSON.stringify({ days, legs }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || json.error || `HTTP ${res.status}`);
+      showAccaAlert('ok', `Ticket ${json.ticket_code} generated · ${legs} legs · spans ${days} day${days === 1 ? '' : 's'} · ${json.total_odds.toFixed(2)} odds`);
+      loadTicketHistory();
+    } catch (err) {
+      showAccaAlert('err', err.message || 'Build failed.');
+    } finally {
+      $accaBuild.disabled = false;
+    }
+  });
+
+  async function loadTicketHistory() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return;
+    const { data: tickets } = await sb
+      .from('acca_tickets')
+      .select('id, ticket_code, scope, legs_filled, total_odds, created_at')
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    if (!tickets || tickets.length === 0) {
+      $accaTickets.innerHTML = `<div class="state"><div class="sm">No tickets yet. Build your first above.</div></div>`;
+      return;
+    }
+
+    let html = '';
+    for (const t of tickets) {
+      const { data: legs } = await sb
+        .from('acca_legs')
+        .select('match_date, kickoff, fixture, competition, country, league, market, decimal_odds, hit_rate_pct')
+        .eq('ticket_id', t.id)
+        .order('match_date', { ascending: true })
+        .order('kickoff', { ascending: true });
+
+      let legsHtml = '';
+      for (const l of legs || []) {
+        const ko = kickoffLocal(l.match_date, l.kickoff);
+        const titleCaseMkt = String(l.market).split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        const venue = [l.country, l.league].filter(Boolean).join(' · ');
+        legsHtml += `
+          <div class="leg">
+            <div class="leg-fix">${esc(l.fixture)}</div>
+            ${venue ? `<div class="leg-meta">${esc(venue)}</div>` : ''}
+            <div class="leg-meta">${esc(l.match_date)} · ${esc(ko)}</div>
+            <div class="leg-mkt"><span>${esc(titleCaseMkt)}</span><span>@ ${parseFloat(l.decimal_odds).toFixed(2)}</span></div>
+          </div>`;
+      }
+
+      html += `
+        <div class="ticket">
+          <div class="ticket-head">
+            <span class="code">#${esc(t.ticket_code)}</span>
+            <span>${esc(t.scope)} · ${t.legs_filled} legs</span>
+            <span class="odds">${parseFloat(t.total_odds).toFixed(2)}</span>
+          </div>
+          ${legsHtml}
+        </div>`;
+    }
+    $accaTickets.innerHTML = html;
+  }
+
+  $signout.addEventListener('click', async () => { await sb.auth.signOut(); location.href = '/'; });
+
+  /* ====== Auth gate ====== */
+  function gateRedirect(href, msg) { $gateMsg.innerHTML = msg; setTimeout(() => location.href = href, 700); }
+
+  (async () => {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { gateRedirect('/signin', 'No session — redirecting to sign in…'); return; }
+
+    // Defensive self-heal: ensure praxos_users row exists before reading status.
+    // RLS allows self-insert because auth.uid() === clerk_id.
+    await sb.from('praxos_users').upsert({
+      clerk_id: session.user.id,
+      email:    session.user.email,
+      full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || null,
+    }, { onConflict: 'clerk_id', ignoreDuplicates: true });
+
+    const { data: status, error } = await sb
+      .from('praxos_user_status').select('is_active, days_remaining').eq('clerk_id', session.user.id).maybeSingle();
+
+    if (error) { $gateMsg.innerHTML = `Access check failed: ${error.message}`; return; }
+    if (!status || !status.is_active) {
+      gateRedirect('/subscribe', 'Subscription required — redirecting…');
+      return;
+    }
+
+    $email.textContent = session.user.email;
+    if (status.days_remaining != null) {
+      $days.textContent = `${status.days_remaining} day${status.days_remaining === 1 ? '' : 's'} left`;
+    }
+
+    $gate.style.display = 'none';
+    $app.style.display  = 'block';
+
+    loadFixtures();
+  })();
+</script>
+
+</body>
+</html>
