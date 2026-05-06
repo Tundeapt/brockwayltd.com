@@ -62,10 +62,10 @@
     <div class="price"><sup>₦</sup>33,500</div>
     <div class="price-note">per month · billed monthly · cancel any time</div>
     <ul class="feat">
-      <li>Full daily proven fixtures list</li>
-      <li>Decimal odds floor on every tip</li>
-      <li>Quadrant + density per match</li>
-      <li>Auto-rejected toxic and ambiguous fixtures</li>
+      <li>Full daily fixtures by country &amp; league</li>
+      <li>Quantitative board on every fixture</li>
+      <li>Top-3 weighted tips per fixture</li>
+      <li>Build accumulator tickets · no duplicate tips</li>
       <li>Unlimited queries · 30-day rolling expiry</li>
     </ul>
     <button id="pay" class="pay-btn">Pay ₦33,500 with Korapay</button>
@@ -81,6 +81,7 @@ const SUPABASE_URL = "https://bgymxvpjssnexztpkbfc.supabase.co";
 const SUPABASE_KEY = "sb_publishable_4IhlE7C-URixujv1yvUbhw_7mRmPQdp";
 const KORAPAY_KEY  = "pk_test_qSeC6mJbPErsGnCAH7t2Jdbdour3fxmHbsT3rXHT";
 const PRICE_NGN    = 33500;
+const ACTIVATE_URL = `${SUPABASE_URL}/functions/v1/activate-subscription`;
 const WEBHOOK_URL  = `${SUPABASE_URL}/functions/v1/korapay-webhook`;
 
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -107,6 +108,23 @@ if (status && status.is_active) {
 
 $logout.addEventListener('click', async (e) => { e.preventDefault(); await sb.auth.signOut(); location.href = '/'; });
 
+async function activateByReference(reference) {
+  const { data: { session: s } } = await sb.auth.getSession();
+  if (!s) throw new Error('Session expired. Sign in again.');
+  const res = await fetch(ACTIVATE_URL, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${s.access_token}`,
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_KEY,
+    },
+    body: JSON.stringify({ reference }),
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
+  return json;
+}
+
 $pay.addEventListener('click', () => {
   if (!window.Korapay) { showAlert('err', 'Payment script failed to load. Refresh and try again.'); return; }
   const fullName = user.user_metadata?.full_name || user.email.split('@')[0];
@@ -125,30 +143,15 @@ $pay.addEventListener('click', () => {
     metadata: { user_id: user.id, plan: 'praxos_monthly_30d' },
     onClose: () => { $pay.disabled = false; showAlert('info', 'Payment cancelled. You can try again any time.'); },
     onSuccess: async (data) => {
-      showAlert('ok', '<span class="loader"></span>Payment received. Activating your access…');
-      let tries = 0;
-      const maxTries = 30; // ~60s total
-      const poll = setInterval(async () => {
-        tries++;
-        const { data: row } = await sb
-          .from('praxos_user_status').select('is_active').eq('clerk_id', user.id).maybeSingle();
-        if (row && row.is_active) {
-          clearInterval(poll);
-          showAlert('ok', 'Active. Redirecting to terminal…');
-          setTimeout(() => location.href = '/praxos', 800);
-        } else if (tries >= maxTries) {
-          clearInterval(poll);
-          const { data: byEmail } = await sb
-            .from('praxos_user_status').select('is_active').eq('email', user.email).maybeSingle();
-          if (byEmail && byEmail.is_active) {
-            showAlert('ok', 'Activated. Redirecting…');
-            setTimeout(() => location.href = '/praxos', 800);
-          } else {
-            showAlert('info', `Payment confirmed but activation is delayed.<br>Wait 1 minute and refresh, or email support@brockwayltd.com with reference: <b>${data.reference || 'unknown'}</b>`);
-            $pay.disabled = false;
-          }
-        }
-      }, 2000);
+      showAlert('ok', '<span class="loader"></span>Payment received. Activating…');
+      try {
+        await activateByReference(data.reference || ref);
+        showAlert('ok', 'Activated. Redirecting to terminal…');
+        setTimeout(() => location.href = '/praxos', 800);
+      } catch (err) {
+        showAlert('err', `Activation failed: ${err.message}. Email support@brockwayltd.com with reference: ${data.reference || ref}`);
+        $pay.disabled = false;
+      }
     },
     onFailed: (data) => {
       $pay.disabled = false;
