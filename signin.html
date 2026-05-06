@@ -15,30 +15,39 @@
   html, body { margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh; }
   body { background-image:radial-gradient(1200px 600px at 80% -10%, rgba(255,176,0,0.06), transparent 60%),radial-gradient(900px 500px at -10% 110%, rgba(78,161,255,0.04), transparent 60%);display:flex;flex-direction:column; }
   body::before { content:'';position:fixed;inset:0;pointer-events:none;background-image:repeating-linear-gradient(0deg,rgba(255,255,255,0.012) 0 1px,transparent 1px 3px);z-index:1; }
-
   header { position:relative;z-index:2;padding:24px 36px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between; }
   .brand { font-family:'Fraunces',Georgia,serif;font-weight:900;font-size:24px;letter-spacing:-0.02em;color:var(--ink);text-decoration:none; }
   .brand em { font-style:italic;color:var(--amber); }
   header .back { font-size:13px;color:var(--ink-dim);text-decoration:none;font-weight:500; }
-  header .back:hover { color:var(--amber); }
-
   main { position:relative;z-index:2;flex:1;display:flex;align-items:center;justify-content:center;padding:40px 24px; }
   .card { width:100%;max-width:420px;background:var(--panel);border:1px solid var(--line);padding:38px 34px; }
   h1 { font-family:'Fraunces',serif;font-weight:500;font-style:italic;font-size:30px;line-height:1.2;letter-spacing:-0.01em;margin:0 0 8px; }
   h1 em { color:var(--amber);font-style:italic; }
   .subtitle { color:var(--ink-dim);font-size:14px;margin-bottom:28px; }
 
+  .google-btn {
+    width:100%;background:#fff;color:#1a1a1a;border:none;font-family:inherit;font-weight:500;font-size:14px;
+    padding:11px 14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;
+    transition:background 0.12s;
+  }
+  .google-btn:hover { background:#f0f0f0; }
+  .google-btn:disabled { opacity:0.6;cursor:wait; }
+  .google-btn svg { width:18px;height:18px; }
+
+  .divider { display:flex;align-items:center;gap:14px;margin:20px 0;color:var(--ink-mute);font-size:11px;letter-spacing:0.18em;text-transform:uppercase;font-weight:600; }
+  .divider::before, .divider::after { content:'';flex:1;height:1px;background:var(--line); }
+
   .tab-row { display:flex;gap:0;margin-bottom:24px;border-bottom:1px solid var(--line); }
-  .tab { flex:1;padding:11px 0;background:none;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;letter-spacing:0.02em;color:var(--ink-mute);border-bottom:2px solid transparent;transition:0.15s; }
+  .tab { flex:1;padding:11px 0;background:none;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;color:var(--ink-mute);border-bottom:2px solid transparent;transition:0.15s; }
   .tab.active { color:var(--ink);border-bottom-color:var(--amber); }
   .tab:hover { color:var(--ink); }
 
   .field { margin-bottom:16px; }
-  .field label { display:block;font-size:12px;letter-spacing:0.04em;color:var(--ink-mute);margin-bottom:6px;font-weight:500; }
+  .field label { display:block;font-size:12px;color:var(--ink-mute);margin-bottom:6px;font-weight:500; }
   .field input { width:100%;background:var(--bg-soft);border:1px solid var(--line-2);color:var(--ink);font-family:inherit;font-size:14px;padding:11px 14px;outline:none; }
   .field input:focus { border-color:var(--amber); }
 
-  .submit { width:100%;background:var(--amber);color:#1a1306;border:none;font-family:inherit;font-weight:700;font-size:14px;letter-spacing:0.02em;padding:13px 0;cursor:pointer;margin-top:6px;transition:background 0.12s; }
+  .submit { width:100%;background:var(--amber);color:#1a1306;border:none;font-family:inherit;font-weight:700;font-size:14px;padding:13px 0;cursor:pointer;margin-top:6px;transition:background 0.12s; }
   .submit:hover { background:#ffc333; }
   .submit:disabled { opacity:0.55;cursor:wait; }
 
@@ -57,7 +66,6 @@
 </style>
 </head>
 <body>
-
 <header>
   <a href="/" class="brand">Pra<em>x</em>os</a>
   <a href="/" class="back">← Back</a>
@@ -67,6 +75,18 @@
   <div class="card">
     <h1 id="title">Welcome <em>back</em>.</h1>
     <div class="subtitle" id="subtitle">Sign in to access the terminal.</div>
+
+    <button type="button" id="google-btn" class="google-btn">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+      </svg>
+      <span>Continue with Google</span>
+    </button>
+
+    <div class="divider">or with email</div>
 
     <div class="tab-row">
       <button class="tab active" id="tab-signin" type="button">Sign in</button>
@@ -99,34 +119,32 @@
 
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
 const SUPABASE_URL = "https://bgymxvpjssnexztpkbfc.supabase.co";
 const SUPABASE_KEY = "sb_publishable_4IhlE7C-URixujv1yvUbhw_7mRmPQdp";
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const $title    = document.getElementById('title');
+const $title = document.getElementById('title');
 const $subtitle = document.getElementById('subtitle');
-const $tabIn    = document.getElementById('tab-signin');
-const $tabUp    = document.getElementById('tab-signup');
-const $nameField= document.getElementById('name-field');
-const $name     = document.getElementById('full_name');
-const $email    = document.getElementById('email');
+const $tabIn = document.getElementById('tab-signin');
+const $tabUp = document.getElementById('tab-signup');
+const $nameField = document.getElementById('name-field');
+const $name = document.getElementById('full_name');
+const $email = document.getElementById('email');
 const $password = document.getElementById('password');
-const $submit   = document.getElementById('submit-btn');
-const $alert    = document.getElementById('alert');
-const $hint     = document.getElementById('hint');
-const $form     = document.getElementById('auth-form');
-const $forgot   = document.getElementById('forgot-link');
+const $submit = document.getElementById('submit-btn');
+const $alert = document.getElementById('alert');
+const $hint = document.getElementById('hint');
+const $form = document.getElementById('auth-form');
+const $forgot = document.getElementById('forgot-link');
+const $google = document.getElementById('google-btn');
 
 let mode = 'signin';
-
 function setMode(m) {
   mode = m;
   if (m === 'signin') {
     $title.innerHTML = 'Welcome <em>back</em>.';
     $subtitle.textContent = 'Sign in to access the terminal.';
-    $tabIn.classList.add('active');
-    $tabUp.classList.remove('active');
+    $tabIn.classList.add('active'); $tabUp.classList.remove('active');
     $nameField.style.display = 'none';
     $submit.textContent = 'Sign in';
     $password.autocomplete = 'current-password';
@@ -134,8 +152,7 @@ function setMode(m) {
   } else {
     $title.innerHTML = 'Get <em>access</em>.';
     $subtitle.textContent = 'Create your account to subscribe.';
-    $tabUp.classList.add('active');
-    $tabIn.classList.remove('active');
+    $tabUp.classList.add('active'); $tabIn.classList.remove('active');
     $nameField.style.display = 'block';
     $submit.textContent = 'Create account';
     $password.autocomplete = 'new-password';
@@ -143,38 +160,50 @@ function setMode(m) {
   }
   $alert.innerHTML = '';
 }
-
 $tabIn.addEventListener('click', () => setMode('signin'));
 $tabUp.addEventListener('click', () => setMode('signup'));
 
 function showAlert(type, msg) { $alert.innerHTML = `<div class="alert ${type}">${msg}</div>`; }
 
+$google.addEventListener('click', async () => {
+  $google.disabled = true;
+  $google.innerHTML = '<span class="loader"></span>Opening Google…';
+  try {
+    const { error } = await sb.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${location.origin}/signin` },
+    });
+    if (error) throw error;
+  } catch (err) {
+    showAlert('err', err.message || 'Google sign-in failed.');
+    $google.disabled = false;
+    $google.innerHTML = `
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+      </svg>
+      <span>Continue with Google</span>`;
+  }
+});
+
 $forgot.addEventListener('click', async (e) => {
   e.preventDefault();
   const email = $email.value.trim();
-  if (!email) {
-    showAlert('err', 'Enter your email above first, then click "Forgot password".');
-    return;
-  }
+  if (!email) { showAlert('err', 'Enter your email above first, then click "Forgot password".'); return; }
   try {
-    const { error } = await sb.auth.resetPasswordForEmail(email, {
-      redirectTo: `${location.origin}/reset-password`
-    });
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: `${location.origin}/reset-password` });
     if (error) throw error;
     showAlert('ok', `Password reset link sent to ${email}. Check your inbox.`);
-  } catch (err) {
-    showAlert('err', err.message || 'Could not send reset email.');
-  }
+  } catch (err) { showAlert('err', err.message || 'Could not send reset email.'); }
 });
 
 async function routeAuthenticated() {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) return;
   const { data: row } = await sb
-    .from('praxos_user_status')
-    .select('is_active')
-    .eq('clerk_id', session.user.id)
-    .maybeSingle();
+    .from('praxos_user_status').select('is_active').eq('clerk_id', session.user.id).maybeSingle();
   location.href = (row && row.is_active) ? '/praxos' : '/subscribe';
 }
 routeAuthenticated();
@@ -186,7 +215,7 @@ $form.addEventListener('submit', async (e) => {
   const original = $submit.textContent;
   $submit.innerHTML = `<span class="loader"></span>${mode === 'signin' ? 'Signing in…' : 'Creating account…'}`;
 
-  const email    = $email.value.trim();
+  const email = $email.value.trim();
   const password = $password.value;
   const fullName = $name.value.trim();
 
@@ -197,30 +226,21 @@ $form.addEventListener('submit', async (e) => {
         options: { data: { full_name: fullName || null }, emailRedirectTo: `${location.origin}/signin` }
       });
       if (error) throw error;
-
-      // praxos_users row is auto-created via the on_auth_user_created trigger.
-
-      if (data.session) {
-        location.href = '/subscribe';
-      } else {
+      if (data.session) location.href = '/subscribe';
+      else {
         showAlert('ok', `Account created. Check ${email} to confirm, then come back and sign in.`);
-        $submit.disabled = false;
-        $submit.textContent = original;
+        $submit.disabled = false; $submit.textContent = original;
       }
     } else {
       const { data, error } = await sb.auth.signInWithPassword({ email, password });
       if (error) throw error;
       const { data: row } = await sb
-        .from('praxos_user_status')
-        .select('is_active')
-        .eq('clerk_id', data.user.id)
-        .maybeSingle();
+        .from('praxos_user_status').select('is_active').eq('clerk_id', data.user.id).maybeSingle();
       location.href = (row && row.is_active) ? '/praxos' : '/subscribe';
     }
   } catch (err) {
     showAlert('err', err.message || 'Something went wrong. Try again.');
-    $submit.disabled = false;
-    $submit.textContent = original;
+    $submit.disabled = false; $submit.textContent = original;
   }
 });
 </script>
