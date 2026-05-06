@@ -210,11 +210,8 @@
   <div class="acca-body" id="acca-body">
     <div class="acca-form">
       <div class="row">
-        <label for="acca-scope">Pool</label>
-        <select id="acca-scope">
-          <option value="today">Today only</option>
-          <option value="random_3d">Random over 3 days</option>
-        </select>
+        <label for="acca-days">Days span</label>
+        <input type="number" id="acca-days" min="1" max="7" value="1" />
       </div>
       <div class="row">
         <label for="acca-legs">Legs</label>
@@ -252,7 +249,7 @@
   const $accaSide = document.getElementById('acca-side');
   const $accaClose = document.getElementById('acca-close');
   const $accaBuild = document.getElementById('acca-build');
-  const $accaScope = document.getElementById('acca-scope');
+  const $accaDays = document.getElementById('acca-days');
   const $accaLegs = document.getElementById('acca-legs');
   const $accaAlert = document.getElementById('acca-alert');
   const $accaTickets = document.getElementById('acca-tickets');
@@ -431,9 +428,11 @@
   function showAccaAlert(type, msg) { $accaAlert.innerHTML = `<div class="alert ${type}">${msg}</div>`; }
 
   $accaBuild.addEventListener('click', async () => {
-    const scope = $accaScope.value;
-    const legs  = parseInt($accaLegs.value || '6', 10);
+    const days = parseInt($accaDays.value || '1', 10);
+    const legs = parseInt($accaLegs.value || '6', 10);
+    if (days < 1 || days > 7) { showAccaAlert('err', 'Days must be between 1 and 7.'); return; }
     if (legs < 2 || legs > 20) { showAccaAlert('err', 'Legs must be between 2 and 20.'); return; }
+    if (days > 1 && legs < days) { showAccaAlert('err', `Legs (${legs}) must be at least ${days} so each date appears at least once.`); return; }
 
     $accaBuild.disabled = true;
     showAccaAlert('info', '<span class="loader"></span>Building ticket…');
@@ -449,11 +448,11 @@
           'Content-Type': 'application/json',
           'apikey': SUPABASE_KEY,
         },
-        body: JSON.stringify({ scope, legs }),
+        body: JSON.stringify({ days, legs }),
       });
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
-      showAccaAlert('ok', `Ticket ${json.ticket_code} generated · ${legs} legs · ${json.total_odds.toFixed(2)} odds`);
+      if (!res.ok) throw new Error(json.message || json.error || `HTTP ${res.status}`);
+      showAccaAlert('ok', `Ticket ${json.ticket_code} generated · ${legs} legs · spans ${days} day${days === 1 ? '' : 's'} · ${json.total_odds.toFixed(2)} odds`);
       loadTicketHistory();
     } catch (err) {
       showAccaAlert('err', err.message || 'Build failed.');
@@ -480,7 +479,7 @@
     for (const t of tickets) {
       const { data: legs } = await sb
         .from('acca_legs')
-        .select('match_date, kickoff, fixture, competition, market, decimal_odds, hit_rate_pct')
+        .select('match_date, kickoff, fixture, competition, country, league, market, decimal_odds, hit_rate_pct')
         .eq('ticket_id', t.id)
         .order('match_date', { ascending: true })
         .order('kickoff', { ascending: true });
@@ -489,9 +488,11 @@
       for (const l of legs || []) {
         const ko = kickoffLocal(l.match_date, l.kickoff);
         const titleCaseMkt = String(l.market).split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        const venue = [l.country, l.league].filter(Boolean).join(' · ');
         legsHtml += `
           <div class="leg">
             <div class="leg-fix">${esc(l.fixture)}</div>
+            ${venue ? `<div class="leg-meta">${esc(venue)}</div>` : ''}
             <div class="leg-meta">${esc(l.match_date)} · ${esc(ko)}</div>
             <div class="leg-mkt"><span>${esc(titleCaseMkt)}</span><span>@ ${parseFloat(l.decimal_odds).toFixed(2)}</span></div>
           </div>`;
@@ -518,6 +519,14 @@
   (async () => {
     const { data: { session } } = await sb.auth.getSession();
     if (!session) { gateRedirect('/signin', 'No session — redirecting to sign in…'); return; }
+
+    // Defensive self-heal: ensure praxos_users row exists before reading status.
+    // RLS allows self-insert because auth.uid() === clerk_id.
+    await sb.from('praxos_users').upsert({
+      clerk_id: session.user.id,
+      email:    session.user.email,
+      full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || null,
+    }, { onConflict: 'clerk_id', ignoreDuplicates: true });
 
     const { data: status, error } = await sb
       .from('praxos_user_status').select('is_active, days_remaining').eq('clerk_id', session.user.id).maybeSingle();
