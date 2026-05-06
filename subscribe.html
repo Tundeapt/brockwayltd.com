@@ -98,6 +98,14 @@ if (!session) { location.href = '/signin'; throw new Error('not authed'); }
 const user = session.user;
 $email.textContent = user.email;
 
+// Defensive self-heal: ensure praxos_users row exists before payment.
+// RLS allows self-insert (auth.uid() === clerk_id).
+await sb.from('praxos_users').upsert({
+  clerk_id:  user.id,
+  email:     user.email,
+  full_name: user.user_metadata?.full_name || user.user_metadata?.name || null,
+}, { onConflict: 'clerk_id', ignoreDuplicates: true });
+
 const { data: status } = await sb
   .from('praxos_user_status').select('is_active, days_remaining').eq('clerk_id', user.id).maybeSingle();
 
