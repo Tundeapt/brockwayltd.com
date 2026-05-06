@@ -42,31 +42,26 @@
   main { position:relative;z-index:2;padding:24px 28px 60px;max-width:1100px;margin:0 auto;transition:margin-right 0.3s ease; }
   main.sidebar-open { margin-right:380px; }
 
-  /* Country/league/fixture accordions */
-  .acc { border:1px solid var(--line);background:var(--panel);margin-bottom:8px; }
-  .acc summary { list-style:none;cursor:pointer;padding:14px 18px;display:flex;align-items:center;gap:14px;font-weight:600; }
-  .acc summary::-webkit-details-marker { display:none; }
-  .acc summary::before { content:'▸';color:var(--ink-mute);transition:transform 0.15s;font-size:14px; }
-  .acc[open] > summary::before { transform:rotate(90deg);color:var(--amber); }
-  .acc summary:hover { background:rgba(255,176,0,0.04); }
-  .acc-title { flex:1;font-size:15px;color:var(--ink); }
-  .badge { background:var(--bg-soft);color:var(--ink-dim);font-size:11px;font-weight:600;padding:3px 9px;border-radius:10px;border:1px solid var(--line-2); }
-
-  .acc.country { border-left:3px solid var(--amber); }
-  .acc.league  { margin:6px 12px 0 32px;border-left:2px solid var(--blue); }
-  .acc.league summary { padding:10px 14px;font-size:13px; }
-
-  .fixture-row {
-    margin:4px 12px 0 56px;padding:10px 14px;background:var(--bg-soft);border:1px solid var(--line);
-    display:flex;align-items:center;gap:14px;cursor:pointer;transition:background 0.08s;
-    font-size:13px;
+  /* Flat table layout */
+  .tbl-wrap { border:1px solid var(--line);background:var(--panel);overflow-x:auto; }
+  .fx-table { width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums; }
+  .fx-table thead th {
+    text-align:left;font-size:11px;letter-spacing:0.04em;color:var(--ink-mute);
+    padding:13px 14px;background:var(--panel-2);border-bottom:1px solid var(--line-2);
+    font-weight:600;white-space:nowrap;
   }
-  .fixture-row:hover { background:rgba(255,176,0,0.06);border-color:var(--line-2); }
-  .fixture-row .ko { color:var(--amber);font-weight:700;min-width:48px; }
-  .fixture-row .name { flex:1;color:var(--ink);font-weight:500; }
-  .fixture-row .score { color:var(--ink-dim);font-size:12px;font-weight:600;min-width:80px;text-align:right; }
-  .fixture-row .score.pending { color:var(--ink-mute);font-weight:500;font-style:italic; }
-  .fixture-row .score.graded { color:var(--green); }
+  .fx-table tbody tr {
+    border-bottom:1px solid var(--line);transition:background 0.08s ease;cursor:pointer;
+  }
+  .fx-table tbody tr:hover { background:rgba(255,176,0,0.06); }
+  .fx-table tbody td { padding:13px 14px;font-size:13px;line-height:1.4;vertical-align:middle; }
+  .fx-table td.kickoff { color:var(--amber);font-weight:700;white-space:nowrap;width:90px; }
+  .fx-table td.country { color:var(--ink-dim);white-space:nowrap; }
+  .fx-table td.league  { color:var(--ink-dim);white-space:nowrap; }
+  .fx-table td.name    { color:var(--ink);font-weight:500; }
+  .fx-table .status { font-size:12px;font-weight:600; }
+  .fx-table .status.pending { color:var(--ink-mute);font-weight:500;font-style:italic; }
+  .fx-table .status.graded  { color:var(--green); }
 
   /* Fixture modal */
   .modal-back {
@@ -154,8 +149,7 @@
   @media (max-width:760px) {
     main.sidebar-open { margin-right:0; }
     .acca-side { width:100%; }
-    .fixture-row { margin-left:32px; }
-    .acc.league { margin-left:14px; }
+    .fx-table td.country, .fx-table th:nth-child(2) { display:none; }
   }
 </style>
 </head>
@@ -279,62 +273,51 @@
 
   function pctToOdds(pct) { const p = parseFloat(pct); return p > 0 ? (100/p).toFixed(2) : '—'; }
 
-  /* ====== Render fixtures grouped by country/league ====== */
-  function buildHierarchy(rows) {
-    const countries = new Map();
-    for (const r of rows) {
-      const ckey = r.country || 'Other';
-      const lkey = r.league || 'League';
-      if (!countries.has(ckey)) countries.set(ckey, new Map());
-      const lmap = countries.get(ckey);
-      if (!lmap.has(lkey)) lmap.set(lkey, []);
-      lmap.get(lkey).push(r);
-    }
-    return countries;
-  }
-
+  /* ====== Render fixtures as a flat sortable table ====== */
   function renderFixtures(rows) {
     if (!rows.length) {
       $result.innerHTML = `<div class="state"><div class="big">No fixtures.</div><div class="sm">Try another date.</div></div>`;
       return;
     }
-    const tree = buildHierarchy(rows);
-    const sortedCountries = [...tree.keys()].sort((a,b) => a.localeCompare(b));
+    rows.sort((a,b) => (a.kickoff || '').localeCompare(b.kickoff || ''));
 
-    let html = '';
-    for (const country of sortedCountries) {
-      const lmap = tree.get(country);
-      const fixtureCount = [...lmap.values()].reduce((acc, arr) => acc + arr.length, 0);
-      html += `<details class="acc country"><summary><span class="acc-title">${esc(country)}</span><span class="badge">${fixtureCount}</span></summary>`;
-      const sortedLeagues = [...lmap.keys()].sort((a,b) => a.localeCompare(b));
-      for (const league of sortedLeagues) {
-        const fxs = lmap.get(league).slice().sort((a,b) => (a.kickoff || '').localeCompare(b.kickoff || ''));
-        html += `<details class="acc league"><summary><span class="acc-title">${esc(league)}</span><span class="badge">${fxs.length}</span></summary>`;
-        for (const f of fxs) {
-          const ko = kickoffLocal(f.match_date, f.kickoff);
-          let scoreHtml;
-          if (f.grade_status === 'graded' && f.final_score) {
-            scoreHtml = `<span class="score graded">${esc(f.final_score)}</span>`;
-          } else if (f.grade_status === 'graded') {
-            scoreHtml = `<span class="score graded">FT</span>`;
-          } else {
-            scoreHtml = `<span class="score pending">pending</span>`;
-          }
-          html += `
-            <div class="fixture-row" data-mid="${esc(f.match_id)}">
-              <span class="ko">${esc(ko)}</span>
-              <span class="name">${esc(f.fixture)}</span>
-              ${scoreHtml}
-            </div>`;
-        }
-        html += `</details>`;
+    let html = `
+      <div class="tbl-wrap">
+        <table class="fx-table">
+          <thead>
+            <tr>
+              <th>Kickoff</th>
+              <th>Country</th>
+              <th>League</th>
+              <th>Fixture</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>`;
+
+    for (const f of rows) {
+      const ko = kickoffLocal(f.match_date, f.kickoff);
+      let statusHtml;
+      if (f.grade_status === 'graded' && f.final_score) {
+        statusHtml = `<span class="status graded">${esc(f.final_score)}</span>`;
+      } else if (f.grade_status === 'graded') {
+        statusHtml = `<span class="status graded">FT</span>`;
+      } else {
+        statusHtml = `<span class="status pending">pending</span>`;
       }
-      html += `</details>`;
+      html += `
+        <tr class="fx-row" data-mid="${esc(f.match_id)}">
+          <td class="kickoff">${esc(ko)}</td>
+          <td class="country">${esc(f.country || '')}</td>
+          <td class="league">${esc(f.league || '')}</td>
+          <td class="name">${esc(f.fixture)}</td>
+          <td>${statusHtml}</td>
+        </tr>`;
     }
+    html += `</tbody></table></div>`;
     $result.innerHTML = html;
 
-    /* Wire up click handlers for fixture rows */
-    $result.querySelectorAll('.fixture-row').forEach(el => {
+    $result.querySelectorAll('.fx-row').forEach(el => {
       el.addEventListener('click', () => {
         const mid = el.getAttribute('data-mid');
         const fixture = rows.find(r => r.match_id === mid);
@@ -400,7 +383,7 @@
     $result.innerHTML = `<div class="state"><div class="big"><span class="loader"></span> Fetching fixtures…</div><div class="sm">${date}</div></div>`;
 
     const cols = 'match_id,match_date,kickoff,fixture,country,league,grade_status,home_goals,away_goals,final_score,target_score,quant_tips,quant_grade,competition_raw,match_velocity,hpi,api';
-    const url = `${SUPABASE_URL}/rest/v1/praxos_delta_day?select=${encodeURIComponent(cols)}&match_date=eq.${encodeURIComponent(date)}&order=kickoff.asc`;
+    const url = `${SUPABASE_URL}/rest/v1/praxos_gamma_day?select=${encodeURIComponent(cols)}&match_date=eq.${encodeURIComponent(date)}&order=kickoff.asc`;
     try {
       const res = await fetch(url, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Accept': 'application/json' }});
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
