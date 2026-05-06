@@ -199,14 +199,39 @@ $forgot.addEventListener('click', async (e) => {
   } catch (err) { showAlert('err', err.message || 'Could not send reset email.'); }
 });
 
-async function routeAuthenticated() {
-  const { data: { session } } = await sb.auth.getSession();
+async function ensurePraxosUserRow(user) {
+  // Defensive: if the trigger ever fails to create the row, create it client-side.
+  // Self-insert is RLS-permitted because auth.uid() === clerk_id.
+  await sb.from('praxos_users').upsert({
+    clerk_id:   user.id,
+    email:      user.email,
+    full_name:  user.user_metadata?.full_name || user.user_metadata?.name || null,
+  }, { onConflict: 'clerk_id', ignoreDuplicates: true });
+}
+
+async function routeFromSession(session) {
   if (!session) return;
+  await ensurePraxosUserRow(session.user);
   const { data: row } = await sb
     .from('praxos_user_status').select('is_active').eq('clerk_id', session.user.id).maybeSingle();
   location.href = (row && row.is_active) ? '/praxos' : '/subscribe';
 }
-routeAuthenticated();
+
+// Subscribe to auth state changes — handles both initial page load AND
+// the async hydration after OAuth redirect (Supabase processes #access_token
+// in the URL hash asynchronously, so a one-shot getSession() at load time
+// can return null before processing completes).
+sb.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_IN' && session) {
+    routeFromSession(session);
+  }
+});
+
+// Also do an immediate check in case session is already there (no hash to process)
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) routeFromSession(session);
+})();
 
 $form.addEventListener('submit', async (e) => {
   e.preventDefault();
