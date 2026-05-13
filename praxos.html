@@ -38,10 +38,6 @@
   .ctl label { font-size:11px;color:var(--ink-mute);font-weight:500; }
   .ctl input[type="date"] { background:var(--panel);border:1px solid var(--line-2);color:var(--ink);font-family:inherit;font-size:14px;padding:9px 12px;outline:none;color-scheme:dark; }
   .ctl input:focus { border-color:var(--amber); }
-  .src-toggle { display:flex;border:1px solid var(--line-2);background:var(--panel);overflow:hidden; }
-  .src-btn { background:transparent;border:none;color:var(--ink-dim);font-family:inherit;font-size:13px;font-weight:600;padding:9px 16px;cursor:pointer;letter-spacing:0.02em;transition:0.12s; }
-  .src-btn:hover { color:var(--ink); }
-  .src-btn.active { background:var(--amber);color:#1a1306; }
   .src-tag { font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:var(--amber);font-weight:600;margin-left:6px; }
 
   main { position:relative;z-index:2;padding:24px 28px 60px;max-width:1100px;margin:0 auto;transition:margin-right 0.3s ease; }
@@ -174,7 +170,7 @@
 <div id="app" style="display:none;">
 
   <header>
-    <a href="/" class="brand">Pra<em>x</em>os<span class="src-tag" id="engine-tag">GAMMA</span></a>
+    <a href="/" class="brand">Pra<em>x</em>os<span class="src-tag">VAULT</span></a>
     <div class="meta">
       <span class="pulse">Live</span>
       <span id="now-label">—</span>
@@ -189,13 +185,6 @@
     <div class="ctl">
       <label for="date">Match Date</label>
       <input type="date" id="date" />
-    </div>
-    <div class="ctl src-ctl">
-      <label>Engine</label>
-      <div class="src-toggle" role="tablist">
-        <button type="button" class="src-btn active" data-src="gamma">Gamma</button>
-        <button type="button" class="src-btn"        data-src="delta">Delta</button>
-      </div>
     </div>
   </section>
 
@@ -242,26 +231,9 @@
   const SUPABASE_KEY = "sb_publishable_4IhlE7C-URixujv1yvUbhw_7mRmPQdp";
   const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  /* ====== Source toggle (delta | gamma) — persisted in localStorage ====== */
-  let SOURCE = (localStorage.getItem('praxos_source') === 'delta') ? 'delta' : 'gamma';
-  function applySourceUI() {
-    document.querySelectorAll('.src-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.getAttribute('data-src') === SOURCE);
-    });
-    const tag = document.getElementById('engine-tag');
-    if (tag) tag.textContent = SOURCE.toUpperCase();
-  }
-  document.addEventListener('click', (e) => {
-    const t = e.target.closest('.src-btn');
-    if (!t) return;
-    const next = t.getAttribute('data-src');
-    if (next !== 'delta' && next !== 'gamma') return;
-    if (next === SOURCE) return;
-    SOURCE = next;
-    localStorage.setItem('praxos_source', SOURCE);
-    applySourceUI();
-    if (typeof loadFixtures === 'function') loadFixtures();
-  });
+  /* ====== Source: praxos_vault (fixed) ====== */
+  const SOURCE = 'vault';
+  function applySourceUI() { /* no-op — vault is the only source */ }
 
   /* ====== Refs ====== */
   const $gate = document.getElementById('gate');
@@ -430,7 +402,7 @@
     $status.innerHTML = `<span class="loader"></span> Loading ${date}`;
     $result.innerHTML = `<div class="state"><div class="big"><span class="loader"></span> Fetching fixtures…</div><div class="sm">${date}</div></div>`;
 
-    const view = SOURCE === 'delta' ? 'praxos_delta_day' : 'praxos_gamma_day';
+    const view = 'praxos_vault_day';
     const cols = 'match_id,match_date,kickoff,fixture,country,league,grade_status,home_goals,away_goals,final_score,target_score,quant_tips,quant_grade,competition_raw,match_velocity,hpi,api';
     const url = `${SUPABASE_URL}/rest/v1/${view}?select=${encodeURIComponent(cols)}&match_date=eq.${encodeURIComponent(date)}&order=kickoff.asc`;
     try {
