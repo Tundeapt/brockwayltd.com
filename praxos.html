@@ -38,7 +38,6 @@
   .ctl label { font-size:11px;color:var(--ink-mute);font-weight:500; }
   .ctl input[type="date"] { background:var(--panel);border:1px solid var(--line-2);color:var(--ink);font-family:inherit;font-size:14px;padding:9px 12px;outline:none;color-scheme:dark; }
   .ctl input:focus { border-color:var(--amber); }
-  .src-tag { font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:var(--amber);font-weight:600;margin-left:6px; }
 
   main { position:relative;z-index:2;padding:24px 28px 60px;max-width:1100px;margin:0 auto;transition:margin-right 0.3s ease; }
   main.sidebar-open { margin-right:380px; }
@@ -170,7 +169,7 @@
 <div id="app" style="display:none;">
 
   <header>
-    <a href="/" class="brand">Pra<em>x</em>os<span class="src-tag">VAULT</span></a>
+    <a href="/" class="brand">Pra<em>x</em>os</a>
     <div class="meta">
       <span class="pulse">Live</span>
       <span id="now-label">—</span>
@@ -403,7 +402,7 @@
     $result.innerHTML = `<div class="state"><div class="big"><span class="loader"></span> Fetching fixtures…</div><div class="sm">${date}</div></div>`;
 
     const view = 'praxos_absolute_day';
-    const cols = 'match_id,match_date,kickoff,fixture,country,league,grade_status,home_goals,away_goals,final_score,target_score,quant_tips,quant_grade,competition_raw,match_velocity,hpi,api';
+    const cols = 'match_id,match_date,kickoff,fixture,country,league,grade_status,final_score,target_score,quant_tips,quant_grade';
     const url = `${SUPABASE_URL}/rest/v1/${view}?select=${encodeURIComponent(cols)}&match_date=eq.${encodeURIComponent(date)}&order=kickoff.asc`;
     try {
       const res = await fetch(url, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Accept': 'application/json' }});
