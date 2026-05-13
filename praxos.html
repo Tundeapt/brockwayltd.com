@@ -402,7 +402,7 @@
     $status.innerHTML = `<span class="loader"></span> Loading ${date}`;
     $result.innerHTML = `<div class="state"><div class="big"><span class="loader"></span> Fetching fixtures…</div><div class="sm">${date}</div></div>`;
 
-    const view = 'praxos_vault_day';
+    const view = 'praxos_absolute_day';
     const cols = 'match_id,match_date,kickoff,fixture,country,league,grade_status,home_goals,away_goals,final_score,target_score,quant_tips,quant_grade,competition_raw,match_velocity,hpi,api';
     const url = `${SUPABASE_URL}/rest/v1/${view}?select=${encodeURIComponent(cols)}&match_date=eq.${encodeURIComponent(date)}&order=kickoff.asc`;
     try {
@@ -456,7 +456,7 @@
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.message || json.error || `HTTP ${res.status}`);
-      showAccaAlert('ok', `Ticket ${json.ticket_code} generated · ${SOURCE.toUpperCase()} · ${legs} legs · spans ${days} day${days === 1 ? '' : 's'} · ${json.total_odds.toFixed(2)} odds`);
+      showAccaAlert('ok', `Ticket ${json.ticket_code} generated · ${legs} legs · spans ${days} day${days === 1 ? '' : 's'}`);
       loadTicketHistory();
     } catch (err) {
       showAccaAlert('err', err.message || 'Build failed.');
@@ -470,7 +470,7 @@
     if (!session) return;
     const { data: tickets } = await sb
       .from('acca_tickets')
-      .select('id, ticket_code, scope, legs_filled, total_odds, created_at')
+      .select('id, ticket_code, scope, legs_filled, created_at')
       .order('created_at', { ascending: false })
       .limit(10);
 
@@ -483,7 +483,7 @@
     for (const t of tickets) {
       const { data: legs } = await sb
         .from('acca_legs')
-        .select('match_date, kickoff, fixture, competition, country, league, market, decimal_odds, hit_rate_pct')
+        .select('match_date, kickoff, fixture, competition, country, league, market')
         .eq('ticket_id', t.id)
         .order('match_date', { ascending: true })
         .order('kickoff', { ascending: true });
@@ -498,7 +498,7 @@
             <div class="leg-fix">${esc(l.fixture)}</div>
             ${venue ? `<div class="leg-meta">${esc(venue)}</div>` : ''}
             <div class="leg-meta">${esc(l.match_date)} · ${esc(ko)}</div>
-            <div class="leg-mkt"><span>${esc(titleCaseMkt)}</span><span>@ ${parseFloat(l.decimal_odds).toFixed(2)}</span></div>
+            <div class="leg-mkt"><span>${esc(titleCaseMkt)}</span></div>
           </div>`;
       }
 
@@ -507,7 +507,6 @@
           <div class="ticket-head">
             <span class="code">#${esc(t.ticket_code)}</span>
             <span>${esc(t.scope)} · ${t.legs_filled} legs</span>
-            <span class="odds">${parseFloat(t.total_odds).toFixed(2)}</span>
           </div>
           ${legsHtml}
         </div>`;
