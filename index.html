@@ -3,213 +3,284 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Praxos — Quantitative Football Intelligence</title>
-<meta name="description" content="A quantitative engine that finds proven football tips. ₦33,500 per month." />
+<title>Praxos · Quantitative Football Analytics by Brockway</title>
+<meta name="description" content="Praxos delivers institutional-grade football analytics. 34 markets graded inside a 70–87% probability corridor. Built by Brockway Trading." />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,700;9..144,900&display=swap" rel="stylesheet" />
+<!-- API-Sports widget for live football data -->
+<script type="module" crossorigin src="https://widgets.api-sports.io/3.1.0/widgets.js"></script>
 <style>
   :root {
-    --bg:#0b0d10;--bg-soft:#11151a;--panel:#141a21;--line:#232c36;--line-2:#2c3744;
-    --ink:#e8ecf1;--ink-dim:#8a96a4;--ink-mute:#5b6776;--amber:#ffb000;--green:#2cd075;
-    --fs-base: 15px;
+    --bg:#0b0d10;--bg-soft:#11151a;--panel:#141a21;--panel-2:#1a2129;
+    --line:#232c36;--line-2:#2c3744;
+    --ink:#e8ecf1;--ink-dim:#8a96a4;--ink-mute:#5b6776;
+    --amber:#ffb000;--green:#2cd075;--red:#ff4d54;--blue:#4ea1ff;
   }
-  * { box-sizing: border-box; }
-  html, body {
-    margin:0;padding:0;background:var(--bg);color:var(--ink);
-    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-    font-size:var(--fs-base);line-height:1.6;
-    -webkit-font-smoothing:antialiased;text-rendering:geometricPrecision;
-  }
-  body {
-    background-image:
-      radial-gradient(1400px 700px at 80% -10%, rgba(255,176,0,0.06), transparent 60%),
-      radial-gradient(1000px 600px at -10% 110%, rgba(78,161,255,0.04), transparent 60%);
-    min-height:100vh;
-  }
+  * { box-sizing:border-box; }
+  html, body { margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased; }
+  body { background-image:radial-gradient(1200px 600px at 80% -10%, rgba(255,176,0,0.07), transparent 60%),radial-gradient(900px 500px at -10% 110%, rgba(78,161,255,0.04), transparent 60%);min-height:100vh; }
   body::before { content:'';position:fixed;inset:0;pointer-events:none;background-image:repeating-linear-gradient(0deg,rgba(255,255,255,0.012) 0 1px,transparent 1px 3px);z-index:1; }
-  .wrap { position:relative;z-index:2;max-width:980px;margin:0 auto;padding:0 28px; }
 
-  nav { padding:24px 0;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line); }
-  .brand { font-family:'Fraunces',Georgia,serif;font-weight:900;font-size:26px;letter-spacing:-0.02em;color:var(--ink);text-decoration:none; }
+  header.site { position:sticky;top:0;z-index:50;padding:20px 36px;border-bottom:1px solid var(--line);background:rgba(11,13,16,0.85);backdrop-filter:saturate(140%) blur(10px);display:flex;align-items:center;justify-content:space-between;gap:18px; }
+  .brand { font-family:'Fraunces',serif;font-weight:900;font-size:28px;letter-spacing:-0.02em;color:var(--ink);text-decoration:none;display:flex;align-items:baseline;gap:8px; }
   .brand em { font-style:italic;color:var(--amber); }
-  .brand-sub { font-size:11px;color:var(--ink-mute);letter-spacing:0.18em;text-transform:uppercase;margin-left:12px;border-left:1px solid var(--line-2);padding-left:12px;font-weight:500; }
-  nav .links { display:flex;gap:24px;align-items:center;font-size:13px;font-weight:500; }
-  nav .links a { color:var(--ink-dim);text-decoration:none;transition:color 0.15s; }
-  nav .links a:hover { color:var(--amber); }
-  nav .links .cta { background:var(--amber);color:#1a1306;padding:9px 18px;font-weight:600; }
-  nav .links .cta:hover { background:#ffc333;color:#1a1306; }
+  .brand .sub { font-family:'Inter',sans-serif;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--ink-mute);font-weight:600; }
+  nav.top { display:flex;gap:10px;align-items:center; }
+  nav.top a { font-size:13px;color:var(--ink-dim);text-decoration:none;padding:9px 14px;border:1px solid transparent;font-weight:500;transition:0.12s;cursor:pointer; }
+  nav.top a:hover { color:var(--ink); }
+  nav.top a.btn-primary { background:var(--amber);color:#1a1306;border-color:var(--amber);font-weight:700; }
+  nav.top a.btn-primary:hover { background:#ffc333; }
+  nav.top a.btn-ghost { border-color:var(--line-2); }
+  nav.top a.btn-ghost:hover { border-color:var(--amber);color:var(--amber); }
 
-  .hero { padding:90px 0 70px; }
-  .ticker { display:inline-flex;align-items:center;gap:10px;font-size:12px;text-transform:uppercase;letter-spacing:0.16em;color:var(--green);margin-bottom:28px;font-weight:500; }
-  .ticker::before { content:'';width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 1.6s ease-in-out infinite; }
+  .hero { position:relative;z-index:2;max-width:1180px;margin:0 auto;padding:80px 36px 60px;text-align:left; }
+  .eyebrow { font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:var(--amber);font-weight:700;margin-bottom:22px; }
+  .eyebrow::before { content:'';display:inline-block;width:32px;height:1px;background:var(--amber);vertical-align:middle;margin-right:12px; }
+  h1.hero-title { font-family:'Fraunces',serif;font-weight:500;font-size:clamp(40px,7vw,84px);line-height:0.98;letter-spacing:-0.025em;margin:0 0 22px;max-width:980px; }
+  h1.hero-title em { font-style:italic;color:var(--amber); }
+  .hero-lede { font-size:17px;line-height:1.55;color:var(--ink-dim);max-width:680px;margin:0 0 38px;font-weight:400; }
+  .hero-cta { display:flex;gap:14px;flex-wrap:wrap;align-items:center; }
+  .cta-primary { background:var(--amber);color:#1a1306;border:none;font-family:inherit;font-weight:700;font-size:14px;letter-spacing:0.02em;padding:15px 28px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:0.12s; }
+  .cta-primary:hover { background:#ffc333; }
+  .cta-secondary { background:transparent;color:var(--ink);border:1px solid var(--line-2);font-family:inherit;font-weight:600;font-size:14px;padding:15px 26px;cursor:pointer;text-decoration:none;transition:0.12s; }
+  .cta-secondary:hover { border-color:var(--amber);color:var(--amber); }
+
+  .stats { position:relative;z-index:2;max-width:1180px;margin:0 auto;padding:0 36px 60px;border-bottom:1px solid var(--line); }
+  .stats-grid { display:grid;grid-template-columns:repeat(4,1fr);gap:0; }
+  .stat { padding:20px 24px;border-left:1px solid var(--line); }
+  .stat:first-child { border-left:none;padding-left:0; }
+  .stat-num { font-family:'Fraunces',serif;font-weight:700;font-size:42px;line-height:1;color:var(--ink);letter-spacing:-0.02em; }
+  .stat-num em { font-style:italic;color:var(--amber); }
+  .stat-label { font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-mute);font-weight:600;margin-top:8px; }
+
+  section.block { position:relative;z-index:2;max-width:1180px;margin:0 auto;padding:80px 36px;border-bottom:1px solid var(--line); }
+  .block h2 { font-family:'Fraunces',serif;font-weight:500;font-size:clamp(30px,4vw,46px);line-height:1.1;letter-spacing:-0.02em;margin:0 0 14px; }
+  .block h2 em { font-style:italic;color:var(--amber); }
+  .block .kicker { font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:var(--ink-mute);font-weight:600;margin-bottom:18px; }
+  .block .lede { font-size:16px;color:var(--ink-dim);max-width:680px;margin-bottom:44px;line-height:1.6; }
+
+  .features { display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line); }
+  .feature { background:var(--bg);padding:32px 28px; }
+  .feature .num { font-family:'Fraunces',serif;font-weight:900;font-style:italic;font-size:32px;color:var(--amber);margin-bottom:14px;line-height:1; }
+  .feature h3 { font-family:'Inter',sans-serif;font-weight:700;font-size:17px;color:var(--ink);margin:0 0 10px; }
+  .feature p { color:var(--ink-dim);font-size:14px;line-height:1.6;margin:0; }
+
+  .live-wrap { background:var(--panel);border:1px solid var(--line);overflow:hidden; }
+  .live-head { padding:18px 22px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between; }
+  .live-head h3 { font-family:'Fraunces',serif;font-weight:500;font-size:20px;margin:0; }
+  .live-head h3 em { font-style:italic;color:var(--amber); }
+  .live-head .live-pulse { display:inline-flex;align-items:center;gap:8px;font-size:11px;color:var(--green);letter-spacing:0.12em;text-transform:uppercase;font-weight:600; }
+  .live-head .live-pulse::before { content:'';width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 1.6s ease-in-out infinite; }
   @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.35;} }
+  .live-body { padding:0;min-height:380px;max-height:560px;overflow-y:auto;color-scheme:dark; }
 
-  h1 { font-family:'Fraunces',Georgia,serif;font-weight:500;font-size:clamp(40px,6vw,68px);line-height:1.05;letter-spacing:-0.02em;margin:0 0 24px;color:var(--ink); }
-  h1 em { font-style:italic;color:var(--amber);font-weight:500; }
-  .lede { font-size:18px;color:var(--ink-dim);max-width:620px;margin:0 0 38px;line-height:1.55; }
-  .lede b { color:var(--ink);font-weight:500; }
-
-  .cta-row { display:flex;gap:14px;align-items:center;flex-wrap:wrap; }
-  .btn-primary { background:var(--amber);color:#1a1306;border:none;font-family:inherit;font-weight:700;font-size:14px;letter-spacing:0.04em;padding:14px 26px;cursor:pointer;text-decoration:none;display:inline-block;transition:background 0.12s; }
-  .btn-primary:hover { background:#ffc333; }
-  .btn-ghost { background:transparent;color:var(--ink-dim);border:1px solid var(--line-2);font-family:inherit;font-size:14px;padding:13px 22px;cursor:pointer;text-decoration:none;display:inline-block;transition:all 0.12s;font-weight:500; }
-  .btn-ghost:hover { border-color:var(--amber);color:var(--ink); }
-
-  .strip { margin-top:70px;display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--line);background:var(--panel); }
-  .strip .cell { padding:22px 22px;border-right:1px solid var(--line); }
-  .strip .cell:last-child { border-right:none; }
-  .strip .v { font-family:'Fraunces',serif;font-weight:700;font-size:30px;letter-spacing:-0.01em;color:var(--amber); }
-  .strip .l { font-size:11px;color:var(--ink-mute);text-transform:uppercase;letter-spacing:0.16em;margin-top:4px;font-weight:500; }
-  @media (max-width:720px){.strip{grid-template-columns:repeat(2,1fr);}.strip .cell:nth-child(2){border-right:none;}.strip .cell:nth-child(1),.strip .cell:nth-child(2){border-bottom:1px solid var(--line);}}
-
-  section { padding:80px 0;border-top:1px solid var(--line); }
-  .eyebrow { font-size:11px;color:var(--amber);text-transform:uppercase;letter-spacing:0.22em;margin-bottom:14px;font-weight:600; }
-  h2 { font-family:'Fraunces',serif;font-weight:500;font-size:clamp(28px,4vw,40px);line-height:1.1;letter-spacing:-0.01em;margin:0 0 22px;color:var(--ink); }
-  h2 em { font-style:italic;color:var(--amber);font-weight:500; }
-  .body { color:var(--ink-dim);font-size:15px;max-width:680px;line-height:1.65; }
-  .body b { color:var(--ink);font-weight:500; }
-
-  .grid-3 { display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);margin-top:40px;border:1px solid var(--line); }
-  .grid-3 .card { padding:28px 24px;background:var(--panel);min-height:200px; }
-  .grid-3 .num { font-family:'Fraunces',serif;font-style:italic;font-weight:700;font-size:32px;color:var(--amber);margin-bottom:14px;line-height:1; }
-  .grid-3 .ttl { font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink);margin-bottom:10px; }
-  .grid-3 .desc { color:var(--ink-dim);font-size:14px;line-height:1.6; }
-  @media (max-width:720px){.grid-3{grid-template-columns:1fr;}}
-
-  .pricing-row { display:grid;grid-template-columns:1.2fr 1fr;gap:30px;margin-top:40px;align-items:stretch; }
-  @media (max-width:760px){.pricing-row{grid-template-columns:1fr;}}
-  .pricing-card { border:1px solid var(--amber);background:var(--panel);padding:38px 34px;position:relative; }
-  .pricing-card::before { content:'CURRENT';position:absolute;top:14px;right:18px;font-size:10px;color:var(--amber);letter-spacing:0.22em;font-weight:600; }
-  .price-eyebrow { font-size:12px;text-transform:uppercase;letter-spacing:0.18em;color:var(--ink-mute);margin-bottom:12px;font-weight:600; }
-  .price-amount { font-family:'Fraunces',serif;font-weight:700;font-size:56px;line-height:1;color:var(--ink);margin-bottom:6px;letter-spacing:-0.02em; }
-  .price-amount sup { font-size:26px;vertical-align:top;margin-right:4px;color:var(--amber); }
-  .price-period { color:var(--ink-dim);font-size:14px;margin-top:8px; }
-  ul.feat { list-style:none;padding:0;margin:28px 0;display:flex;flex-direction:column;gap:12px; }
+  .price-card { max-width:520px;background:var(--panel);border:1px solid var(--amber);padding:42px 38px;margin-top:32px; }
+  .price-card .eyebrow { margin-bottom:14px; }
+  .price-card h3 { font-family:'Fraunces',serif;font-weight:500;font-size:34px;line-height:1.1;letter-spacing:-0.02em;margin:0 0 8px;font-style:italic; }
+  .price-card h3 em { color:var(--amber); }
+  .price-card .lede { color:var(--ink-dim);font-size:14px;margin:0 0 26px;line-height:1.6; }
+  .price-card .price { font-family:'Fraunces',serif;font-weight:700;font-size:54px;line-height:1;color:var(--ink);margin-bottom:6px;letter-spacing:-0.02em; }
+  .price-card .price sup { font-size:24px;vertical-align:top;color:var(--amber);margin-right:4px; }
+  .price-card .price-note { color:var(--ink-dim);font-size:13px;margin-bottom:30px; }
+  ul.feat { list-style:none;padding:0;margin:0 0 32px;display:flex;flex-direction:column;gap:11px; }
   ul.feat li { color:var(--ink);font-size:14px;padding-left:22px;position:relative;line-height:1.5; }
   ul.feat li::before { content:'✓';position:absolute;left:0;color:var(--amber);font-weight:700; }
-  .pricing-card .btn-primary { width:100%;text-align:center; }
-  .pricing-side { border:1px solid var(--line);background:var(--bg-soft);padding:32px 30px;display:flex;flex-direction:column;justify-content:space-between; }
-  .pricing-side h3 { font-family:'Fraunces',serif;font-weight:500;font-size:22px;margin:0 0 16px;color:var(--ink);line-height:1.25; }
-  .pricing-side h3 em { font-style:italic;color:var(--amber);font-weight:500; }
-  .pricing-side p { color:var(--ink-dim);font-size:14px;line-height:1.6;margin:0 0 16px; }
-  .verifier { margin-top:30px;padding:24px 26px;background:var(--bg-soft);border:1px solid var(--line);font-size:13px;color:var(--ink-dim);line-height:1.6; }
-  .verifier b { color:var(--ink);font-weight:500; }
 
-  .faq { margin-top:36px;border-top:1px solid var(--line); }
-  .faq details { border-bottom:1px solid var(--line);padding:22px 0;cursor:pointer; }
-  .faq summary { list-style:none;font-size:15px;font-weight:500;color:var(--ink);display:flex;justify-content:space-between;align-items:center; }
-  .faq summary::-webkit-details-marker { display:none; }
-  .faq summary::after { content:'+';color:var(--amber);font-size:22px;font-weight:400; }
-  .faq details[open] summary::after { content:'−'; }
-  .faq .answer { color:var(--ink-dim);font-size:14px;line-height:1.65;padding-top:14px;max-width:700px; }
-
-  footer { padding:40px 0 60px;border-top:1px solid var(--line);color:var(--ink-mute);font-size:12px;text-transform:uppercase;letter-spacing:0.16em;display:flex;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-top:80px;font-weight:500; }
+  footer { position:relative;z-index:2;padding:30px 36px;border-top:1px solid var(--line);color:var(--ink-mute);font-size:11px;letter-spacing:0.12em;text-transform:uppercase;font-weight:500;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;max-width:1180px;margin:0 auto; }
   footer a { color:var(--ink-mute);text-decoration:none; }
   footer a:hover { color:var(--amber); }
+
+  @media (max-width:760px) {
+    header.site { padding:16px 20px; }
+    nav.top a { padding:8px 10px;font-size:12px; }
+    .hero { padding:48px 20px 40px; }
+    .stats { padding:0 20px 36px; }
+    .stats-grid { grid-template-columns:repeat(2,1fr); }
+    .stat { padding:16px 14px; }
+    .stat:nth-child(3) { border-left:none; }
+    section.block { padding:48px 20px; }
+    .features { grid-template-columns:1fr; }
+    footer { padding:24px 20px; }
+  }
 </style>
 </head>
+
 <body>
 
-<div class="wrap">
-  <nav>
-    <div>
-      <a href="/" class="brand">Pra<em>x</em>os</a>
-      <span class="brand-sub">A Brockway product</span>
-    </div>
-    <div class="links">
-      <a href="#how">How it works</a>
-      <a href="#pricing">Pricing</a>
-      <a href="#faq">FAQ</a>
-      <a href="/signin" class="cta">Sign in</a>
-    </div>
+<header class="site">
+  <a href="/" class="brand">Pra<em>x</em>os <span class="sub">by Brockway</span></a>
+  <nav class="top" id="auth-nav">
+    <a href="/signin" class="btn-ghost">Sign in</a>
+    <a href="/signin?mode=signup" class="btn-primary">Get Access</a>
   </nav>
+</header>
 
-  <header class="hero">
-    <div class="ticker">Live · graded daily · markets verified against history</div>
-    <h1>Football tips with a <em>track record</em>, not a hot take.</h1>
-    <p class="lede">
-      Praxos is a <b>quantitative engine</b> that grades every market it suggests against thousands of historical matches. You see the tip, the regime, and the proven hit rate before you bet.
-    </p>
-    <div class="cta-row">
-      <a href="/signin" class="btn-primary">Get access · ₦33,500/mo</a>
-      <a href="#how" class="btn-ghost">See how it works</a>
+<section class="hero">
+  <div class="eyebrow">Quantitative Football Analytics</div>
+  <h1 class="hero-title">Football, graded by the <em>math</em>.</h1>
+  <p class="hero-lede">
+    Praxos models 34 football markets across global leagues every day. Poisson distributions, tactical pressure, and dynamic velocity bands run continuously over thousands of graded fixtures — the system tells you what the probabilities actually are, not what the bookmakers want you to think.
+  </p>
+  <div class="hero-cta">
+    <a href="#" class="cta-primary" id="cta-primary">Open Terminal →</a>
+    <a href="#how" class="cta-secondary">See how it works</a>
+  </div>
+</section>
+
+<section class="stats">
+  <div class="stats-grid">
+    <div class="stat"><div class="stat-num">34</div><div class="stat-label">Markets per fixture</div></div>
+    <div class="stat"><div class="stat-num">70<em>–</em>87%</div><div class="stat-label">Probability corridor</div></div>
+    <div class="stat"><div class="stat-num">1<em>,</em>200<em>+</em></div><div class="stat-label">Graded matches</div></div>
+    <div class="stat"><div class="stat-num">Daily</div><div class="stat-label">Updates · global coverage</div></div>
+  </div>
+</section>
+
+<section class="block" id="live">
+  <div class="kicker">Live · API-Sports</div>
+  <h2>Today's <em>football</em> fixtures, live.</h2>
+  <p class="lede">Real-time fixture data drives every Praxos calculation. Below is the raw feed — the same fixture pool the engine evaluates before producing the terminal's daily picks.</p>
+  <div class="live-wrap">
+    <div class="live-head">
+      <h3>Today's <em>Games</em></h3>
+      <span class="live-pulse">Live</span>
     </div>
-    <div class="strip">
-      <div class="cell"><div class="v">1,282+</div><div class="l">Matches Graded</div></div>
-      <div class="cell"><div class="v">82%+</div><div class="l">Avg Tip Hit Rate</div></div>
-      <div class="cell"><div class="v">2×2</div><div class="l">Quadrant Filter</div></div>
-      <div class="cell"><div class="v">Daily</div><div class="l">Fresh Picks</div></div>
+    <div class="live-body">
+      <api-sports-widget data-type="games"></api-sports-widget>
     </div>
-  </header>
+  </div>
+</section>
 
-  <section id="how">
-    <div class="eyebrow">How it works</div>
-    <h2>The system in <em>three lines</em>.</h2>
-    <p class="body">No commentary. No "feel". Every tip is measured against its historical performance under the same match conditions, and only the proven ones surface.</p>
-
-    <div class="grid-3">
-      <div class="card"><div class="num">01</div><div class="ttl">Classify the match</div><div class="desc">Each fixture is tagged by pace and pressure balance, defining its quadrant in the engine.</div></div>
-      <div class="card"><div class="num">02</div><div class="ttl">Match against history</div><div class="desc">Every market is checked against thousands of past games in the same quadrant. Hit rate is stored.</div></div>
-      <div class="card"><div class="num">03</div><div class="ttl">Surface only the top tip</div><div class="desc">Only the highest-scoring market per fixture surfaces — and only if it beats the dynamic global floor.</div></div>
+<section class="block" id="how">
+  <div class="kicker">Methodology</div>
+  <h2>Built on three <em>principles</em>.</h2>
+  <p class="lede">Praxos doesn't guess. Every published pick clears a structural test, a probability floor, and a regime check before it ever appears on the terminal.</p>
+  <div class="features">
+    <div class="feature">
+      <div class="num">01</div>
+      <h3>Poisson distribution engine</h3>
+      <p>A 7×7 scoreline grid evaluated per fixture against current league velocity. Markets graded against actual scoreline mass — not gut feel.</p>
     </div>
-  </section>
-
-  <section id="pricing">
-    <div class="eyebrow">Pricing</div>
-    <h2>One plan. <em>One number</em>. Cancel any month.</h2>
-    <p class="body">Built for serious bettors who want quantitative edge, not entertainment.</p>
-
-    <div class="pricing-row">
-      <div class="pricing-card">
-        <div class="price-eyebrow">Praxos · Monthly</div>
-        <div class="price-amount"><sup>₦</sup>33,500</div>
-        <div class="price-period">per month · billed monthly · cancel any time</div>
-        <ul class="feat">
-          <li>Full daily proven fixtures list</li>
-          <li>Decimal odds floor on every tip</li>
-          <li>Quadrant + density classification per match</li>
-          <li>Auto-rejected toxic and ambiguous fixtures</li>
-          <li>Unlimited queries · 30-day rolling expiry</li>
-        </ul>
-        <a href="/signin" class="btn-primary">Sign up &amp; pay with Korapay</a>
-      </div>
-      <aside class="pricing-side">
-        <div>
-          <h3>Why <em>one</em> price?</h3>
-          <p>Tier-gating breaks signal quality. Every subscriber sees the same proven list — no hidden "premium" picks, no upsell loops.</p>
-          <p>If a fixture isn't in the list, it's because the data doesn't support it.</p>
-        </div>
-        <div class="verifier"><b>Payments</b> are processed by Korapay. Your subscription auto-renews until you cancel.</div>
-      </aside>
+    <div class="feature">
+      <div class="num">02</div>
+      <h3>Dynamic league velocity</h3>
+      <p>Compression, neutral, and expansion regimes recalibrate every day. A 1-0 league is treated differently from a 3-2 league, automatically.</p>
     </div>
-  </section>
-
-  <section id="faq">
-    <div class="eyebrow">FAQ</div>
-    <h2>The honest answers.</h2>
-    <div class="faq">
-      <details><summary>Is this a tipster service?</summary><div class="answer">No. Praxos is a quantitative engine. It doesn't issue opinions — it issues markets that have demonstrated proven historical performance under the current match's regime. You see the data behind every pick.</div></details>
-      <details><summary>Are the hit rates guaranteed?</summary><div class="answer">No. Hit rates are historical. We never claim 100%. Every pick has a real probability of losing — what we eliminate is selecting markets without a track record.</div></details>
-      <details><summary>How is this different from other tip services?</summary><div class="answer">Most services don't show you the success rate of their picks under current match conditions. Praxos surfaces only the top-scoring market per fixture, and shows you the implied minimum odds inline.</div></details>
-      <details><summary>What happens after I subscribe?</summary><div class="answer">You sign up, pay via Korapay, and your subscription is activated for 30 days. You then get full access to the Praxos terminal at <b>brockwayltd.com/praxos</b>.</div></details>
-      <details><summary>Can I cancel?</summary><div class="answer">Yes. Subscriptions are monthly. Cancel any month. No long-term commitment.</div></details>
-      <details><summary>What sports are covered?</summary><div class="answer">Football only. Pre-match markets across major and tier-2 leagues globally.</div></details>
+    <div class="feature">
+      <div class="num">03</div>
+      <h3>Empirically gated</h3>
+      <p>Each tip has a tracked hit rate over its full sample. Only tips whose per-match confidence clears the long-run floor reach the terminal.</p>
     </div>
-  </section>
+  </div>
+</section>
 
-  <section style="text-align:center;padding:100px 0;">
-    <h2>Ready to bet on <em>numbers</em>?</h2>
-    <p class="body" style="margin:0 auto 30px;">Get into the terminal in under two minutes.</p>
-    <a href="/signin" class="btn-primary">Sign up · ₦33,500/mo</a>
-  </section>
+<section class="block" id="pricing">
+  <div class="kicker">Access</div>
+  <h2>One price. Full <em>terminal</em>.</h2>
+  <p class="lede">No tiers, no upsells, no hidden picks. Every subscriber sees the same daily fixture board, the same quant grades, and the same accumulator builder.</p>
+  <div class="price-card">
+    <div class="eyebrow">Praxos · Monthly</div>
+    <h3>Activate your <em>access</em>.</h3>
+    <p class="lede">30 days of full terminal access. Cancel any time.</p>
+    <div class="price"><sup>₦</sup>33,500</div>
+    <div class="price-note">per month · billed monthly via Korapay</div>
+    <ul class="feat">
+      <li>Full daily fixtures by country &amp; league</li>
+      <li>Quantitative board on every fixture</li>
+      <li>Compass target score &amp; tip grading</li>
+      <li>Accumulator builder · no duplicate tips</li>
+      <li>Unlimited queries · 30-day rolling expiry</li>
+    </ul>
+    <a href="/signin?mode=signup" class="cta-primary" id="cta-pricing" style="width:100%;text-align:center;justify-content:center;">Get Access →</a>
+  </div>
+</section>
 
-  <footer>
-    <span>© Brockway Ltd · Praxos is a Brockway product</span>
-    <span><a href="mailto:support@brockwayltd.com">support@brockwayltd.com</a></span>
-  </footer>
-</div>
+<footer>
+  <span>© Brockway Trading &amp; Technical Analysis Ltd · Lagos</span>
+  <span>support@brockwayltd.com</span>
+</footer>
+
+<!-- Config widget: football only. Replace data-key with your API-Sports key. -->
+<api-sports-widget
+  data-type="config"
+  data-sport="football"
+  data-key="YOUR_API_SPORTS_KEY"
+  data-lang="en"
+  data-theme="grey"
+  data-show-error="false"
+  data-show-logos="true"
+  data-refresh="60"
+  data-favorite="false"
+  data-standings="false"
+  data-team-statistics="false"
+  data-player-statistics="false"
+  data-tab="games"
+></api-sports-widget>
+
+<script type="module">
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+  const SUPABASE_URL = "https://bgymxvpjssnexztpkbfc.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_4IhlE7C-URixujv1yvUbhw_7mRmPQdp";
+  const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const $nav = document.getElementById('auth-nav');
+  const $ctaPrimary = document.getElementById('cta-primary');
+  const $ctaPricing = document.getElementById('cta-pricing');
+
+  async function applyAuthState() {
+    const { data: { session } } = await sb.auth.getSession();
+
+    if (!session) {
+      $nav.innerHTML = `
+        <a href="/signin" class="btn-ghost">Sign in</a>
+        <a href="/signin?mode=signup" class="btn-primary">Get Access</a>`;
+      $ctaPrimary.href = '/signin?mode=signup';
+      $ctaPrimary.textContent = 'Get Access →';
+      $ctaPricing.href = '/signin?mode=signup';
+      $ctaPricing.textContent = 'Get Access →';
+      return;
+    }
+
+    const { data: status } = await sb
+      .from('praxos_user_status')
+      .select('is_active, days_remaining')
+      .eq('clerk_id', session.user.id)
+      .maybeSingle();
+    const active = !!(status && status.is_active);
+
+    if (active) {
+      $nav.innerHTML = `
+        <span style="font-size:12px;color:var(--ink-dim);font-weight:500;">${session.user.email}</span>
+        <a href="/praxos" class="btn-primary">Open Terminal →</a>
+        <a href="#" class="btn-ghost" id="signout">Sign out</a>`;
+      $ctaPrimary.href = '/praxos';
+      $ctaPrimary.textContent = 'Open Terminal →';
+      $ctaPricing.href = '/praxos';
+      $ctaPricing.textContent = 'Open Terminal →';
+    } else {
+      $nav.innerHTML = `
+        <span style="font-size:12px;color:var(--ink-dim);font-weight:500;">${session.user.email}</span>
+        <a href="/subscribe" class="btn-primary">Subscribe →</a>
+        <a href="#" class="btn-ghost" id="signout">Sign out</a>`;
+      $ctaPrimary.href = '/subscribe';
+      $ctaPrimary.textContent = 'Subscribe →';
+      $ctaPricing.href = '/subscribe';
+      $ctaPricing.textContent = 'Subscribe →';
+    }
+
+    const $signout = document.getElementById('signout');
+    if ($signout) $signout.addEventListener('click', async (e) => {
+      e.preventDefault();
+      await sb.auth.signOut();
+      location.reload();
+    });
+  }
+
+  applyAuthState();
+  sb.auth.onAuthStateChange(() => applyAuthState());
+</script>
 
 </body>
 </html>
